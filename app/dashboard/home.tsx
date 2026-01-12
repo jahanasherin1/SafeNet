@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location'; 
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../../services/api'; 
 
 export default function DashboardHome() {
   const router = useRouter();
   const [userName, setUserName] = useState('User');
+  const [sosLoading, setSosLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
+  // --- REFRESH DATA EVERY TIME SCREEN IS FOCUSED ---
   useFocusEffect(
     useCallback(() => {
       const loadUserData = async () => {
@@ -17,24 +22,108 @@ export default function DashboardHome() {
           const storedUser = await AsyncStorage.getItem('user');
           if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            setUserName(parsedUser.name || 'User'); 
+            setUserName(parsedUser.name || 'User');
+            setUserEmail(parsedUser.email || '');
           }
         } catch (error) {
           console.error("Failed to load user data", error);
         }
       };
+
       loadUserData();
     }, [])
   );
+
+  // --- PERIODIC LOCATION UPDATE (Every 30 seconds) ---
+  useEffect(() => {
+    // FIX: Changed type from NodeJS.Timeout to any
+    let locationInterval: any; 
+
+    const startLocationTracking = async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log("Location permission not granted");
+          return;
+        }
+
+        // Update location every 30 seconds
+        locationInterval = setInterval(async () => {
+          try {
+            const location = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced
+            });
+
+            if (userEmail) {
+              // Note: Ensure this route exists in your backend
+              // If not, you can create it or just comment this out for now
+              await api.post('/user/update-location', {
+                userEmail: userEmail,
+                location: {
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude
+                }
+              });
+              console.log('✅ Location updated:', location.coords);
+            }
+          } catch (error) {
+            console.error('Location update error:', error);
+          }
+        }, 30000); 
+
+      } catch (error) {
+        console.error("Location tracking error:", error);
+      }
+    };
+
+    startLocationTracking();
+
+    // Cleanup interval on unmount
+    return () => {
+      if (locationInterval) clearInterval(locationInterval);
+    };
+  }, [userEmail]);
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
-      // UPDATED: Navigate to Main Home Screen
-      router.replace('/main');
+      router.replace('/main'); 
     } catch (error) {
       console.error("Logout error:", error);
+    }
+  };
+
+  const handleSOS = async () => {
+    setSosLoading(true);
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert("Permission Denied: Allow location to use SOS.");
+        setSosLoading(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      const userData = await AsyncStorage.getItem('user');
+      if (!userData) return;
+      const user = JSON.parse(userData);
+
+      const response = await api.post('/sos/trigger', {
+        userEmail: user.email,
+        location: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        }
+      });
+
+      if (response.status === 200) {
+        alert("SOS SENT: Guardians notified.");
+      }
+    } catch (error) {
+      alert("SOS Failed to send.");
+    } finally {
+      setSosLoading(false);
     }
   };
 
@@ -64,8 +153,12 @@ export default function DashboardHome() {
             <Text style={styles.sosTitle}>SOS</Text>
             <Text style={styles.sosSubtitle}>Tap in case of Emergency</Text>
           </View>
-          <TouchableOpacity style={styles.sosButton} activeOpacity={0.8}>
-            <Text style={styles.sosButtonText}>Tap</Text>
+          <TouchableOpacity 
+            style={styles.sosButton} 
+            activeOpacity={0.8}
+            onPress={handleSOS} 
+          >
+            <Text style={styles.sosButtonText}>{sosLoading ? "..." : "Tap"}</Text>
           </TouchableOpacity>
         </LinearGradient>
 
@@ -143,7 +236,7 @@ export default function DashboardHome() {
             </View>
             <TouchableOpacity 
               style={styles.manageButton}
-              onPress={() => router.push('/guardians/add')}
+              onPress={() => router.push('/guardians/list')}
             >
                 <Text style={styles.manageButtonText}>Manage</Text>
             </TouchableOpacity>

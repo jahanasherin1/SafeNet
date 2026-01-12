@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native'; // Added Platform
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,23 +14,37 @@ export default function AddGuardianScreen() {
   // State for Inputs
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState(''); // Added Email State
+  const [email, setEmail] = useState(''); 
   const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // --- HELPER FOR WEB & MOBILE ALERTS ---
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      // Web: Standard browser alert
+      window.alert(`${title}: ${message}`);
+      if (onOk) onOk();
+    } else {
+      // Mobile: Native Alert
+      Alert.alert(title, message, [
+        { text: "OK", onPress: onOk }
+      ]);
+    }
+  };
 
   const handleAddGuardian = async () => {
     // Basic Validation
     if (!name.trim()) {
-      Alert.alert("Error", "Guardian Name is required");
+      showAlert("Error", "Guardian Name is required");
       return;
     }
     if (phone.length !== 10) {
-      Alert.alert("Error", "Please enter a valid 10-digit phone number");
+      showAlert("Error", "Please enter a valid 10-digit phone number");
       return;
     }
     // Simple Email Regex
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        Alert.alert("Error", "Please enter a valid email address");
+        showAlert("Error", "Please enter a valid email address");
         return;
     }
 
@@ -39,31 +53,34 @@ export default function AddGuardianScreen() {
     try {
       const userData = await AsyncStorage.getItem('user');
       if (!userData) {
-        Alert.alert("Error", "User session not found.");
+        showAlert("Error", "User session not found.");
         router.replace('/auth/login');
         return;
       }
       
       const user = JSON.parse(userData);
 
-      // Send Request to Backend including Email
+      // Send Request to Backend
       const response = await api.post('/guardians/add', {
         userEmail: user.email, 
         name,
         phone,
-        guardianEmail: email, // Sending email
+        guardianEmail: email, 
         relationship
       });
 
       if (response.status === 200) {
-        Alert.alert("Success", "Guardian added! An email with the login code has been sent to them.", [
-          { text: "OK", onPress: () => router.back() } 
-        ]);
+        // Success: Alert then navigate to Dashboard
+        showAlert(
+          "Success", 
+          "Guardian added! An email with the login code has been sent to them.", 
+          () => router.replace('/dashboard/home')
+        );
       }
 
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to add guardian";
-      Alert.alert("Error", msg);
+      showAlert("Error", msg);
     } finally {
       setLoading(false);
     }

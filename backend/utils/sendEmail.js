@@ -8,7 +8,7 @@ const sendEmail = async (to, subject, text) => {
         user: process.env.EMAIL_USER, // safenet2026@gmail.com
         pass: process.env.EMAIL_PASS, // Your 16-char App Password
       },
-    });
+    }); 
 
     const mailOptions = {
       from: `"SafeNet Security" <${process.env.EMAIL_USER}>`,

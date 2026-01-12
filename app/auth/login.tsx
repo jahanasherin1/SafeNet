@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native'; // Added Platform
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Save Session
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import api from '../../services/api'; // Ensure you have this file created
+import api from '../../services/api'; 
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function LoginScreen() {
   // State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false); // New Loading State
+  const [loading, setLoading] = useState(false);
   
   const [errors, setErrors] = useState({
     email: '',
@@ -21,6 +21,18 @@ export default function LoginScreen() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+
+  // --- HELPER FOR WEB & MOBILE ALERTS ---
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+      if (onOk) onOk();
+    } else {
+      Alert.alert(title, message, [
+        { text: "OK", onPress: onOk }
+      ]);
+    }
+  };
 
   const handleLogin = async () => {
     let isValid = true;
@@ -46,7 +58,7 @@ export default function LoginScreen() {
     setErrors(currentErrors);
 
     if (isValid) {
-      setLoading(true); // Start Loading
+      setLoading(true); 
       try {
         // --- BACKEND API CALL ---
         const response = await api.post('/auth/login', {
@@ -55,22 +67,22 @@ export default function LoginScreen() {
         });
 
         if (response.status === 200) {
-          // 1. Save User Data locally (for "Welcome, Name" feature)
+          // 1. Save User Data locally
           const userData = JSON.stringify(response.data.user);
           await AsyncStorage.setItem('user', userData);
-          await AsyncStorage.setItem('token', response.data.token || ''); // If your API sends a token
+          await AsyncStorage.setItem('token', response.data.token || ''); 
 
           console.log("Login Successful");
           
-          // 2. Navigate to Dashboard
+          // 2. Navigate to Dashboard (No alert needed for login success, just go)
           router.replace('/dashboard/home');
         }
       } catch (error: any) {
-        // Handle Error
+        // Handle Error using Cross-Platform Alert
         const errorMessage = error.response?.data?.message || "Invalid email or password";
-        Alert.alert("Login Failed", errorMessage);
+        showAlert("Login Failed", errorMessage);
       } finally {
-        setLoading(false); // Stop Loading
+        setLoading(false); 
       }
     }
   };

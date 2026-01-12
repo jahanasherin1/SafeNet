@@ -1,34 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Switch, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router'; // 1. Import useFocusEffect
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LinearGradient } from 'expo-linear-gradient'; // 1. ADD THIS IMPORT
+import { LinearGradient } from 'expo-linear-gradient';
+import api from '../../services/api'; // Import API to get Base URL for images
 
 export default function ProfileScreen() {
   const router = useRouter();
   
   // State for user data
   const [userName, setUserName] = useState('User');
-  const [userPhone, setUserPhone] = useState('+0 000 000-0000');
+  const [userPhone, setUserPhone] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null); // State for Image
 
   // State for toggles
   const [isBatteryMode, setIsBatteryMode] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(true);
 
-  // Load actual user info from storage
-  useEffect(() => {
-    const loadUser = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        setUserName(user.name || 'Sophia Carter');
-        setUserPhone(user.phone || '+1 (555) 123-4567');
-      }
-    };
-    loadUser();
-  }, []);
+  // --- 2. REFRESH DATA WHEN SCREEN IS FOCUSED ---
+  useFocusEffect(
+    useCallback(() => {
+      const loadUser = async () => {
+        try {
+          const storedUser = await AsyncStorage.getItem('user');
+          if (storedUser) {
+            const user = JSON.parse(storedUser);
+            
+            setUserName(user.name || 'User');
+            setUserPhone(user.phone || '');
+
+            // Handle Profile Image URL
+            if (user.profileImage) {
+              // Construct full URL if it's a relative path from backend
+              const baseUrl = api.defaults.baseURL?.replace('/api', '');
+              setProfileImage(`${baseUrl}/${user.profileImage}`);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load profile", error);
+        }
+      };
+      loadUser();
+    }, [])
+  );
 
   const handleLogout = async () => {
     await AsyncStorage.clear();
@@ -52,7 +68,10 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.imageContainer}>
             <Image 
-              source={{ uri: 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' }} 
+              // 3. Use Dynamic Image or Default Fallback
+              source={{ 
+                uri: profileImage || 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' 
+              }} 
               style={styles.profileImage} 
             />
           </View>
@@ -106,7 +125,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* --- GRADIENT LOGOUT BUTTON --- */}
+        {/* Gradient Logout Button */}
         <TouchableOpacity style={styles.logoutContainer} onPress={handleLogout}>
           <LinearGradient
             colors={['#C18FFF', '#6A5ACD']}
@@ -162,6 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 3,
     borderColor: '#FFF',
+    backgroundColor: '#DDD', // Gray background while loading
   },
   userName: {
     fontSize: 22,
@@ -208,7 +228,6 @@ const styles = StyleSheet.create({
     color: '#2D2D2D',
     fontWeight: '500',
   },
-  // LOGOUT BUTTON STYLES
   logoutContainer: {
     marginTop: 40,
     shadowColor: '#6A5ACD',

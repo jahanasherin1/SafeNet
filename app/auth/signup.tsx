@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Added for Auto-Login
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // Added Platform
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import api from '../../services/api'; // Ensure you have this file created
+import api from '../../services/api';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -15,7 +17,7 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false); // New Loading State
+  const [loading, setLoading] = useState(false);
   
   const [errors, setErrors] = useState({
     name: '',
@@ -27,6 +29,18 @@ export default function SignupScreen() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // --- HELPER FOR WEB & MOBILE ALERTS ---
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+      if (onOk) onOk();
+    } else {
+      Alert.alert(title, message, [
+        { text: "OK", onPress: onOk }
+      ]);
+    }
+  };
 
   const validateAndSignup = async () => {
     let isValid = true;
@@ -62,28 +76,53 @@ export default function SignupScreen() {
     setErrors(currentErrors);
 
     if (isValid) {
-      setLoading(true); // Start Loading
+      setLoading(true); 
       try {
+        // Request location permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        let userLocation = { latitude: 0, longitude: 0 };
+
+        if (status === 'granted') {
+          try {
+            const currentLocation = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced
+            });
+            userLocation = {
+              latitude: currentLocation.coords.latitude,
+              longitude: currentLocation.coords.longitude
+            };
+          } catch (locError) {
+            console.warn('Location fetch failed, using default:', locError);
+          }
+        }
+
         // --- BACKEND API CALL ---
         const response = await api.post('/auth/signup', {
           name,
           phone,
           email,
-          password
+          password,
+          location: userLocation
         });
 
         if (response.status === 201 || response.status === 200) {
-          Alert.alert("Success", "Account created successfully!", [
-            { text: "OK", onPress: () => router.replace('/dashboard/home') }
-          ]);
+          // 1. Save User Data locally (Auto-Login)
+          const userData = JSON.stringify(response.data.user);
+          await AsyncStorage.setItem('user', userData);
+
+          // 2. Alert and Navigate
+          showAlert(
+            "Success", 
+            "Account created successfully!", 
+            () => router.replace('/dashboard/home')
+          );
         }
       } catch (error: any) {
-        // Handle Error
         const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
-        Alert.alert("Registration Error", errorMessage);
+        showAlert("Registration Error", errorMessage);
         console.error(error);
       } finally {
-        setLoading(false); // Stop Loading
+        setLoading(false); 
       }
     }
   };

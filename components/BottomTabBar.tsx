@@ -5,15 +5,18 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   
+  // 1. Define screens that should NOT appear in the bottom bar
+  const hiddenRoutes = ['edit-profile', '_sitemap', '+not-found'];
+
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
 
-        // --- ADD THIS LOGIC HERE ---
-        // If href is set to null in _layout.tsx, do not render this button
-        if ((options as any).href === null) return null;
-        // ---------------------------
+        // 2. FILTER LOGIC: If route name is in the hidden list, don't render it
+        if (hiddenRoutes.includes(route.name)) {
+          return null;
+        }
 
         const label = options.tabBarLabel !== undefined
             ? options.tabBarLabel
@@ -45,6 +48,10 @@ const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
         return (
           <TouchableOpacity
             key={index}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={options.tabBarTestID}
             onPress={onPress}
             style={styles.tabButton}
             activeOpacity={0.8}
@@ -77,7 +84,11 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#E8E6F0',
-    elevation: 10,
+    elevation: 10, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   tabButton: {
     flex: 1,
