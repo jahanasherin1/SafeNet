@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import BottomTabBar from '../../components/BottomTabBar'; 
+import BottomTabBar from '../../components/BottomTabBar';
 
 export default function GuardianDashboardLayout() {
   return (

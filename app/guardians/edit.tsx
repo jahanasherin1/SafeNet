@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, ActivityIndicator, Platform } from 'react-native'; // Added Platform
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -19,14 +19,22 @@ export default function EditGuardianScreen() {
   const [relationship, setRelationship] = useState(params.relationship as string || '');
   const [loading, setLoading] = useState(false);
 
-  // Helper function for Cross-Platform Alerts
+  // Helper: Get Initials
+  const getInitials = (fullName: string) => {
+    const names = fullName.trim().split(' ');
+    let initials = names[0].substring(0, 1).toUpperCase();
+    if (names.length > 1) {
+      initials += names[names.length - 1].substring(0, 1).toUpperCase();
+    }
+    return initials || "G";
+  };
+
+  // Helper for Cross-Platform Alerts
   const showAlert = (title: string, message: string, onOk?: () => void) => {
     if (Platform.OS === 'web') {
-      // WEB: Standard browser alert
       window.alert(`${title}: ${message}`);
       if (onOk) onOk();
     } else {
-      // MOBILE: Native Alert
       Alert.alert(title, message, [
         { text: "OK", onPress: onOk }
       ]);
@@ -68,7 +76,7 @@ export default function EditGuardianScreen() {
       });
 
       if (response.status === 200) {
-        // 3. Success -> Navigate Back (Works on Web & Mobile)
+        // 3. Success -> Navigate Back
         showAlert("Success", "Guardian details updated", () => router.back());
       }
     } catch (error) {
@@ -95,21 +103,14 @@ export default function EditGuardianScreen() {
       }
     };
 
-    // WEB: Use confirm()
     if (Platform.OS === 'web') {
       if (window.confirm("Are you sure you want to remove this guardian?")) {
         performDelete();
       }
-    } 
-    // MOBILE: Use Alert.alert with buttons
-    else {
+    } else {
       Alert.alert("Delete Guardian", "Are you sure you want to remove this guardian?", [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: performDelete
-        }
+        { text: "Delete", style: "destructive", onPress: performDelete }
       ]);
     }
   };
@@ -129,16 +130,14 @@ export default function EditGuardianScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Photo Section */}
+        {/* --- UPDATED PROFILE SECTION (Initials) --- */}
         <View style={styles.avatarSection}>
-          <Image 
-            source={{ uri: `https://i.pravatar.cc/150?u=${params._id}` }} 
-            style={styles.avatar} 
-          />
-          <TouchableOpacity>
-            <Text style={styles.changePhotoText}>Change Photo</Text>
-          </TouchableOpacity>
+          <View style={styles.initialsContainer}>
+            <Text style={styles.initialsText}>{getInitials(name)}</Text>
+          </View>
+          {/* Removed "Change Photo" text since we use initials now */}
         </View>
+        {/* ------------------------------------------ */}
 
         {/* Form */}
         <View style={styles.form}>
@@ -194,8 +193,25 @@ const styles = StyleSheet.create({
   backButton: { padding: 5 },
   scrollContent: { padding: 24 },
   avatarSection: { alignItems: 'center', marginBottom: 30 },
-  avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 10, borderWidth: 3, borderColor: '#FAF9FF' },
-  changePhotoText: { color: '#6A5ACD', fontWeight: '600' },
+  
+  // Styles for Initials Circle
+  initialsContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFEAD1', // Light orange to match list
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FAF9FF',
+    marginBottom: 10
+  },
+  initialsText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#E65100', // Dark orange text
+  },
+
   form: { flex: 1 },
   label: { fontSize: 15, fontWeight: '600', color: '#1A1B4B', marginBottom: 8, marginTop: 10 },
 });

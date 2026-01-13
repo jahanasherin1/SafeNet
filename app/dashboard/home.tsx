@@ -36,7 +36,6 @@ export default function DashboardHome() {
 
   // --- PERIODIC LOCATION UPDATE (Every 30 seconds) ---
   useEffect(() => {
-    // FIX: Changed type from NodeJS.Timeout to any
     let locationInterval: any; 
 
     const startLocationTracking = async () => {
@@ -55,8 +54,6 @@ export default function DashboardHome() {
             });
 
             if (userEmail) {
-              // Note: Ensure this route exists in your backend
-              // If not, you can create it or just comment this out for now
               await api.post('/user/update-location', {
                 userEmail: userEmail,
                 location: {
@@ -78,7 +75,6 @@ export default function DashboardHome() {
 
     startLocationTracking();
 
-    // Cleanup interval on unmount
     return () => {
       if (locationInterval) clearInterval(locationInterval);
     };
@@ -167,14 +163,24 @@ export default function DashboardHome() {
           <View style={{ flex: 1 }}>
             <Text style={styles.cardTitle}>Live Location: Active</Text>
             <Text style={styles.cardDesc}>Shared with guardians during emergencies</Text>
-            <TouchableOpacity style={styles.smallButton}>
+            
+            {/* UPDATED: Navigates to Location Screen */}
+            <TouchableOpacity 
+              style={styles.smallButton}
+              onPress={() => router.push('/dashboard/location')}
+            >
               <Text style={styles.smallButtonText}>Enable</Text>
               <Ionicons name="location-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
           </View>
-          <View style={styles.locationIconContainer}>
+
+          {/* UPDATED: Icon also navigates to Location Screen */}
+          <TouchableOpacity 
+            style={styles.locationIconContainer}
+            onPress={() => router.push('/dashboard/location')}
+          >
             <Ionicons name="navigate-circle" size={80} color="#7B61FF" />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Quick Safety Actions */}
