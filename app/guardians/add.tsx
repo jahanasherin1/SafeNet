@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native'; // Added Platform
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import api from '../../services/api'; 
+import api from '../../services/api';
 
 export default function AddGuardianScreen() {
   const router = useRouter();
@@ -21,11 +21,9 @@ export default function AddGuardianScreen() {
   // --- HELPER FOR WEB & MOBILE ALERTS ---
   const showAlert = (title: string, message: string, onOk?: () => void) => {
     if (Platform.OS === 'web') {
-      // Web: Standard browser alert
       window.alert(`${title}: ${message}`);
       if (onOk) onOk();
     } else {
-      // Mobile: Native Alert
       Alert.alert(title, message, [
         { text: "OK", onPress: onOk }
       ]);
@@ -60,8 +58,8 @@ export default function AddGuardianScreen() {
       
       const user = JSON.parse(userData);
 
-      // Send Request to Backend
-      const response = await api.post('/guardians/add', {
+      // --- FIX: Changed path to SINGULAR '/guardian/add' ---
+      const response = await api.post('/guardian/add', {
         userEmail: user.email, 
         name,
         phone,
@@ -79,6 +77,7 @@ export default function AddGuardianScreen() {
       }
 
     } catch (error: any) {
+      console.error("Add Guardian Error:", error);
       const msg = error.response?.data?.message || "Failed to add guardian";
       showAlert("Error", msg);
     } finally {

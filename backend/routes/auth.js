@@ -1,8 +1,28 @@
 import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
 import { GuardianOtp, PasswordReset, User } from '../models/schemas.js';
 import sendEmail from '../utils/sendEmail.js';
 
 const router = express.Router();
+
+// --- MULTER CONFIGURATION ---
+const uploadDir = 'uploads/';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // 1. Signup
 router.post('/signup', async (req, res) => {
@@ -43,7 +63,21 @@ router.post('/login', async (req, res) => {
     if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-    res.status(200).json({ message: 'Login successful', user });
+
+    // Generate a simple token (in production, use JWT)
+    const token = Buffer.from(`${user._id}:${Date.now()}`).toString('base64');
+
+    res.status(200).json({ 
+      message: 'Login successful', 
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        profileImage: user.profileImage
+      },
+      token 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
@@ -125,21 +159,24 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// 3. Update Profile
-router.post('/update-profile', async (req, res) => {
+// 3. Update Profile (Updated to handle File Uploads)
+router.post('/update-profile', upload.single('profileImage'), async (req, res) => {
   try {
     const { currentEmail, name, phone, password } = req.body;
 
     const updateData = { name, phone };
-    if (password) updateData.password = password; 
-    
+    if (password && password.trim() !== "") {
+        updateData.password = password;
+    }
+
     if (req.file) {
-      updateData.profileImage = `uploads/${req.file.filename}`;
+      // Store path and normalize slashes for cross-platform compatibility
+      updateData.profileImage = req.file.path.replace(/\\/g, "/");
     }
 
     const user = await User.findOneAndUpdate(
       { email: currentEmail },
-      updateData,
+      { $set: updateData },
       { new: true } 
     );
 

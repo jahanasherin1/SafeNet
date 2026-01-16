@@ -6,7 +6,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   
   // 1. Define screens that should NOT appear in the bottom bar
-  const hiddenRoutes = ['edit-profile', '_sitemap', '+not-found'];
+  const hiddenRoutes = ['edit-profile', 'start-journey','monitor-journey', '_sitemap', '+not-found'];
 
   return (
     <View style={styles.container}>

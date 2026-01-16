@@ -1,3 +1,5 @@
+// --- backend/routes/users.js ---
+
 import express from 'express';
 import { User } from '../models/schemas.js';
 
@@ -6,27 +8,32 @@ const router = express.Router();
 // Update User Location
 router.post('/update-location', async (req, res) => {
   try {
-    const { userEmail, location } = req.body;
-    const { latitude, longitude } = location;
+    const { email, latitude, longitude } = req.body;
 
-    if (!userEmail || latitude === undefined || longitude === undefined) {
-      return res.status(400).json({ message: 'Missing required fields: userEmail, location' });
+    if (!email || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ message: 'Missing required fields: email, latitude, longitude' });
     }
 
-    const user = await User.findOne({ email: userEmail });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    // Find and update user location
+    const user = await User.findOneAndUpdate(
+      { email },
+      {
+        currentLocation: {
+          latitude,
+          longitude,
+          timestamp: new Date()
+        }
+      },
+      { new: true }
+    );
 
-    user.currentLocation = {
-      latitude,
-      longitude,
-      timestamp: new Date()
-    };
-
-    await user.save();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     res.status(200).json({ 
       message: 'Location updated successfully',
-      currentLocation: user.currentLocation
+      timestamp: user.currentLocation.timestamp
     });
 
   } catch (error) {

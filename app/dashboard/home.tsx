@@ -1,87 +1,136 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Location from 'expo-location'; 
+import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as TaskManager from 'expo-task-manager'; // Import TaskManager
+import React, { useCallback, useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api from '../../services/api'; 
+import api from '../../services/api';
+// Import the task name
+import { LOCATION_TASK_NAME } from '../../services/LocationTask';
 
 export default function DashboardHome() {
   const router = useRouter();
   const [userName, setUserName] = useState('User');
-  const [sosLoading, setSosLoading] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  
+  // Tracking State
+  const [sosLoading, setSosLoading] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState('Waiting for updates...');
 
-  // --- REFRESH DATA EVERY TIME SCREEN IS FOCUSED ---
+  // --- 1. LOAD DATA & CHECK STATUS ON FOCUS ---
   useFocusEffect(
     useCallback(() => {
-      const loadUserData = async () => {
-        try {
-          const storedUser = await AsyncStorage.getItem('user');
-          if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUserName(parsedUser.name || 'User');
-            setUserEmail(parsedUser.email || '');
-          }
-        } catch (error) {
-          console.error("Failed to load user data", error);
-        }
-      };
-
       loadUserData();
+      checkTrackingStatus();
     }, [])
   );
 
-  // --- PERIODIC LOCATION UPDATE (Every 30 seconds) ---
-  useEffect(() => {
-    let locationInterval: any; 
+  const loadUserData = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setUserName(parsedUser.name || 'User');
+        setUserEmail(parsedUser.email || '');
+      }
+    } catch (error) {
+      console.error("Failed to load user data", error);
+    }
+  };
 
-    const startLocationTracking = async () => {
+  const checkTrackingStatus = async () => {
+    try {
+      // 1. Check if the Background Task is running
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
+      setIsTracking(isRegistered);
+
+      // 2. Load the last known timestamp from Storage (written by the Background Task)
+      const storedTime = await AsyncStorage.getItem('lastLocationTime');
+      if (storedTime) {
+        const date = new Date(storedTime);
+        setLastUpdated(date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      } else if (!isRegistered) {
+        setLastUpdated("Tracking Disabled");
+      }
+    } catch (e) {
+      console.error("Status check failed", e);
+    }
+  };
+
+  // --- 2. TOGGLE TRACKING (START/STOP) ---
+  const toggleTracking = async () => {
+    if (isTracking) {
+      // --- STOP TRACKING ---
       try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          console.log("Location permission not granted");
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        setIsTracking(false);
+        setLastUpdated("Stopped");
+        Alert.alert("Location Tracking", "Live tracking disabled.");
+      } catch (err) {
+        console.log("Error stopping location:", err);
+      }
+    } else {
+      // --- START TRACKING ---
+      try {
+        // A. Foreground Permission
+        const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+        if (fgStatus !== 'granted') {
+          Alert.alert("Permission Denied", "Allow location access to enable tracking.");
           return;
         }
 
-        // Update location every 30 seconds
-        locationInterval = setInterval(async () => {
-          try {
-            const location = await Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.Balanced
-            });
+        // B. Background Permission (Crucial for Android)
+        const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+        if (bgStatus !== 'granted') {
+          Alert.alert(
+            "Background Permission Required", 
+            "To keep you safe when the app is closed, please select 'Allow all the time' in settings."
+          );
+          // We continue anyway, but it might stop when minimized on some Android versions
+        }
 
-            if (userEmail) {
-              await api.post('/user/update-location', {
-                userEmail: userEmail,
-                location: {
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude
-                }
-              });
-              console.log('✅ Location updated:', location.coords);
-            }
-          } catch (error) {
-            console.error('Location update error:', error);
+        // C. Start The Service
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 10, // Update every 10 meters
+          deferredUpdatesInterval: 5000, // Minimum 5 seconds
+          
+          // ANDROID NOTIFICATION CONFIG (Required for background)
+          foregroundService: {
+            notificationTitle: "SafeNet Active",
+            notificationBody: "Sharing your live location with guardians.",
+            notificationColor: "#6A5ACD"
           }
-        }, 30000); 
+        });
+
+        setIsTracking(true);
+        
+        // Update Timestamp immediately
+        const now = new Date();
+        const iso = now.toISOString();
+        await AsyncStorage.setItem('lastLocationTime', iso);
+        setLastUpdated(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
       } catch (error) {
-        console.error("Location tracking error:", error);
+        console.error("Start tracking error:", error);
+        Alert.alert("Error", "Could not start location tracking.");
       }
-    };
-
-    startLocationTracking();
-
-    return () => {
-      if (locationInterval) clearInterval(locationInterval);
-    };
-  }, [userEmail]);
+    }
+  };
 
   const handleLogout = async () => {
     try {
+      // Optional: Stop tracking on logout? 
+      // Usually safety apps keep tracking, but let's stop it for clean session exit.
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
+      if (isRegistered) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+      
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
       router.replace('/main'); 
@@ -93,20 +142,11 @@ export default function DashboardHome() {
   const handleSOS = async () => {
     setSosLoading(true);
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        alert("Permission Denied: Allow location to use SOS.");
-        setSosLoading(false);
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      const userData = await AsyncStorage.getItem('user');
-      if (!userData) return;
-      const user = JSON.parse(userData);
-
+      // Force high accuracy for SOS
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      
       const response = await api.post('/sos/trigger', {
-        userEmail: user.email,
+        userEmail: userEmail,
         location: {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude
@@ -114,10 +154,17 @@ export default function DashboardHome() {
       });
 
       if (response.status === 200) {
-        alert("SOS SENT: Guardians notified.");
+        Alert.alert("SOS SENT", "Guardians notified.");
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setLastUpdated(now);
+        
+        // Auto-enable tracking if not already on
+        if (!isTracking) {
+            toggleTracking();
+        }
       }
     } catch (error) {
-      alert("SOS Failed to send.");
+      Alert.alert("Error", "SOS Failed to send.");
     } finally {
       setSosLoading(false);
     }
@@ -131,55 +178,52 @@ export default function DashboardHome() {
         <View style={styles.headerContainer}>
           <View style={styles.headerTopRow}>
             <Text style={styles.dashboardLabel}>SafeNet Dashboard</Text>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Ionicons name="log-out-outline" size={24} color="#6A5ACD" />
-            </TouchableOpacity>
           </View>
           <Text style={styles.welcomeText}>Welcome, {userName}</Text>
         </View>
 
         {/* SOS Card */}
-        <LinearGradient
-          colors={['#6A5ACD', '#4B3F8C']} 
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.sosCard}
-        >
-          <View>
+        <LinearGradient colors={['#6A5ACD', '#4B3F8C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sosCard}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.sosTitle}>SOS</Text>
             <Text style={styles.sosSubtitle}>Tap in case of Emergency</Text>
+            <Text style={styles.miniTime}>Last Signal: {lastUpdated}</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.sosButton} 
-            activeOpacity={0.8}
-            onPress={handleSOS} 
-          >
+          <TouchableOpacity style={styles.sosButton} activeOpacity={0.8} onPress={handleSOS}>
             <Text style={styles.sosButtonText}>{sosLoading ? "..." : "Tap"}</Text>
           </TouchableOpacity>
         </LinearGradient>
 
-        {/* Live Location Card */}
+        {/* Live Location Card - UPDATED WITH SWITCH */}
         <View style={styles.locationCard}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Live Location: Active</Text>
-            <Text style={styles.cardDesc}>Shared with guardians during emergencies</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <View style={[styles.statusDot, { backgroundColor: isTracking ? '#00C851' : '#FF4B4B' }]} />
+                <Text style={styles.cardTitle}>Live Location: {isTracking ? "ON" : "OFF"}</Text>
+            </View>
             
-            {/* UPDATED: Navigates to Location Screen */}
-            <TouchableOpacity 
-              style={styles.smallButton}
-              onPress={() => router.push('/dashboard/location')}
-            >
-              <Text style={styles.smallButtonText}>Enable</Text>
-              <Ionicons name="location-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
-            </TouchableOpacity>
+            <Text style={styles.cardDesc}>
+              {isTracking 
+                ? "Background tracking active." 
+                : "Enable to share real-time movements."}
+            </Text>
+            
+            <Text style={styles.updateText}>Last sync: {lastUpdated}</Text>
+
+            {/* Toggle Switch */}
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
+                <Switch 
+                    value={isTracking}
+                    onValueChange={toggleTracking}
+                    trackColor={{ false: "#E0E0E0", true: "#D1C4E9" }}
+                    thumbColor={isTracking ? "#6A5ACD" : "#f4f3f4"}
+                />
+                <Text style={styles.switchLabel}>{isTracking ? "Disable" : "Enable"}</Text>
+            </View>
           </View>
 
-          {/* UPDATED: Icon also navigates to Location Screen */}
-          <TouchableOpacity 
-            style={styles.locationIconContainer}
-            onPress={() => router.push('/dashboard/location')}
-          >
-            <Ionicons name="navigate-circle" size={80} color="#7B61FF" />
+          <TouchableOpacity style={styles.locationIconContainer} onPress={() => router.push('/dashboard/location')}>
+            <Ionicons name={isTracking ? "navigate-circle" : "navigate-circle-outline"} size={80} color="#7B61FF" />
           </TouchableOpacity>
         </View>
 
@@ -190,7 +234,7 @@ export default function DashboardHome() {
           <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={styles.actionTitle}>Start Journey</Text>
             <Text style={styles.actionDesc}>Alert guardians if you don't reach your destination</Text>
-            <TouchableOpacity style={styles.smallButton}>
+            <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/dashboard/start-journey')}>
               <Text style={styles.smallButtonText}>Start</Text>
               <Ionicons name="arrow-forward" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
@@ -218,7 +262,7 @@ export default function DashboardHome() {
           <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={styles.actionTitle}>Nearby Safe Places</Text>
             <Text style={styles.actionDesc}>Find help near you</Text>
-            <TouchableOpacity style={styles.smallButton}>
+            <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/dashboard/location')}>
               <Text style={styles.smallButtonText}>Find</Text>
               <Ionicons name="location-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
@@ -230,24 +274,16 @@ export default function DashboardHome() {
 
         {/* Trusted Guardians */}
         <Text style={styles.sectionTitle}>Trusted Guardians</Text>
-
         <View style={styles.guardianCard}>
-            <Image 
-              source={{ uri: 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' }} 
-              style={styles.avatar} 
-            />
+            <Image source={{ uri: 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' }} style={styles.avatar} />
             <View style={{flex: 1, marginLeft: 15}}>
                 <Text style={styles.guardianTitle}>Add / Manage Guardians</Text>
                 <Text style={styles.guardianDesc}>Alerts are sent only to your trusted contacts</Text>
             </View>
-            <TouchableOpacity 
-              style={styles.manageButton}
-              onPress={() => router.push('/guardians/list')}
-            >
+            <TouchableOpacity style={styles.manageButton} onPress={() => router.push('/guardians/list')}>
                 <Text style={styles.manageButtonText}>Manage</Text>
             </TouchableOpacity>
         </View>
-        
         <View style={{height: 20}} />
       </ScrollView>
     </SafeAreaView>
@@ -262,15 +298,23 @@ const styles = StyleSheet.create({
   dashboardLabel: { fontSize: 14, fontWeight: '600', color: '#6A5ACD', letterSpacing: 0.5, textTransform: 'uppercase' },
   logoutButton: { padding: 5 },
   welcomeText: { fontSize: 28, fontWeight: 'bold', color: '#1A1B4B' },
+  
   sosCard: { height: 160, borderRadius: 20, padding: 25, justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end', marginBottom: 25, shadowColor: '#6A5ACD', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 5 },
   sosTitle: { fontSize: 32, fontWeight: 'bold', color: '#FFF' },
   sosSubtitle: { fontSize: 14, color: '#E0E0E0', marginTop: 5 },
+  miniTime: { fontSize: 10, color: '#E0E0E0', marginTop: 8 },
   sosButton: { backgroundColor: '#F0F0F0', paddingHorizontal: 25, paddingVertical: 10, borderRadius: 20 },
   sosButtonText: { color: '#1A1B4B', fontWeight: 'bold' },
+  
+  // Location Card Styles
   locationCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, flexDirection: 'row', marginBottom: 25, elevation: 2 },
+  statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },
-  cardDesc: { fontSize: 13, color: '#7A7A7A', marginVertical: 8, lineHeight: 18 },
+  cardDesc: { fontSize: 13, color: '#7A7A7A', marginTop: 5, marginBottom: 5, lineHeight: 18 },
+  updateText: { fontSize: 12, color: '#6A5ACD', marginBottom: 10, fontWeight: '600' },
+  switchLabel: { fontSize: 14, fontWeight: '500', color: '#1A1B4B', marginLeft: 8 },
   locationIconContainer: { justifyContent: 'center', alignItems: 'center', width: 80 },
+  
   smallButton: { flexDirection: 'row', backgroundColor: '#F3F0FA', alignSelf: 'flex-start', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, alignItems: 'center', marginTop: 5 },
   smallButtonText: { fontSize: 13, fontWeight: '600', color: '#1A1B4B' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 15, marginTop: 10 },

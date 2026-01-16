@@ -4,7 +4,9 @@ import sendEmail from '../utils/sendEmail.js';
 
 const router = express.Router();
 
-// 4. Add Guardian
+/**
+ * 1. Add Guardian
+ */
 router.post('/add', async (req, res) => {
   try {
     const { userEmail, name, phone, relationship, guardianEmail } = req.body;
@@ -35,7 +37,9 @@ router.post('/add', async (req, res) => {
   }
 });
 
-// 6. Get All Guardians
+/**
+ * 2. Get All Guardians for a specific User
+ */
 router.post('/all', async (req, res) => {
   try {
     const { userEmail } = req.body;
@@ -47,7 +51,9 @@ router.post('/all', async (req, res) => {
   }
 });
 
-// 7. Update Guardian
+/**
+ * 3. Update Guardian Details
+ */
 router.put('/update', async (req, res) => {
   try {
     const { userEmail, guardianId, name, phone, relationship, email } = req.body;
@@ -69,7 +75,9 @@ router.put('/update', async (req, res) => {
   }
 });
 
-// 8. Delete Guardian
+/**
+ * 4. Delete a Guardian
+ */
 router.delete('/delete', async (req, res) => {
   try {
     const { userEmail, guardianId } = req.body;
@@ -83,21 +91,15 @@ router.delete('/delete', async (req, res) => {
   }
 });
 
-// Get All Users for Guardian
+/**
+ * 5. Get All Users a specific Guardian is protecting
+ */
 router.post('/all-users', async (req, res) => {
   try {
     const { guardianEmail } = req.body;
-
-    if (!guardianEmail) {
-      return res.status(400).json({ message: 'Guardian email is required.' });
-    }
+    if (!guardianEmail) return res.status(400).json({ message: 'Guardian email is required.' });
 
     const users = await User.find({ "guardians.email": guardianEmail });
-
-    if (!users || users.length === 0) {
-      return res.status(404).json({ message: 'No users found for this guardian.' });
-    }
-
     const usersData = users.map(user => ({
       _id: user._id,
       name: user.name,
@@ -106,19 +108,52 @@ router.post('/all-users', async (req, res) => {
       profileImage: user.profileImage,
       sosActive: user.sosActive,
       lastSosTime: user.lastSosTime,
-      currentLocation: user.currentLocation
+      currentLocation: user.currentLocation,
+      // Fixed: Added Optional Chaining (?.) to prevent crashes if currentLocation is null
+      lastUpdated: user.currentLocation?.timestamp || user.lastSosTime || user.createdAt
     }));
 
-    res.status(200).json({ 
-      message: 'Users retrieved successfully',
-      users: usersData,
-      totalUsers: usersData.length
-    });
-
+    res.status(200).json({ users: usersData });
   } catch (error) {
-    console.error("Get Guardian Users Error:", error);
+    console.error("Get All Users Error:", error);
     res.status(500).json({ message: 'Server Error' });
   }
+});
+
+/**
+ * 6. SOS Status and Live Location (Polled by Guardian)
+ * Updated to return 'lastSosTime' explicitly for the Red Card
+ */
+router.post('/sos-status', async (req, res) => {
+    try {
+      const { protectingEmail } = req.body;
+      if (!protectingEmail) return res.status(400).json({ message: 'Email required' });
+
+      const user = await User.findOne({ email: protectingEmail });
+      
+      if (!user) return res.status(404).json({ message: 'User not found' });
+  
+      // Calculate a safe "Last Updated" time for the general UI
+      const safeTimestamp = user.currentLocation?.timestamp || user.lastSosTime || user.createdAt || new Date();
+
+      res.status(200).json({ 
+          isSosActive: user.sosActive,
+          
+          // CRITICAL: This is the specific time the SOS button was pressed
+          lastSosTime: user.lastSosTime, 
+          
+          location: user.currentLocation || { latitude: 0, longitude: 0 }, 
+          
+          // This is the time the location changed (for the list view)
+          lastUpdated: safeTimestamp,
+          
+          profileImage: user.profileImage,
+          journey: user.journey || { isActive: false } 
+      });
+    } catch (error) {
+      console.error("SOS Status Fetch Error:", error);
+      res.status(500).json({ message: 'Server Error' });
+    }
 });
 
 export default router;

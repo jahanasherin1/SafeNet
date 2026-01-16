@@ -3,28 +3,29 @@ import express from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import path from 'path';
 
 // Import Routes
 import authRoutes from './routes/auth.js';
 import guardianRoutes from './routes/guardians.js';
 import sosRoutes from './routes/sos.js';
 import userRoutes from './routes/users.js';
+import journeyRoutes from './routes/journey.js'; // <--- ADDED THIS
 
 dotenv.config();
-
 const app = express();
 
-// Middleware
-app.use(cors()); // Allows your app to communicate with the frontend
-app.use(express.json()); // Essential to parse JSON bodies in POST requests
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
-// Use Routes
+// --- ROUTES MOUNTING ---
 app.use('/api/auth', authRoutes);
-app.use('/api/guardians', guardianRoutes);
+app.use('/api/guardian', guardianRoutes);
 app.use('/api/sos', sosRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/journey', journeyRoutes); // <--- ADDED THIS (Fixes 404)
 
-// Root Route for testing
 app.get('/', (req, res) => {
   res.send('SafeNet API is running...');
 });
@@ -39,10 +40,9 @@ const connectDB = async () => {
   }
 };
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });

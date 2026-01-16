@@ -14,20 +14,20 @@ export default function GuardianHomeScreen() {
   const [protectingUser, setProtectingUser] = useState('User');
   const [protectingEmail, setProtectingEmail] = useState('');
   
-  // State for all users
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   
-  // State for User Image (current selected user)
-  const [userImage, setUserImage] = useState<string | null>(null);
+  const [userImage, setUserImage] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState('');
 
-  // SOS & Location State
+  // SOS & Journey State
   const [isSosActive, setIsSosActive] = useState(false);
-  const [lastAlertTime, setLastAlertTime] = useState('No recent alerts');
+  const [lastAlertTime, setLastAlertTime] = useState('No recent alerts'); // Specific to SOS
+  const [lastLocationTime, setLastLocationTime] = useState('Waiting for updates...'); // Specific to Location
   const [locationStatus, setLocationStatus] = useState('Waiting for updates...');
+  const [journeyData, setJourneyData] = useState(null);
 
-  // 1. Initial Data Load
+  // 1. Initial Load from Storage
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
@@ -40,7 +40,6 @@ export default function GuardianHomeScreen() {
             if (parsed.protecting) setProtectingUser(parsed.protecting);
             if (parsed.protectingEmail) setProtectingEmail(parsed.protectingEmail);
             
-            // Fetch all users for this guardian
             if (parsed.guardianEmail) {
               fetchAllUsers(parsed.guardianEmail);
             }
@@ -53,8 +52,8 @@ export default function GuardianHomeScreen() {
     }, [])
   );
 
-  // 2. Fetch All Users for Guardian
-  const fetchAllUsers = async (email: string) => {
+  // 2. Fetch User List
+  const fetchAllUsers = async (email) => {
     setLoadingUsers(true);
     try {
       const response = await api.post('/guardian/all-users', {
@@ -63,7 +62,6 @@ export default function GuardianHomeScreen() {
 
       if (response.status === 200) {
         setAllUsers(response.data.users);
-        // Set first user as selected by default
         if (response.data.users.length > 0) {
           setSelectedUserId(response.data.users[0]._id);
           setProtectingUser(response.data.users[0].name);
@@ -77,66 +75,88 @@ export default function GuardianHomeScreen() {
     }
   };
 
-  // 3. POLLING for current selected user
+  // 3. Real-time Polling
   useEffect(() => {
     if (!protectingEmail) return;
 
-    const checkStatus = async () => {
+    const checkAllStatuses = async () => {
       try {
-        const response = await api.post('/guardian/sos-status', {
-          protectingEmail: protectingEmail
-        });
+        const results = await Promise.all(
+          allUsers.map(async (user) => {
+            const res = await api.post('/guardian/sos-status', {
+              protectingEmail: user.email
+            });
+            return { email: user.email, data: res.data };
+          })
+        );
 
-        if (response.status === 200) {
-          const { isSosActive, lastSosTime, location, profileImage } = response.data;
+        setAllUsers((prevUsers) =>
+          prevUsers.map((u) => {
+            const update = results.find((r) => r.email === u.email);
+            if (update) {
+              return {
+                ...u,
+                sosActive: update.data.isSosActive,
+                lastUpdated: update.data.lastUpdated,
+                currentLocation: update.data.location,
+                journey: update.data.journey
+              };
+            }
+            return u;
+          })
+        );
+
+        const currentBatch = results.find(r => r.email === protectingEmail);
+        if (currentBatch) {
+          const { isSosActive, lastUpdated, lastSosTime, location, profileImage, journey } = currentBatch.data;
           
           setIsSosActive(isSosActive);
+          setJourneyData(journey);
 
-          // IMAGE LOGIC
           if (profileImage) {
-            const rootUrl = api.defaults.baseURL?.replace('/api', '');
-            const fullImageUrl = `${rootUrl}/${profileImage}`;
-            setUserImage(fullImageUrl);
+            setUserImage(`${api.defaults.baseURL?.replace('/api', '')}/${profileImage}`);
           } else {
             setUserImage(null);
           }
 
-          // TIME LOGIC
-          if (lastSosTime) {
-            const time = new Date(lastSosTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            setLastAlertTime(time);
+          // A. Update SOS Time (Red Card)
+          if (isSosActive && lastSosTime) {
+            setLastAlertTime(new Date(lastSosTime).toLocaleString([], { 
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+            }));
+          } else {
+            setLastAlertTime("No recent alerts");
           }
 
-          // LOCATION LOGIC
-          if (isSosActive && location && location.latitude !== 0) {
+          // B. Update Location Time (Location Card)
+          if (lastUpdated) {
+            setLastLocationTime(new Date(lastUpdated).toLocaleString([], { 
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+            }));
+          }
+
+          if (location && location.latitude !== 0) {
             setLocationStatus(`Lat: ${location.latitude.toFixed(4)}, Lng: ${location.longitude.toFixed(4)}`);
-          } else if (isSosActive) {
-            setLocationStatus("Fetching emergency coordinates...");
           } else {
-            setLocationStatus("User is safe. Location hidden.");
+            setLocationStatus("Waiting for location...");
           }
         }
       } catch (error) {
-        // Silent error for polling
+        console.error("Polling error:", error);
       }
     };
 
-    checkStatus();
-    const intervalId = setInterval(checkStatus, 5000); 
-
+    checkAllStatuses();
+    const intervalId = setInterval(checkAllStatuses, 5000); 
     return () => clearInterval(intervalId); 
-  }, [protectingEmail]);
+  }, [allUsers.length, protectingEmail]);
 
-  const handleSelectUser = (user: any) => {
+  const handleSelectUser = (user) => {
     setSelectedUserId(user._id);
     setProtectingUser(user.name);
     setProtectingEmail(user.email);
-    
-    // Persist selected user to AsyncStorage so location screen can access it
     AsyncStorage.setItem('selectedUser', JSON.stringify({
-      userId: user._id,
-      userName: user.name,
-      userEmail: user.email
+      userId: user._id, userName: user.name, userEmail: user.email
     })).catch(err => console.error('Error saving selected user:', err));
   };
 
@@ -144,32 +164,19 @@ export default function GuardianHomeScreen() {
     try {
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('guardianSessionToken');
       router.replace('/main');
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch (error) { console.error("Logout error:", error); }
   };
 
-  const gradientColors = isSosActive 
-    ? ['#FF4B4B', '#FF0000'] 
-    : ['#9D80CB', '#5B4D85'];
+  const gradientColors = isSosActive ? ['#FF4B4B', '#FF0000'] : ['#9D80CB', '#5B4D85'];
 
-  // Render individual user card
-  const renderUserCard = ({ item }: { item: any }) => (
+  const renderUserCard = ({ item }) => (
     <TouchableOpacity
-      style={[
-        styles.userCard,
-        selectedUserId === item._id && styles.userCardActive
-      ]}
+      style={[styles.userCard, selectedUserId === item._id && styles.userCardActive]}
       onPress={() => handleSelectUser(item)}
     >
       <Image
-        source={{
-          uri: item.profileImage 
-            ? `${api.defaults.baseURL?.replace('/api', '')}/${item.profileImage}`
-            : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg'
-        }}
+        source={{ uri: item.profileImage ? `${api.defaults.baseURL?.replace('/api', '')}/${item.profileImage}` : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }}
         style={styles.userCardImage}
       />
       <View style={styles.userCardContent}>
@@ -177,10 +184,11 @@ export default function GuardianHomeScreen() {
         <Text style={[styles.userCardStatus, { color: item.sosActive ? '#FF4B4B' : '#00C851' }]}>
           {item.sosActive ? '🚨 Emergency' : '✓ Safe'}
         </Text>
+        <Text style={{fontSize: 10, color: '#999', marginTop: 2}}>
+          Updated: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '...'}
+        </Text>
       </View>
-      {selectedUserId === item._id && (
-        <Ionicons name="checkmark-circle" size={24} color="#6A5ACD" />
-      )}
+      {selectedUserId === item._id && <Ionicons name="checkmark-circle" size={24} color="#6A5ACD" />}
     </TouchableOpacity>
   );
 
@@ -199,75 +207,38 @@ export default function GuardianHomeScreen() {
           <Text style={styles.welcomeText}>Welcome, {guardianName}</Text>
         </View>
 
-        {/* Users List Section */}
+        {/* User List */}
         {loadingUsers ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#6A5ACD" />
-            <Text style={styles.loadingText}>Loading protected users...</Text>
-          </View>
+          <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#6A5ACD" /></View>
         ) : allUsers.length > 0 ? (
           <View style={styles.usersListSection}>
             <Text style={styles.usersListTitle}>Protected Users ({allUsers.length})</Text>
-            <FlatList
-              data={allUsers}
-              renderItem={renderUserCard}
-              keyExtractor={(item) => item._id}
-              scrollEnabled={false}
-              style={styles.usersList}
-            />
+            <FlatList data={allUsers} renderItem={renderUserCard} keyExtractor={(item) => item._id} scrollEnabled={false} style={styles.usersList} />
           </View>
-        ) : (
-          <View style={styles.noUsersContainer}>
-            <Ionicons name="people-outline" size={50} color="#CCC" />
-            <Text style={styles.noUsersText}>No users registered with you yet</Text>
-          </View>
-        )}
+        ) : null}
 
         {/* SOS Card */}
-        <LinearGradient
-          colors={gradientColors as unknown as readonly [any, any, ...any[]]} 
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.sosCard}
-        >
+        <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sosCard}>
           <View style={styles.sosHeaderRow}>
-             <Text style={styles.urgentLabel}>
-                {isSosActive ? "⚠️ URGENT ALERT" : "Status: Normal"}
-             </Text>
+             <Text style={styles.urgentLabel}>{isSosActive ? "⚠️ URGENT ALERT" : "Status: Normal"}</Text>
              {isSosActive && <Ionicons name="warning" size={24} color="#FFF" />}
           </View>
-
-          <Text style={styles.sosTitle}>
-            {isSosActive 
-              ? "SOS ACTIVE - IMMEDIATE ACTION REQUIRED" 
-              : "User is Safe"}
+          <Text style={styles.sosTitle}>{isSosActive ? "SOS ACTIVE - IMMEDIATE ACTION REQUIRED" : "User is Safe"}</Text>
+          <Text style={styles.sosTime}>
+            {isSosActive ? `Last update: ${lastAlertTime}` : "No recent alerts"}
           </Text>
-          <Text style={styles.sosTime}>Last update: {lastAlertTime}</Text>
         </LinearGradient>
 
-        {/* User Profile Section */}
+        {/* User Summary Row */}
         <View style={styles.sectionContainer}>
           <View style={styles.userRow}>
             <View style={{flex: 1}}>
                 <Text style={styles.subHeader}>Live updates from the user's device</Text>
                 <Text style={styles.userName}>{protectingUser}</Text>
-                <Text style={[styles.statusText, { color: isSosActive ? '#FF4B4B' : '#00C851' }]}>
-                    {isSosActive ? "Emergency Mode" : "Safe"}
-                </Text>
-                
-                <TouchableOpacity style={[styles.callButton, isSosActive && {backgroundColor: '#FF4B4B'}]}>
-                    <Text style={styles.callButtonText}>Call User</Text>
-                </TouchableOpacity>
+                <Text style={[styles.statusText, { color: isSosActive ? '#FF4B4B' : '#00C851' }]}>{isSosActive ? "Emergency Mode" : "Safe"}</Text>
+                <TouchableOpacity style={[styles.callButton, isSosActive && {backgroundColor: '#FF4B4B'}]}><Text style={styles.callButtonText}>Call User</Text></TouchableOpacity>
             </View>
-            
-            {/* DYNAMIC IMAGE COMPONENT */}
-            <Image 
-                source={{ 
-                  uri: userImage || 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' 
-                }} 
-                style={styles.userImage} 
-                key={userImage}
-            />
+            <Image source={{ uri: userImage || 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }} style={styles.userImage} key={userImage} />
           </View>
         </View>
 
@@ -275,26 +246,17 @@ export default function GuardianHomeScreen() {
         <Text style={styles.sectionTitle}>Location Overview</Text>
         <View style={styles.cardContainer}>
             <View style={{flex: 1, paddingRight: 10}}>
-                <Text style={styles.locationTitle} numberOfLines={1}>
-                    {locationStatus}
-                </Text>
-                <Text style={styles.timeText}>Updated: {lastAlertTime}</Text>
+                <Text style={styles.locationTitle} numberOfLines={1}>{locationStatus}</Text>
                 
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push('/guardian-dashboard/location')}
-                >
+                {/* UPDATED: Now shows real tracking time from backend */}
+                <Text style={styles.timeText}>Updated: {lastLocationTime}</Text>
+                
+                <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/guardian-dashboard/location')}>
                     <Text style={styles.actionButtonText}>Track Live Location</Text>
-                    <Ionicons name="location-outline" size={14} color="#1A1B4B" />
+                    <Ionicons name="location-outline" size={14} color="#1A1B4B" style={{marginLeft: 5}} />
                 </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.mapContainer}
-              onPress={() => router.push('/guardian-dashboard/location')}
-            >
-                <Ionicons name="map" size={50} color="#DDD" />
-            </TouchableOpacity>
+            <TouchableOpacity style={styles.mapContainer} onPress={() => router.push('/guardian-dashboard/location')}><Ionicons name="map" size={50} color="#DDD" /></TouchableOpacity>
         </View>
 
         {/* Zone Alert Overview */}
@@ -303,26 +265,46 @@ export default function GuardianHomeScreen() {
             <View style={{flex: 1, paddingRight: 10}}>
                 <Text style={styles.locationTitle}>Zone Activity: Low Risk</Text>
                 <Text style={styles.timeText}>Last activity: Just now</Text>
+                <TouchableOpacity style={styles.actionButton}><Text style={styles.actionButtonText}>View Zone Alerts</Text><Ionicons name="alert-circle-outline" size={14} color="#1A1B4B" style={{marginLeft: 5}} /></TouchableOpacity>
+            </View>
+            <View style={[styles.mapContainer, { backgroundColor: '#E0DDCA' }]}><Ionicons name="navigate" size={50} color="#AAA" /></View>
+        </View>
+
+        {/* Journey Monitoring Section */}
+        <Text style={styles.sectionTitle}>Journey Monitoring</Text>
+        <View style={styles.cardContainer}>
+            <View style={{flex: 1, paddingRight: 10}}>
+                <Text style={styles.locationTitle}>
+                    Destination: {journeyData?.isActive ? journeyData.destination : "No destination set"}
+                </Text>
+                <Text style={styles.timeText}>
+                    {journeyData?.isActive 
+                        ? `ETA: ${new Date(journeyData.eta).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Status: En route` 
+                        : "No active journey"}
+                </Text>
                 
-                <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>View Zone Alerts</Text>
-                    <Ionicons name="alert-circle-outline" size={14} color="#1A1B4B" />
+                <TouchableOpacity 
+                    style={[styles.actionButton, !journeyData?.isActive && { opacity: 0.5 }]}
+                    disabled={!journeyData?.isActive}
+                    onPress={() => router.push({
+                        pathname: '/guardian-dashboard/monitor-journey',
+                        params: { userEmail: protectingEmail }
+                    })}
+                >
+                    <Text style={styles.actionButtonText}>View Journey Details</Text>
+                    <Ionicons name="navigate-outline" size={14} color="#1A1B4B" style={{marginLeft: 5}} />
                 </TouchableOpacity>
             </View>
-            <View style={[styles.mapContainer, { backgroundColor: '#E0DDCA' }]}>
-                <Ionicons name="navigate" size={50} color="#AAA" />
+            <View style={[styles.mapContainer, { backgroundColor: '#D1C4E9' }]}>
+                <Ionicons name="bicycle" size={50} color="#957DAD" />
             </View>
         </View>
 
-        {/* Emergency Button */}
         <TouchableOpacity style={[styles.emergencyButton, isSosActive && { borderColor: 'red', borderWidth: 1 }]}>
-            <Text style={[styles.emergencyButtonText, isSosActive && { color: 'red' }]}>
-                Contact Emergency Services
-            </Text>
+            <Text style={[styles.emergencyButtonText, isSosActive && { color: 'red' }]}>Contact Emergency Services</Text>
         </TouchableOpacity>
-
+        
         <View style={{height: 20}} />
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -336,148 +318,36 @@ const styles = StyleSheet.create({
   dashboardLabel: { fontSize: 14, fontWeight: '600', color: '#6A5ACD', letterSpacing: 0.5, textTransform: 'uppercase' },
   logoutButton: { padding: 5 },
   welcomeText: { fontSize: 28, fontWeight: 'bold', color: '#1A1B4B' },
-  
-  // Users List Styles
   usersListSection: { marginBottom: 25 },
   usersListTitle: { fontSize: 16, fontWeight: '600', color: '#1A1B4B', marginBottom: 12 },
   usersList: { marginBottom: 10 },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: '#EEE',
-  },
-  userCardActive: {
-    borderColor: '#6A5ACD',
-    backgroundColor: '#FAF7FC',
-  },
-  userCardImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
-    backgroundColor: '#DDD',
-  },
-  userCardContent: {
-    flex: 1,
-  },
-  userCardName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1B4B',
-  },
-  userCardStatus: {
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 30,
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#6A5ACD',
-    fontSize: 14,
-  },
-
-  noUsersContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    marginBottom: 20,
-  },
-  noUsersText: {
-    marginTop: 15,
-    color: '#999',
-    fontSize: 15,
-  },
-  
-  sosCard: {
-    padding: 25,
-    borderRadius: 20,
-    marginBottom: 15,
-    height: 180,
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
+  userCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 10, borderWidth: 2, borderColor: '#EEE' },
+  userCardActive: { borderColor: '#6A5ACD', backgroundColor: '#FAF7FC' },
+  userCardImage: { width: 50, height: 50, borderRadius: 25, marginRight: 12, backgroundColor: '#DDD' },
+  userCardContent: { flex: 1 },
+  userCardName: { fontSize: 15, fontWeight: '600', color: '#1A1B4B' },
+  userCardStatus: { fontSize: 12, marginTop: 4, fontWeight: '500' },
+  loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 30 },
+  sosCard: { padding: 25, borderRadius: 20, marginBottom: 15, height: 180, justifyContent: 'center', elevation: 5 },
   sosHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   urgentLabel: { color: '#E0E0E0', fontSize: 14, fontWeight: 'bold' },
   sosTitle: { color: '#FFF', fontSize: 24, fontWeight: 'bold', lineHeight: 32, marginBottom: 10 },
   sosTime: { color: '#EEE', fontSize: 14 },
-
   sectionContainer: { marginBottom: 25 },
   subHeader: { color: '#6A5ACD', fontSize: 14, marginBottom: 5 },
   userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   userName: { fontSize: 22, fontWeight: 'bold', color: '#1A1B4B' },
   statusText: { fontSize: 16, marginBottom: 15, fontWeight: '600' },
-  userImage: { 
-    width: 100, 
-    height: 100, 
-    borderRadius: 12, 
-    backgroundColor: '#DDD',
-    borderWidth: 2,
-    borderColor: '#FFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4, 
-  },
-  
-  callButton: {
-    backgroundColor: '#9D80CB',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
+  userImage: { width: 100, height: 100, borderRadius: 12, backgroundColor: '#DDD', borderWidth: 2, borderColor: '#FFF' },
+  callButton: { backgroundColor: '#9D80CB', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12, alignSelf: 'flex-start' },
   callButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
-
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 15 },
-  cardContainer: {
-    backgroundColor: '#FFF', 
-    marginBottom: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 15, 
-    padding: 10,     
-    elevation: 1,    
-  },
+  cardContainer: { backgroundColor: '#FFF', marginBottom: 25, flexDirection: 'row', alignItems: 'center', borderRadius: 15, padding: 15, elevation: 1 },
   locationTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 5 },
   timeText: { fontSize: 13, color: '#666', marginBottom: 15 },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8E6F0',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    alignSelf: 'flex-start'
-  },
-  actionButtonText: { fontSize: 13, fontWeight: '600', color: '#1A1B4B', marginRight: 5 },
-  mapContainer: {
-    width: 100,
-    height: 80,
-    borderRadius: 12,
-    backgroundColor: '#D1C4E9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emergencyButton: {
-    backgroundColor: '#E8E6F0',
-    paddingVertical: 18,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  emergencyButtonText: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },
-});
+  actionButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F0FA', alignSelf: 'flex-start', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, alignItems: 'center', marginTop: 5 },
+  actionButtonText: { fontSize: 13, fontWeight: '600', color: '#1A1B4B' },
+  mapContainer: { width: 100, height: 80, borderRadius: 12, backgroundColor: '#D1C4E9', justifyContent: 'center', alignItems: 'center' },
+  emergencyButton: { backgroundColor: '#E8E6F0', paddingVertical: 18, borderRadius: 15, alignItems: 'center', marginTop: 10, borderWidth: 1, borderColor: '#FF4B4B' },
+  emergencyButtonText: { fontSize: 16, fontWeight: 'bold', color: '#FF4B4B' },
+}); 

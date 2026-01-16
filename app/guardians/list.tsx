@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -23,7 +23,8 @@ export default function GuardianListScreen() {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        const response = await api.post('/guardians/all', {
+        // FIX: Route path updated to match backend
+        const response = await api.post('/guardian/all', {
           userEmail: user.email
         });
         if (response.status === 200) {
@@ -47,15 +48,12 @@ export default function GuardianListScreen() {
     return initials;
   };
 
-  const renderGuardianItem = ({ item, index }: { item: any, index: number }) => (
+  const renderGuardianItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       
-      {/* --- UPDATED PROFILE SECTION --- */}
-      {/* Replaced random avatar with Initials Circle */}
       <View style={styles.initialsContainer}>
         <Text style={styles.initialsText}>{getInitials(item.name || "Guardian")}</Text>
       </View>
-      {/* ------------------------------- */}
       
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{item.name}</Text>
@@ -139,19 +137,18 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 15,
     padding: 10,
-    backgroundColor: '#FFFFFF', // Added slight white background to card
-    elevation: 1, // Slight shadow
+    backgroundColor: '#FFFFFF', 
+    elevation: 1, 
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 }
   },
   
-  // --- NEW STYLES FOR INITIALS ---
   initialsContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#FFEAD1', // Light orange/peach background
+    backgroundColor: '#FFEAD1', 
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -160,9 +157,8 @@ const styles = StyleSheet.create({
   initialsText: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#E65100', // Darker orange text
+    color: '#E65100', 
   },
-  // -------------------------------
 
   infoContainer: { flex: 1, marginLeft: 15 },
   name: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },

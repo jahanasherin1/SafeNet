@@ -5,7 +5,7 @@ const GuardianOtpSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
   email: { type: String, required: true },
   otp: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now, expires: 600 } // OTP expires in 10 minutes
+  createdAt: { type: Date, default: Date.now, expires: 600 } 
 });
 
 export const GuardianOtp = mongoose.model('GuardianOtp', GuardianOtpSchema);
@@ -14,7 +14,7 @@ export const GuardianOtp = mongoose.model('GuardianOtp', GuardianOtpSchema);
 const PasswordResetSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   resetCode: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now, expires: 900 } // Reset code expires in 15 minutes
+  createdAt: { type: Date, default: Date.now, expires: 900 }
 });
 
 export const PasswordReset = mongoose.model('PasswordReset', PasswordResetSchema);
@@ -27,10 +27,16 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   
-  // Profile Image Path
+  // Journey Object
+  journey: {
+    isActive: { type: Boolean, default: false },
+    destination: { type: String, default: '' },
+    eta: { type: Date, default: null },
+    startTime: { type: Date, default: null }
+  },
+  
   profileImage: { type: String, default: '' },
 
-  // Guardian List
   guardians: [
     {
       name: String,
@@ -41,11 +47,9 @@ const UserSchema = new mongoose.Schema({
     }
   ],
 
-  // SOS State
   sosActive: { type: Boolean, default: false },
   lastSosTime: { type: Date, default: null },
   
-  // Location Data
   currentLocation: {
     latitude: { type: Number, default: 0 },
     longitude: { type: Number, default: 0 },

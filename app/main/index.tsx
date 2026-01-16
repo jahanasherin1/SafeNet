@@ -1,14 +1,23 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSession } from '../../services/SessionContext';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { isLoggedIn, isLoading } = useSession();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      router.replace('/dashboard/home');
+    }
+  }, [isLoggedIn, isLoading]);
 
   const handleRoleSelect = (role: 'user' | 'guardian') => {
     if (role === 'user') {

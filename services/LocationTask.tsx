@@ -1,42 +1,43 @@
-import * as TaskManager from 'expo-task-manager';
-import * as Location from 'expo-location';
+// --- services/LocationTask.tsx ---
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as TaskManager from 'expo-task-manager';
 import api from './api';
 
 export const LOCATION_TASK_NAME = 'background-location-task';
 
-// Define the Background Task
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
   if (error) {
-    console.error("Background Location Error:", error);
+    console.error("❌ Background Location Error:", error);
     return;
   }
 
   if (data) {
     const { locations } = data;
-    const location = locations[0]; // Get the latest location object
+    const location = locations[0]; // Get the latest location
 
     if (location) {
       try {
-        // 1. We cannot use React State here, so we get User from Storage
+        // 1. Get User
         const userData = await AsyncStorage.getItem('user');
         if (!userData) return;
-        
         const user = JSON.parse(userData);
 
-        // 2. Send to Backend
-        // console.log(`📍 Background Update: ${location.coords.latitude}, ${location.coords.longitude}`);
-        
+        // 2. Send to Backend with correct format
         await api.post('/user/update-location', {
-          userEmail: user.email,
-          location: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude
-          }
+          email: user.email,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
         });
 
+        // 3. Save Timestamp Locally for UI "Last Updated"
+        const now = new Date().toISOString();
+        await AsyncStorage.setItem('lastLocationTime', now);
+        
+        console.log(`📍 Background Location Updated: ${now}`);
+
       } catch (err) {
-        // Silent fail in background to save battery/logs
+        console.error("Background Task API Fail:", err);
       }
     }
   }

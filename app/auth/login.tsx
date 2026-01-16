@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native'; // Added Platform
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import api from '../../services/api'; 
+import api from '../../services/api';
+import { useSession } from '../../services/SessionContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useSession();
   
   // State
   const [email, setEmail] = useState('');
@@ -67,14 +68,12 @@ export default function LoginScreen() {
         });
 
         if (response.status === 200) {
-          // 1. Save User Data locally
-          const userData = JSON.stringify(response.data.user);
-          await AsyncStorage.setItem('user', userData);
-          await AsyncStorage.setItem('token', response.data.token || ''); 
+          // Use session context to save user data
+          await login(response.data.user, response.data.token || '');
 
           console.log("Login Successful");
           
-          // 2. Navigate to Dashboard (No alert needed for login success, just go)
+          // Navigate to Dashboard
           router.replace('/dashboard/home');
         }
       } catch (error: any) {

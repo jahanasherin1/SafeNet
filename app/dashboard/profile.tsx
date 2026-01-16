@@ -1,19 +1,21 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Switch, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router'; // 1. Import useFocusEffect
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import api from '../../services/api'; // Import API to get Base URL for images
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../../services/api';
+import { useSession } from '../../services/SessionContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { logout, user } = useSession();
   
   // State for user data
   const [userName, setUserName] = useState('User');
   const [userPhone, setUserPhone] = useState('');
-  const [profileImage, setProfileImage] = useState<string | null>(null); // State for Image
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   // State for toggles
   const [isBatteryMode, setIsBatteryMode] = useState(false);
@@ -24,18 +26,25 @@ export default function ProfileScreen() {
     useCallback(() => {
       const loadUser = async () => {
         try {
-          const storedUser = await AsyncStorage.getItem('user');
-          if (storedUser) {
-            const user = JSON.parse(storedUser);
-            
+          // Use session context if available
+          if (user) {
             setUserName(user.name || 'User');
             setUserPhone(user.phone || '');
-
-            // Handle Profile Image URL
             if (user.profileImage) {
-              // Construct full URL if it's a relative path from backend
               const baseUrl = api.defaults.baseURL?.replace('/api', '');
               setProfileImage(`${baseUrl}/${user.profileImage}`);
+            }
+          } else {
+            // Fallback to AsyncStorage
+            const storedUser = await AsyncStorage.getItem('user');
+            if (storedUser) {
+              const parsedUser = JSON.parse(storedUser);
+              setUserName(parsedUser.name || 'User');
+              setUserPhone(parsedUser.phone || '');
+              if (parsedUser.profileImage) {
+                const baseUrl = api.defaults.baseURL?.replace('/api', '');
+                setProfileImage(`${baseUrl}/${parsedUser.profileImage}`);
+              }
             }
           }
         } catch (error) {
@@ -43,12 +52,16 @@ export default function ProfileScreen() {
         }
       };
       loadUser();
-    }, [])
+    }, [user])
   );
 
   const handleLogout = async () => {
-    await AsyncStorage.clear();
-    router.replace('/auth/login');
+    try {
+      await logout();
+      router.replace('/main');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

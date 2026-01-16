@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import api from '../../services/api';
@@ -65,8 +65,8 @@ export default function EditGuardianScreen() {
       if (!userData) return;
       const user = JSON.parse(userData);
 
-      // 2. API Call
-      const response = await api.put('/guardians/update', {
+      // --- FIX: Changed path to SINGULAR '/guardian/update' ---
+      const response = await api.put('/guardian/update', {
         userEmail: user.email,
         guardianId: params._id,
         name,
@@ -76,10 +76,10 @@ export default function EditGuardianScreen() {
       });
 
       if (response.status === 200) {
-        // 3. Success -> Navigate Back
         showAlert("Success", "Guardian details updated", () => router.back());
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Update Error:", error.response?.data || error.message);
       showAlert("Error", "Failed to update guardian");
     } finally {
       setLoading(false);
@@ -93,12 +93,14 @@ export default function EditGuardianScreen() {
         if (!userData) return;
         const user = JSON.parse(userData);
 
-        await api.delete('/guardians/delete', {
+        // --- FIX: Changed path to SINGULAR '/guardian/delete' ---
+        await api.delete('/guardian/delete', {
             data: { userEmail: user.email, guardianId: params._id }
         });
         
         router.back(); 
       } catch (error) {
+        console.error("Delete Error:", error);
         showAlert("Error", "Could not delete guardian");
       }
     };
@@ -130,14 +132,12 @@ export default function EditGuardianScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* --- UPDATED PROFILE SECTION (Initials) --- */}
+        {/* --- PROFILE SECTION (Initials) --- */}
         <View style={styles.avatarSection}>
           <View style={styles.initialsContainer}>
             <Text style={styles.initialsText}>{getInitials(name)}</Text>
           </View>
-          {/* Removed "Change Photo" text since we use initials now */}
         </View>
-        {/* ------------------------------------------ */}
 
         {/* Form */}
         <View style={styles.form}>
@@ -194,12 +194,11 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24 },
   avatarSection: { alignItems: 'center', marginBottom: 30 },
   
-  // Styles for Initials Circle
   initialsContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#FFEAD1', // Light orange to match list
+    backgroundColor: '#FFEAD1', 
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
   initialsText: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#E65100', // Dark orange text
+    color: '#E65100', 
   },
 
   form: { flex: 1 },

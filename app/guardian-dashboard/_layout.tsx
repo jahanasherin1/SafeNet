@@ -20,6 +20,10 @@ export default function GuardianDashboardLayout() {
         name="location"
         options={{ title: 'Location' }}
       />
+      <Tabs.Screen
+        name="monitor-journey"
+        options={{ title: 'Monitor Journey',href:null, }}
+      />
     </Tabs>
   );
 }

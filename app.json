@@ -1,7 +1,9 @@
+// app.json
 {
   "expo": {
     "name": "SafeNet",
     "slug": "safenet",
+    "scheme": "safenet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,34 +13,30 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.safenet.app",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "SafeNet needs your location to find nearby safe places and share with guardians.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "SafeNet needs your background location to track your movement during emergencies.",
-        "NSLocationAlwaysUsageDescription": "SafeNet tracks your location in the background to ensure your safety.",
-        "UIBackgroundModes": [
-          "location",
-          "fetch"
-        ]
-      }
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.safenet.app",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE"
-      ]
+      ],
+      "package": "com.safenet.app"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "SafeNet needs your location in the background to alert guardians if you are in danger, even when the app is closed.",
+        "NSLocationWhenInUseUsageDescription": "SafeNet uses your location to show where you are to your guardians.",
+        "NSLocationAlwaysUsageDescription": "SafeNet needs your location to keep you safe."
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

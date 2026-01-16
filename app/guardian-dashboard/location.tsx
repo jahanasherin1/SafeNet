@@ -46,8 +46,6 @@ export default function GuardianLocationScreen() {
     longitudeDelta: 0.05,
   });
 
-  const [lastUpdated, setLastUpdated] = useState('Fetching...');
-
   // --- PAN RESPONDER ---
   const panResponder = useRef(
     PanResponder.create({
@@ -123,31 +121,46 @@ export default function GuardianLocationScreen() {
     } catch (error) {}
   };
 
-  // Poll locations
+  // --- POLLING LOGIC (UPDATED WITH DATE FORMATTING) ---
   useEffect(() => {
     if (allUsers.length === 0) return;
     const interval = setInterval(async () => {
-      const userLocations = await Promise.all(
-        allUsers.map(user => api.post('/guardian/sos-status', { protectingEmail: user.email }).catch(() => null))
-      );
-      setAllUsers(prev => prev.map((u, i) => {
-        const res = userLocations[i];
-        if(res?.status === 200) {
-           // Update timestamp if valid
-           const loc = res.data.location;
-           if(loc) {
-             const timeStr = new Date(loc.timestamp || res.data.lastSosTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-             setLastUpdated(timeStr);
-           }
-           return { ...u, ...res.data };
-        }
-        return u;
-      }));
+      try {
+        const results = await Promise.all(
+          allUsers.map(user => 
+            api.post('/guardian/sos-status', { protectingEmail: user.email })
+            .then(res => ({ email: user.email, res: res }))
+            .catch(() => null)
+          )
+        );
+
+        setAllUsers(prev => prev.map((u) => {
+          const match = results.find(r => r?.email === u.email);
+          if(match && match.res?.status === 200) {
+             const data = match.res.data;
+             const loc = data.location;
+             
+             // UPDATED: Added Date to the formatting options
+             const timeStr = new Date(loc?.timestamp || data.lastSosTime || new Date())
+                .toLocaleString([], { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+             return { ...u, ...data, individualLastUpdated: timeStr };
+          }
+          return u;
+        }));
+      } catch (err) {
+        console.error("Polling error", err);
+      }
     }, 5000);
     return () => clearInterval(interval);
   }, [allUsers.length]);
 
-  // Update map focus only when user selection changes (not on every location update)
+  // Update map focus only when user selection changes
   useEffect(() => {
     if (!selectedUserId) return;
     const selectedUser = allUsers.find(u => u._id === selectedUserId);
@@ -155,7 +168,6 @@ export default function GuardianLocationScreen() {
     
     const loc = selectedUser?.location || selectedUser?.currentLocation;
     if (loc && loc.latitude !== 0 && mapRef.current && MapView) {
-      // Only animate when user is explicitly selected, not on every location update
       mapRef.current.animateToRegion({
         latitude: loc.latitude,
         longitude: loc.longitude,
@@ -163,7 +175,7 @@ export default function GuardianLocationScreen() {
         longitudeDelta: 0.05,
       }, 800);
     }
-  }, [selectedUserId]); // Only depend on selectedUserId, not allUsers
+  }, [selectedUserId]);
 
   // Handle External Navigation
   const handleNavigate = async () => {
@@ -188,7 +200,6 @@ export default function GuardianLocationScreen() {
     if(url) Linking.openURL(url);
   };
 
-  // --- RENDER ---
   if (Platform.OS === 'web' || !MapView) {
     return (
       <View style={styles.webContainer}>
@@ -198,7 +209,9 @@ export default function GuardianLocationScreen() {
     );
   }
 
+  // --- DYNAMIC DATA FOR CURRENT SELECTED USER ---
   const selectedUser = allUsers.find(u => u._id === selectedUserId);
+  const selectedUserTime = selectedUser?.individualLastUpdated || 'Fetching...';
 
   return (
     <View style={styles.container}>
@@ -282,13 +295,13 @@ export default function GuardianLocationScreen() {
             ))}
           </View>
           
-          {/* Selected User Details */}
+          {/* Selected User Details (Shows Date + Time) */}
           <View style={styles.detailsContainer}>
              <View style={styles.statusBox}>
                 <Ionicons name={selectedUser?.sosActive ? "warning" : "navigate-circle"} size={24} color={selectedUser?.sosActive ? "#FF4B4B" : "#6A5ACD"} />
                 <View style={{marginLeft: 10}}>
                    <Text style={styles.statusTitle}>{selectedUser?.sosActive ? "SOS ACTIVE" : "User is Safe"}</Text>
-                   <Text style={styles.statusDesc}>Last updated: {lastUpdated}</Text>
+                   <Text style={styles.statusDesc}>Last updated: {selectedUserTime}</Text>
                 </View>
              </View>
 
@@ -319,8 +332,6 @@ export default function GuardianLocationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  
-  // Header
   headerOverlay: { position: 'absolute', top: 20, alignSelf: 'center' },
   statusPill: { 
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.9)', 
@@ -329,16 +340,12 @@ const styles = StyleSheet.create({
   },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   statusText: { fontSize: 13, fontWeight: '700', color: '#1A1B4B' },
-
-  // Map Markers
   markerRing: {
     backgroundColor: '#6A5ACD', width: 36, height: 36, borderRadius: 18, 
     justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFF',
     shadowColor: '#000', shadowOpacity: 0.3, elevation: 5
   },
   markerSos: { backgroundColor: '#FF4B4B', transform: [{scale: 1.2}] },
-
-  // Bottom Sheet
   bottomSheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     height: SHEET_MAX_HEIGHT,
@@ -351,11 +358,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
   },
   dragHandle: { width: 40, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3 },
-  
   sheetContent: { paddingHorizontal: 20, flex: 1 },
   sheetTitle: { fontSize: 16, fontWeight: '700', color: '#1A1B4B', marginBottom: 15 },
-  
-  // User List
   userList: { gap: 10 },
   userCard: { 
     flexDirection: 'row', alignItems: 'center', padding: 12, 
@@ -365,13 +369,10 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   userName: { fontSize: 15, fontWeight: '700', color: '#1A1B4B' },
   userStatus: { fontSize: 12, color: '#7A7A7A', marginTop: 2 },
-
-  // Details
   detailsContainer: { marginTop: 20, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#EEE' },
   statusBox: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
   statusTitle: { fontSize: 15, fontWeight: '700', color: '#1A1B4B' },
   statusDesc: { fontSize: 12, color: '#999' },
-
   navigateBtn: { 
     backgroundColor: '#6A5ACD', 
     padding: 14, 
@@ -382,8 +383,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   navigateBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
-
-  // Web
   webContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAF9FF' },
   webText: { marginTop: 10, color: '#6A5ACD', fontWeight: '600' }
 });
