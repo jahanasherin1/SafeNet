@@ -124,15 +124,24 @@ export default function DashboardHome() {
 
   const handleLogout = async () => {
     try {
-      // Optional: Stop tracking on logout? 
-      // Usually safety apps keep tracking, but let's stop it for clean session exit.
+      // Stop tracking on logout
       const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
       if (isRegistered) {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
       
+      // Clear all user-related AsyncStorage items
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('lastLocationTime');
+      await AsyncStorage.removeItem('selectedUser');
+      await AsyncStorage.removeItem('guardianEmail');
+      
+      // Reset all local state
+      setIsTracking(false);
+      setLastUpdated('Not Started');
+      setSosLoading(false);
+      
       router.replace('/main'); 
     } catch (error) {
       console.error("Logout error:", error);
@@ -142,29 +151,59 @@ export default function DashboardHome() {
   const handleSOS = async () => {
     setSosLoading(true);
     try {
+      // Check if email is available
+      if (!userEmail) {
+        Alert.alert("Error", "User email not found. Please refresh the app.");
+        setSosLoading(false);
+        return;
+      }
+
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Permission Denied", "Location permission is required for SOS.");
+        setSosLoading(false);
+        return;
+      }
+
       // Force high accuracy for SOS
-      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      console.log("Getting high-accuracy location for SOS...");
+      let location = await Location.getCurrentPositionAsync({ 
+        accuracy: Location.Accuracy.High,
+        timeout: 10000 
+      });
       
-      const response = await api.post('/sos/trigger', {
+      console.log("SOS Location:", location.coords);
+
+      const sosData = {
         userEmail: userEmail,
         location: {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude
         }
-      });
+      };
+
+      console.log("Sending SOS with data:", sosData);
+      
+      const response = await api.post('/sos/trigger', sosData);
+
+      console.log("SOS Response:", response.status, response.data);
 
       if (response.status === 200) {
-        Alert.alert("SOS SENT", "Guardians notified.");
+        Alert.alert("🚨 SOS SENT", "Guardians have been notified with your location!");
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         setLastUpdated(now);
         
         // Auto-enable tracking if not already on
         if (!isTracking) {
-            toggleTracking();
+          console.log("Auto-enabling tracking after SOS...");
+          toggleTracking();
         }
       }
-    } catch (error) {
-      Alert.alert("Error", "SOS Failed to send.");
+    } catch (error: any) {
+      console.error("SOS Error:", error.message, error.response?.data);
+      const errorMsg = error.response?.data?.message || error.message || "SOS Failed to send";
+      Alert.alert("❌ SOS Error", errorMsg);
     } finally {
       setSosLoading(false);
     }
@@ -187,7 +226,10 @@ export default function DashboardHome() {
           <View style={{ flex: 1 }}>
             <Text style={styles.sosTitle}>SOS</Text>
             <Text style={styles.sosSubtitle}>Tap in case of Emergency</Text>
-            <Text style={styles.miniTime}>Last Signal: {lastUpdated}</Text>
+            <View style={styles.sosTimeContainer}>
+              <Ionicons name="time-outline" size={12} color="#E0E0E0" />
+              <Text style={styles.miniTime}>SOS Tapped: {lastUpdated}</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.sosButton} activeOpacity={0.8} onPress={handleSOS}>
             <Text style={styles.sosButtonText}>{sosLoading ? "..." : "Tap"}</Text>
@@ -302,7 +344,8 @@ const styles = StyleSheet.create({
   sosCard: { height: 160, borderRadius: 20, padding: 25, justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end', marginBottom: 25, shadowColor: '#6A5ACD', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 5 },
   sosTitle: { fontSize: 32, fontWeight: 'bold', color: '#FFF' },
   sosSubtitle: { fontSize: 14, color: '#E0E0E0', marginTop: 5 },
-  miniTime: { fontSize: 10, color: '#E0E0E0', marginTop: 8 },
+  sosTimeContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  miniTime: { fontSize: 11, color: '#E0E0E0', marginTop: 0, marginLeft: 6, fontWeight: '500' },
   sosButton: { backgroundColor: '#F0F0F0', paddingHorizontal: 25, paddingVertical: 10, borderRadius: 20 },
   sosButtonText: { color: '#1A1B4B', fontWeight: 'bold' },
   

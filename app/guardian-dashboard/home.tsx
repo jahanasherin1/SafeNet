@@ -162,8 +162,27 @@ export default function GuardianHomeScreen() {
 
   const handleLogout = async () => {
     try {
+      // Clear all user-related AsyncStorage items
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('selectedUser');
+      await AsyncStorage.removeItem('guardianEmail');
+      await AsyncStorage.removeItem('lastLocationTime');
+      
+      // Reset all local state
+      setGuardianName('Guardian');
+      setGuardianEmail('');
+      setProtectingUser('User');
+      setProtectingEmail('');
+      setAllUsers([]);
+      setSelectedUserId('');
+      setIsSosActive(false);
+      setLastAlertTime('No recent alerts');
+      setLastLocationTime('Waiting for updates...');
+      setLocationStatus('Waiting for updates...');
+      setJourneyData(null);
+      setUserImage(null);
+      
       router.replace('/main');
     } catch (error) { console.error("Logout error:", error); }
   };
@@ -224,9 +243,12 @@ export default function GuardianHomeScreen() {
              {isSosActive && <Ionicons name="warning" size={24} color="#FFF" />}
           </View>
           <Text style={styles.sosTitle}>{isSosActive ? "SOS ACTIVE - IMMEDIATE ACTION REQUIRED" : "User is Safe"}</Text>
-          <Text style={styles.sosTime}>
-            {isSosActive ? `Last update: ${lastAlertTime}` : "No recent alerts"}
-          </Text>
+          <View style={styles.sosTimeRow}>
+            <Ionicons name="time-outline" size={14} color="#FFF" />
+            <Text style={styles.sosTime}>
+              {isSosActive ? `SOS Tapped: ${lastAlertTime}` : "No recent alerts"}
+            </Text>
+          </View>
         </LinearGradient>
 
         {/* User Summary Row */}
@@ -332,7 +354,8 @@ const styles = StyleSheet.create({
   sosHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   urgentLabel: { color: '#E0E0E0', fontSize: 14, fontWeight: 'bold' },
   sosTitle: { color: '#FFF', fontSize: 24, fontWeight: 'bold', lineHeight: 32, marginBottom: 10 },
-  sosTime: { color: '#EEE', fontSize: 14 },
+  sosTimeRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  sosTime: { color: '#EEE', fontSize: 14, marginLeft: 6, fontWeight: '500' },
   sectionContainer: { marginBottom: 25 },
   subHeader: { color: '#6A5ACD', fontSize: 14, marginBottom: 5 },
   userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },

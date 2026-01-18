@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 
 const { width } = Dimensions.get('window');
@@ -12,12 +12,24 @@ export default function MonitorJourney() {
   const { userEmail } = useLocalSearchParams();
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [liveLocation, setLiveLocation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await api.post('/journey/status', { userEmail });
-      setData(res.data);
+      // Fetch journey data
+      const journeyRes = await api.post('/journey/status', { userEmail });
+      setData(journeyRes.data);
+      
+      // Fetch live location for accurate snapshot
+      try {
+        const locationRes = await api.get(`/user/location/${userEmail}`);
+        if (locationRes.data && locationRes.data.location) {
+          setLiveLocation(locationRes.data.location);
+        }
+      } catch (locErr) {
+        console.log("Live location fetch error:", locErr);
+      }
     } catch (e) {
       console.log("Monitoring Error:", e);
     } finally {
@@ -27,7 +39,7 @@ export default function MonitorJourney() {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 10000); // Poll every 10 seconds
+    const interval = setInterval(fetchStatus, 3000); // Poll every 3 seconds for real-time updates
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
@@ -115,16 +127,19 @@ export default function MonitorJourney() {
                provider={PROVIDER_GOOGLE}
                style={styles.map}
                region={{
-                 latitude: userLoc.latitude || 10.8505,
-                 longitude: userLoc.longitude || 76.2711,
-                 latitudeDelta: 0.01,
-                 longitudeDelta: 0.01,
+                 latitude: liveLocation?.latitude || userLoc.latitude || 10.8505,
+                 longitude: liveLocation?.longitude || userLoc.longitude || 76.2711,
+                 latitudeDelta: 0.02,
+                 longitudeDelta: 0.02,
                }}
                scrollEnabled={false} 
                zoomEnabled={false}
              >
-               {userLoc.latitude !== 0 && (
-                 <Marker coordinate={{ latitude: userLoc.latitude, longitude: userLoc.longitude }}>
+               {(liveLocation?.latitude || userLoc.latitude) !== 0 && (
+                 <Marker coordinate={{ 
+                   latitude: liveLocation?.latitude || userLoc.latitude, 
+                   longitude: liveLocation?.longitude || userLoc.longitude 
+                 }}>
                     <View style={styles.markerContainer}>
                         <Ionicons name="person" size={18} color="white" />
                     </View>
@@ -134,6 +149,17 @@ export default function MonitorJourney() {
            </View>
 
            <Text style={styles.snapshotLabel}>Live Location Snapshot</Text>
+           <View style={styles.locationInfo}>
+             <Text style={styles.coordText}>
+               📍 Lat: {(liveLocation?.latitude || userLoc.latitude || 0).toFixed(4)}, 
+               Lng: {(liveLocation?.longitude || userLoc.longitude || 0).toFixed(4)}
+             </Text>
+             <Text style={styles.coordText}>
+               🕐 Updated: {liveLocation?.timestamp 
+                 ? new Date(liveLocation.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                 : 'Waiting for update...'}
+             </Text>
+           </View>
            <View style={styles.snapshotFooter}>
              <Text style={styles.updatedText}>Tracking user in real time</Text>
              <TouchableOpacity 
@@ -180,6 +206,9 @@ const styles = StyleSheet.create({
   mapWrapper: { height: 200, borderRadius: 24, overflow: 'hidden', backgroundColor: '#EEE', borderWidth: 1, borderColor: '#EEE' },
   map: { flex: 1 },
   markerContainer: { backgroundColor: '#6A5ACD', padding: 5, borderRadius: 20, borderWidth: 2, borderColor: 'white' },
+  
+  locationInfo: { backgroundColor: '#F3F0FA', padding: 12, borderRadius: 12, marginTop: 12, borderLeftWidth: 4, borderLeftColor: '#6A5ACD' },
+  coordText: { fontSize: 12, color: '#1A1B4B', fontWeight: '500', marginVertical: 4, lineHeight: 18 },
   
   snapshotLabel: { fontWeight: 'bold', marginTop: 15, fontSize: 16, color: '#1A1B4B' },
   snapshotFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },

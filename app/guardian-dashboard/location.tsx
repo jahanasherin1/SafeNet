@@ -85,6 +85,21 @@ export default function GuardianLocationScreen() {
     }).start(() => setIsCollapsed(true));
   };
 
+  // Cleanup state on unmount to prevent data persistence
+  useEffect(() => {
+    return () => {
+      setAllUsers([]);
+      setSelectedUserId('');
+      setGuardianEmail('');
+      setLocation({
+        latitude: 10.8505,
+        longitude: 76.2711,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
+    };
+  }, []);
+
   const bottomSheetTranslateY = animatedValue.interpolate({
     inputRange: [0, SHEET_MAX_HEIGHT - SHEET_MIN_HEIGHT],
     outputRange: [0, SHEET_MAX_HEIGHT - SHEET_MIN_HEIGHT],
@@ -121,9 +136,11 @@ export default function GuardianLocationScreen() {
     } catch (error) {}
   };
 
-  // --- POLLING LOGIC (UPDATED WITH DATE FORMATTING) ---
+  // --- POLLING LOGIC (REAL-TIME LOCATION UPDATES) ---
   useEffect(() => {
     if (allUsers.length === 0) return;
+    
+    // Poll every 3 seconds for real-time updates
     const interval = setInterval(async () => {
       try {
         const results = await Promise.all(
@@ -140,23 +157,30 @@ export default function GuardianLocationScreen() {
              const data = match.res.data;
              const loc = data.location;
              
-             // UPDATED: Added Date to the formatting options
+             // Format timestamp for display
              const timeStr = new Date(loc?.timestamp || data.lastSosTime || new Date())
                 .toLocaleString([], { 
                     day: 'numeric', 
                     month: 'short', 
                     hour: '2-digit', 
-                    minute: '2-digit' 
+                    minute: '2-digit',
+                    second: '2-digit'
                 });
 
-             return { ...u, ...data, individualLastUpdated: timeStr };
+             return { 
+               ...u, 
+               ...data, 
+               individualLastUpdated: timeStr,
+               locationUpdateTime: loc?.timestamp
+             };
           }
           return u;
         }));
       } catch (err) {
         console.error("Polling error", err);
       }
-    }, 5000);
+    }, 3000); // Changed from 5000ms to 3000ms for real-time updates
+    
     return () => clearInterval(interval);
   }, [allUsers.length]);
 
@@ -299,9 +323,17 @@ export default function GuardianLocationScreen() {
           <View style={styles.detailsContainer}>
              <View style={styles.statusBox}>
                 <Ionicons name={selectedUser?.sosActive ? "warning" : "navigate-circle"} size={24} color={selectedUser?.sosActive ? "#FF4B4B" : "#6A5ACD"} />
-                <View style={{marginLeft: 10}}>
-                   <Text style={styles.statusTitle}>{selectedUser?.sosActive ? "SOS ACTIVE" : "User is Safe"}</Text>
-                   <Text style={styles.statusDesc}>Last updated: {selectedUserTime}</Text>
+                <View style={{marginLeft: 10, flex: 1}}>
+                   <Text style={styles.statusTitle}>{selectedUser?.sosActive ? "🚨 SOS ACTIVE" : "✅ User is Safe"}</Text>
+                   {selectedUser?.sosActive && selectedUser?.lastSosTime ? (
+                     <Text style={styles.statusDesc}>
+                       SOS Tapped: {new Date(selectedUser.lastSosTime).toLocaleString([], { 
+                         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                       })}
+                     </Text>
+                   ) : (
+                     <Text style={styles.statusDesc}>Last updated: {selectedUserTime}</Text>
+                   )}
                 </View>
              </View>
 

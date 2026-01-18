@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapComponent from '../../components/MapComponent';
 import api from '../../services/api';
@@ -43,9 +43,11 @@ const SAFE_PLACES = [
 export default function UserLocationScreen() {
   const router = useRouter();
   const { user } = useSession();
+  const mapRef = useRef<any>(null);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('My Location');
   const [loadingLocation, setLoadingLocation] = useState(true);
+  const [zoomLevel, setZoomLevel] = useState(13);
 
   // User's Current Location
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
@@ -78,16 +80,34 @@ export default function UserLocationScreen() {
   );
 
   const requestAndUpdateLocation = async () => {
+    setLoadingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required to show your location');
+        setLoadingLocation(false);
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced
-      });
+      let currentLocation = null;
+
+      // Try to get current location
+      try {
+        currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000
+        });
+      } catch (locationError) {
+        console.warn('Failed to get current location, attempting to use last known location:', locationError);
+        // Fallback to last known location
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown) {
+          currentLocation = lastKnown;
+          console.log('Using last known location');
+        } else {
+          throw new Error('Unable to get location. Please ensure location services are enabled.');
+        }
+      }
 
       const newLocation = {
         latitude: currentLocation.coords.latitude,
@@ -97,24 +117,77 @@ export default function UserLocationScreen() {
       setUserLocation(newLocation);
 
       // Send location to backend
-      try {
-        await api.post('/user/update-location', {
-          latitude: newLocation.latitude,
-          longitude: newLocation.longitude,
-          email: userEmail || user?.email
-        });
-      } catch (apiError) {
-        console.warn('Failed to update location on backend:', apiError);
-        // Don't fail the entire operation if backend update fails
+      const emailToSend = userEmail || user?.email;
+      if (emailToSend) {
+        try {
+          await api.post('/user/update-location', {
+            latitude: newLocation.latitude,
+            longitude: newLocation.longitude,
+            email: emailToSend
+          });
+          console.log('Location updated successfully on backend');
+        } catch (apiError) {
+          console.warn('Failed to update location on backend:', apiError);
+          // Don't fail the entire operation if backend update fails
+        }
+      } else {
+        console.warn('No email available to send location update');
       }
     } catch (error) {
       console.error('Location error:', error);
-      Alert.alert('Error', 'Failed to get your location');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to get your location. Make sure location services are enabled.');
+    } finally {
+      setLoadingLocation(false);
     }
   };
 
   const handleDirections = (place: any) => {
-    Alert.alert(place.name, `${place.address}\n\n${place.hours}`);
+    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+    const label = place.name;
+    const url = Platform.select({
+      ios: `maps://maps.apple.com/?daddr=${place.coords.latitude},${place.coords.longitude}&q=${label}`,
+      android: `geo:${place.coords.latitude},${place.coords.longitude}?q=${place.coords.latitude},${place.coords.longitude}(${label})`,
+    });
+    if (url) Linking.openURL(url);
+  };
+
+  const handleZoomIn = () => {
+    if (mapRef.current && zoomLevel < 20) {
+      const newZoom = zoomLevel + 1;
+      setZoomLevel(newZoom);
+      mapRef.current.animateToRegion({
+        latitude: userLocation?.latitude || 9.9816,
+        longitude: userLocation?.longitude || 76.2856,
+        latitudeDelta: 20 / newZoom,
+        longitudeDelta: 20 / newZoom,
+      });
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef.current && zoomLevel > 5) {
+      const newZoom = zoomLevel - 1;
+      setZoomLevel(newZoom);
+      mapRef.current.animateToRegion({
+        latitude: userLocation?.latitude || 9.9816,
+        longitude: userLocation?.longitude || 76.2856,
+        latitudeDelta: 20 / newZoom,
+        longitudeDelta: 20 / newZoom,
+      });
+    }
+  };
+
+  const handleCenterView = () => {
+    if (mapRef.current && userLocation) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
+    } else {
+      Alert.alert('Location Not Available', 'Unable to center on your location');
+    }
   };
 
   const handleNavigateToMyLocation = async () => {
@@ -122,7 +195,12 @@ export default function UserLocationScreen() {
       Alert.alert('Location Not Available', 'Unable to navigate');
       return;
     }
-    Alert.alert('Your Location', `Latitude: ${userLocation.latitude.toFixed(4)}\nLongitude: ${userLocation.longitude.toFixed(4)}`);
+    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+    const url = Platform.select({
+      ios: `maps://maps.apple.com/?daddr=${userLocation.latitude},${userLocation.longitude}&q=My Location`,
+      android: `geo:${userLocation.latitude},${userLocation.longitude}?q=${userLocation.latitude},${userLocation.longitude}(My Location)`,
+    });
+    if (url) Linking.openURL(url);
   };
 
   const renderPlaceItem = ({ item }: { item: any }) => (
@@ -169,6 +247,7 @@ export default function UserLocationScreen() {
               <MapComponent
                 initialLatitude={userLocation.latitude}
                 initialLongitude={userLocation.longitude}
+                mapRef={mapRef}
                 markers={[
                   {
                     id: 'user',
@@ -197,9 +276,10 @@ export default function UserLocationScreen() {
 
               {/* Map Controls */}
               <View style={styles.mapControls}>
-                <TouchableOpacity style={styles.controlBtn} onPress={requestAndUpdateLocation}>
+                <TouchableOpacity style={styles.controlBtn} onPress={handleCenterView}>
                   <Ionicons name="locate" size={24} color="#1A1B4B" />
                 </TouchableOpacity>
+                
                 <TouchableOpacity style={styles.controlBtn} onPress={handleNavigateToMyLocation}>
                   <Ionicons name="navigate" size={24} color="#1A1B4B" />
                 </TouchableOpacity>
@@ -256,12 +336,12 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
   headerSubtitle: { fontSize: 12, color: '#6A5ACD', marginTop: 4, fontWeight: '600' },
   scrollContent: { flexGrow: 1 },
-  mapContainer: { height: 350, width: '100%', position: 'relative', marginBottom: 20, marginHorizontal: 20, borderRadius: 15, overflow: 'hidden' },
+  mapContainer: { height: 350, width: '100%', position: 'relative', marginBottom: 20, borderRadius: 15, overflow: 'hidden' },
   mapLoadingContainer: { width: '100%', height: '100%', backgroundColor: '#F3F0FA', justifyContent: 'center', alignItems: 'center', borderRadius: 15 },
-  mapControls: { position: 'absolute', bottom: 20, right: 20 },
+  mapControls: { position: 'absolute', bottom: 20, right: 20, gap: 10 },
   controlBtn: { 
-    width: 45, height: 45, backgroundColor: '#FFF', borderRadius: 10, 
-    justifyContent: 'center', alignItems: 'center', marginBottom: 10, elevation: 3 
+    width: 50, height: 50, backgroundColor: '#FFF', borderRadius: 12, 
+    justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }
   },
   chipsContainer: { flexDirection: 'row', paddingHorizontal: 20, marginTop: 15, marginBottom: 15 },
   chip: { 
