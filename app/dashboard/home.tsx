@@ -20,14 +20,27 @@ export default function DashboardHome() {
   const [sosLoading, setSosLoading] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('Waiting for updates...');
+  const [lastSosTime, setLastSosTime] = useState<string | null>(null);
 
   // --- 1. LOAD DATA & CHECK STATUS ON FOCUS ---
   useFocusEffect(
     useCallback(() => {
       loadUserData();
       checkTrackingStatus();
+      loadSosStatus();
     }, [])
   );
+
+  const loadSosStatus = async () => {
+    try {
+      const sosTime = await AsyncStorage.getItem('lastSosTime');
+      if (sosTime) {
+        setLastSosTime(sosTime);
+      }
+    } catch (e) {
+      console.error("Failed to load SOS status", e);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -169,8 +182,7 @@ export default function DashboardHome() {
       // Force high accuracy for SOS
       console.log("Getting high-accuracy location for SOS...");
       let location = await Location.getCurrentPositionAsync({ 
-        accuracy: Location.Accuracy.High,
-        timeout: 10000 
+        accuracy: Location.Accuracy.High
       });
       
       console.log("SOS Location:", location.coords);
@@ -191,6 +203,18 @@ export default function DashboardHome() {
 
       if (response.status === 200) {
         Alert.alert("🚨 SOS SENT", "Guardians have been notified with your location!");
+        
+        // Store SOS trigger timestamp with full details (day, month, hour, minute, second)
+        const sosTimestamp = new Date().toLocaleString([], { 
+          day: 'numeric', 
+          month: 'short', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        setLastSosTime(sosTimestamp);
+        await AsyncStorage.setItem('lastSosTime', sosTimestamp);
+        
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         setLastUpdated(now);
         
@@ -217,6 +241,9 @@ export default function DashboardHome() {
         <View style={styles.headerContainer}>
           <View style={styles.headerTopRow}>
             <Text style={styles.dashboardLabel}>SafeNet Dashboard</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#6A5ACD" />
+            </TouchableOpacity>
           </View>
           <Text style={styles.welcomeText}>Welcome, {userName}</Text>
         </View>
@@ -228,7 +255,9 @@ export default function DashboardHome() {
             <Text style={styles.sosSubtitle}>Tap in case of Emergency</Text>
             <View style={styles.sosTimeContainer}>
               <Ionicons name="time-outline" size={12} color="#E0E0E0" />
-              <Text style={styles.miniTime}>SOS Tapped: {lastUpdated}</Text>
+              <Text style={styles.miniTime}>
+                {lastSosTime ? `SOS Tapped: ${lastSosTime}` : "Not triggered yet"}
+              </Text>
             </View>
           </View>
           <TouchableOpacity style={styles.sosButton} activeOpacity={0.8} onPress={handleSOS}>
@@ -290,10 +319,16 @@ export default function DashboardHome() {
           <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={styles.actionTitle}>Fake Call</Text>
             <Text style={styles.actionDesc}>Simulate an incoming call with vibration</Text>
-            <TouchableOpacity style={styles.smallButton}>
+            
+            {/* UPDATED FAKE CALL LINK HERE */}
+            <TouchableOpacity 
+              style={styles.smallButton} 
+              onPress={() => router.push('/dashboard/fake-call')}
+            >
               <Text style={styles.smallButtonText}>Start</Text>
               <Ionicons name="call-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
+
           </View>
           <LinearGradient colors={['#42275a', '#734b6d']} style={styles.actionImageContainer}>
              <Ionicons name="call" size={40} color="#FFF" />

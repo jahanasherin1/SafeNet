@@ -37,6 +37,15 @@ export default function DashboardLayout() {
         name="start-journey"
         options={{ title: 'Start Journey', href: null ,}}
       />
+      <Tabs.Screen name="fake-call" options={{ href: null }} />
+      <Tabs.Screen 
+        name="active-call" 
+        options={{ 
+          href: null,
+          tabBarStyle: { display: 'none' } // Hide tabs during call
+        }} 
+      />
+    
     </Tabs>
   );
 }

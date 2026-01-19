@@ -8,7 +8,7 @@ const PORT = 5000;
 // ❗ IMPORTANT: REPLACE THIS WITH YOUR COMPUTER'S ACTUAL LOCAL IP
 // home:172.20.10.2    ,   192.168.128.244,
 // college : 192.168.1.23
-const LAPTOP_IP = '172.20.10.2'; 
+const LAPTOP_IP = '192.168.1.23'; 
 
 const getBaseUrl = () => {
   // 1. Attempt to get IP automatically from Expo Go (Development Mode)

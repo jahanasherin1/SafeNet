@@ -33,6 +33,7 @@ export default function GuardianLocationScreen() {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [protectingUser, setProtectingUser] = useState('User');
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('hybrid');
   
   // Animation Value
   const animatedValue = useRef(new Animated.Value(0)).current;
@@ -247,6 +248,14 @@ export default function GuardianLocationScreen() {
         provider={PROVIDER_GOOGLE}
         initialRegion={location}
         rotateEnabled={false}
+        mapType={mapType}
+        showsBuildings={true}
+        showsIndoors={true}
+        showsPointsOfInterest={true}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsScale={true}
+        showsCompass={true}
         mapPadding={{ top: 0, right: 0, bottom: SHEET_MIN_HEIGHT, left: 0 }}
       >
         {allUsers.map((user) => {
@@ -269,11 +278,26 @@ export default function GuardianLocationScreen() {
 
       {/* 2. TOP HEADER */}
       <SafeAreaView style={styles.headerOverlay} edges={['top']}>
-        <View style={styles.statusPill}>
-           <View style={[styles.dot, {backgroundColor: selectedUser?.sosActive ? '#FF4B4B' : '#00C851'}]} />
-           <Text style={styles.statusText}>
-             {allUsers.length} Users • {selectedUser?.sosActive ? "SOS ACTIVE" : "Live"}
-           </Text>
+        <View style={styles.headerContent}>
+          <View style={styles.statusPill}>
+             <View style={[styles.dot, {backgroundColor: selectedUser?.sosActive ? '#FF4B4B' : '#00C851'}]} />
+             <Text style={styles.statusText}>
+               {allUsers.length} Users • {selectedUser?.sosActive ? "SOS ACTIVE" : "Live"}
+             </Text>
+          </View>
+          
+          {/* Map Type Toggle */}
+          <TouchableOpacity 
+            style={styles.mapTypeToggle}
+            onPress={() => {
+              const types: Array<'standard' | 'satellite' | 'hybrid' | 'terrain'> = ['standard', 'satellite', 'hybrid', 'terrain'];
+              const currentIndex = types.indexOf(mapType);
+              setMapType(types[(currentIndex + 1) % types.length]);
+            }}
+          >
+            <Ionicons name={mapType === 'satellite' ? 'layers' : 'map'} size={20} color="#FFF" />
+            <Text style={styles.mapTypeText}>{mapType === 'standard' ? 'Map' : mapType === 'satellite' ? 'Satellite' : mapType === 'hybrid' ? 'Hybrid' : 'Terrain'}</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -319,21 +343,26 @@ export default function GuardianLocationScreen() {
             ))}
           </View>
           
-          {/* Selected User Details (Shows Date + Time) */}
+          {/* Selected User Details (Shows Both SOS Time and Last Location Time) */}
           <View style={styles.detailsContainer}>
              <View style={styles.statusBox}>
                 <Ionicons name={selectedUser?.sosActive ? "warning" : "navigate-circle"} size={24} color={selectedUser?.sosActive ? "#FF4B4B" : "#6A5ACD"} />
                 <View style={{marginLeft: 10, flex: 1}}>
                    <Text style={styles.statusTitle}>{selectedUser?.sosActive ? "🚨 SOS ACTIVE" : "✅ User is Safe"}</Text>
-                   {selectedUser?.sosActive && selectedUser?.lastSosTime ? (
+                   
+                   {/* SOS Tapped Time */}
+                   {selectedUser?.lastSosTime && (
                      <Text style={styles.statusDesc}>
-                       SOS Tapped: {new Date(selectedUser.lastSosTime).toLocaleString([], { 
+                       🚨 SOS Tapped: {new Date(selectedUser.lastSosTime).toLocaleString([], { 
                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' 
                        })}
                      </Text>
-                   ) : (
-                     <Text style={styles.statusDesc}>Last updated: {selectedUserTime}</Text>
                    )}
+                   
+                   {/* Last Live Location Time */}
+                   <Text style={styles.statusDesc}>
+                     📍 Last Location: {selectedUserTime}
+                   </Text>
                 </View>
              </View>
 
@@ -364,12 +393,27 @@ export default function GuardianLocationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  headerOverlay: { position: 'absolute', top: 20, alignSelf: 'center' },
+  headerOverlay: { position: 'absolute', top: 20, alignSelf: 'center', left: 0, right: 0, paddingHorizontal: 16 },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   statusPill: { 
+    flex: 1,
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.9)', 
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
     shadowColor: '#000', shadowOpacity: 0.1, elevation: 3
   },
+  mapTypeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(106, 90, 205, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    elevation: 3
+  },
+  mapTypeText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   statusText: { fontSize: 13, fontWeight: '700', color: '#1A1B4B' },
   markerRing: {
