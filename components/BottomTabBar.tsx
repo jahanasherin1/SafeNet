@@ -1,19 +1,25 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import React from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   
   // 1. Define screens that should NOT appear in the bottom bar
   const hiddenRoutes = ['edit-profile', 'start-journey','monitor-journey','fake-call','active-call', '_sitemap', '+not-found'];
+  
+  // 2. Check if current screen should hide the entire tab bar
+  const currentRoute = state.routes[state.index];
+  if (hiddenRoutes.includes(currentRoute.name)) {
+    return null; // Hide entire tab bar on these screens
+  }
 
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
 
-        // 2. FILTER LOGIC: If route name is in the hidden list, don't render it
+        // 3. FILTER LOGIC: If route name is in the hidden list, don't render it as a tab
         if (hiddenRoutes.includes(route.name)) {
           return null;
         }
@@ -51,7 +57,6 @@ const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={options.tabBarTestID}
             onPress={onPress}
             style={styles.tabButton}
             activeOpacity={0.8}

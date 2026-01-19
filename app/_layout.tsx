@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import '../services/BackgroundLocationService'; // Initialize background location task on app start
 import { SessionProvider } from '../services/SessionContext';
 
 function RootLayoutContent() {

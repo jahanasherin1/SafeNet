@@ -2,13 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-// 1. Define your backend port
-const PORT = 5000;
+// ========================================
+// 🌐 NETWORK SETUP - CHANGE IP HERE 👇
+// ========================================
+const LAPTOP_IP = '172.20.10.2';        // ← Home
+// const LAPTOP_IP = '192.168.128.244';  // ← Home Alt
+// const LAPTOP_IP = '192.168.1.23';     // ← College
+// ========================================
 
-// ❗ IMPORTANT: REPLACE THIS WITH YOUR COMPUTER'S ACTUAL LOCAL IP
-// home:172.20.10.2    ,   192.168.128.244,
-// college : 192.168.1.23
-const LAPTOP_IP = '192.168.1.23'; 
+const PORT = 5000; 
 
 const getBaseUrl = () => {
   // 1. Attempt to get IP automatically from Expo Go (Development Mode)

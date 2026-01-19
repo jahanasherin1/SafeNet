@@ -11,6 +11,7 @@ export default function ActiveCallScreen() {
   const callerName = params.name || 'Mom';
   const hasVibration = params.hasVibration === 'yes';
   const voiceType = params.voiceType || 'mom'; // Get the voice type from params
+  const customAudioUri = params.customAudioUri as string; // Get custom audio URI
 
   // State: 'incoming' (ringing) or 'connected' (talking)
   const [callState, setCallState] = useState<'incoming' | 'connected'>('incoming');
@@ -90,6 +91,14 @@ export default function ActiveCallScreen() {
       // Use local ringtone file
       const ringtoneSource = require('../../assets/voice/ringtone.mp3');
       const audioSound = new Audio.Sound();
+      
+      // Add error listener
+      audioSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded === false && status.error) {
+          console.log("Sound playback error:", status.error);
+        }
+      });
+      
       await audioSound.loadAsync(ringtoneSource);
       setRingtoneSound(audioSound);
       
@@ -97,9 +106,9 @@ export default function ActiveCallScreen() {
       await audioSound.setIsLoopingAsync(true);
       await audioSound.playAsync();
       
-      console.log("Ringtone started");
+      console.log("Ringtone started successfully");
     } catch (error) {
-      console.log("Error loading ringtone", error);
+      console.error("Error loading ringtone:", error);
     }
   };
 
@@ -122,16 +131,23 @@ export default function ActiveCallScreen() {
 
     // 4. Play Fake Voice in Loop
     try {
-      // Load voice based on selected type
-      const source = require('../../assets/voice/voice.mp3');
       const audioSound = new Audio.Sound();
-      await audioSound.loadAsync(source);
+      
+      // Use custom audio if available, otherwise use default voice
+      if (customAudioUri && customAudioUri.trim() !== '') {
+        console.log('Using custom audio file:', customAudioUri);
+        await audioSound.loadAsync({ uri: customAudioUri });
+      } else {
+        console.log('Using default voice profile');
+        const source = require('../../assets/voice/voice.mp3');
+        await audioSound.loadAsync(source);
+      }
       
       // Set voice to loop continuously
       await audioSound.setIsLoopingAsync(true);
       setVoiceSound(audioSound);
       
-      console.log(`Playing voice in loop: ${voiceType}`);
+      console.log(`Playing voice in loop: ${customAudioUri ? 'custom' : voiceType}`);
       await audioSound.playAsync();
     } catch (error) {
       console.log("Error loading voice", error);

@@ -3,13 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
-import * as TaskManager from 'expo-task-manager'; // Import TaskManager
 import React, { useCallback, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
-// Import the task name
-import { LOCATION_TASK_NAME } from '../../services/LocationTask';
+// Import the task name and functions
+import { isBackgroundTrackingActive, startBackgroundLocationTracking, stopBackgroundLocationTracking } from '../../services/BackgroundLocationService';
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -57,16 +56,16 @@ export default function DashboardHome() {
 
   const checkTrackingStatus = async () => {
     try {
-      // 1. Check if the Background Task is running
-      const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
-      setIsTracking(isRegistered);
+      // 1. Check if the Background Task is running using the proper API
+      const isTracking = await isBackgroundTrackingActive();
+      setIsTracking(isTracking);
 
       // 2. Load the last known timestamp from Storage (written by the Background Task)
       const storedTime = await AsyncStorage.getItem('lastLocationTime');
       if (storedTime) {
         const date = new Date(storedTime);
         setLastUpdated(date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      } else if (!isRegistered) {
+      } else if (!isTracking) {
         setLastUpdated("Tracking Disabled");
       }
     } catch (e) {
@@ -79,7 +78,7 @@ export default function DashboardHome() {
     if (isTracking) {
       // --- STOP TRACKING ---
       try {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        await stopBackgroundLocationTracking();
         setIsTracking(false);
         setLastUpdated("Stopped");
         Alert.alert("Location Tracking", "Live tracking disabled.");
@@ -89,45 +88,20 @@ export default function DashboardHome() {
     } else {
       // --- START TRACKING ---
       try {
-        // A. Foreground Permission
-        const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
-        if (fgStatus !== 'granted') {
-          Alert.alert("Permission Denied", "Allow location access to enable tracking.");
-          return;
-        }
-
-        // B. Background Permission (Crucial for Android)
-        const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-        if (bgStatus !== 'granted') {
-          Alert.alert(
-            "Background Permission Required", 
-            "To keep you safe when the app is closed, please select 'Allow all the time' in settings."
-          );
-          // We continue anyway, but it might stop when minimized on some Android versions
-        }
-
-        // C. Start The Service
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.Balanced,
-          distanceInterval: 10, // Update every 10 meters
-          deferredUpdatesInterval: 5000, // Minimum 5 seconds
+        const success = await startBackgroundLocationTracking();
+        if (success) {
+          setIsTracking(true);
           
-          // ANDROID NOTIFICATION CONFIG (Required for background)
-          foregroundService: {
-            notificationTitle: "SafeNet Active",
-            notificationBody: "Sharing your live location with guardians.",
-            notificationColor: "#6A5ACD"
-          }
-        });
-
-        setIsTracking(true);
-        
-        // Update Timestamp immediately
-        const now = new Date();
-        const iso = now.toISOString();
-        await AsyncStorage.setItem('lastLocationTime', iso);
-        setLastUpdated(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-
+          // Update Timestamp immediately
+          const now = new Date();
+          const iso = now.toISOString();
+          await AsyncStorage.setItem('lastLocationTime', iso);
+          setLastUpdated(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+          
+          Alert.alert("Location Tracking", "Live tracking enabled.");
+        } else {
+          Alert.alert("Error", "Could not start location tracking. Check permissions.");
+        }
       } catch (error) {
         console.error("Start tracking error:", error);
         Alert.alert("Error", "Could not start location tracking.");
@@ -138,10 +112,7 @@ export default function DashboardHome() {
   const handleLogout = async () => {
     try {
       // Stop tracking on logout
-      const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
-      if (isRegistered) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
+      await stopBackgroundLocationTracking();
       
       // Clear all user-related AsyncStorage items
       await AsyncStorage.removeItem('user');
@@ -239,12 +210,7 @@ export default function DashboardHome() {
         
         {/* Header */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerTopRow}>
-            <Text style={styles.dashboardLabel}>SafeNet Dashboard</Text>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Ionicons name="log-out-outline" size={24} color="#6A5ACD" />
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.dashboardLabel}>SafeNet Dashboard</Text>
           <Text style={styles.welcomeText}>Welcome, {userName}</Text>
         </View>
 
