@@ -1,6 +1,7 @@
 import express from 'express';
 import { User } from '../models/schemas.js';
 import sendEmail from '../utils/sendEmail.js';
+import { createAlert } from './alerts.js';
 
 const router = express.Router();
 
@@ -30,6 +31,20 @@ router.post('/trigger', async (req, res) => {
 
     user.guardians.forEach(g => {
       if (g.email) sendEmail(g.email, emailSubject, emailBody);
+    });
+
+    // Create alert notification
+    await createAlert({
+      userEmail: user.email,
+      userName: user.name,
+      type: 'sos',
+      title: '🚨 SOS Alert',
+      message: `${user.name} triggered an emergency SOS alert and needs immediate help!`,
+      location: { latitude, longitude },
+      metadata: {
+        mapsLink,
+        guardianCount: user.guardians.length
+      }
     });
 
     console.log(`SOS Triggered for ${user.name}`);

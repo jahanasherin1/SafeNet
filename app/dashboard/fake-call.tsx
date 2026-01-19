@@ -1,54 +1,79 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import * as DocumentPicker from 'expo-document-picker'; // Temporarily disabled - rebuild app to enable
+import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import api from '../../services/api';
 
-// Voice profiles with different callers and their voice files
-const VOICE_PROFILES = [
-  { id: 'mom', name: 'Mom', icon: 'M', voiceFile: require('../../assets/voice/voice.mp3') },
-  { id: 'dad', name: 'Dad', icon: 'D', voiceFile: require('../../assets/voice/voice.mp3') },
-  { id: 'police', name: 'Police', icon: 'P', voiceFile: require('../../assets/voice/voice.mp3') },
-  { id: 'friend', name: 'Friend', icon: 'F', voiceFile: require('../../assets/voice/voice.mp3') },
-];
+// Type for saved voice profiles
+interface SavedVoice {
+  id: string;
+  name: string;
+  audioUri: string;
+  audioName: string;
+  dateAdded: string;
+}
 
 export default function FakeCallScreen() {
   const router = useRouter();
-  const [selectedVoice, setSelectedVoice] = useState('mom'); // Default to Mom
-  const [customName, setCustomName] = useState('');
+  const [callerName, setCallerName] = useState('');
   const [vibration, setVibration] = useState(true);
   const [callDelay, setCallDelay] = useState(5); // Default 5 seconds
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [shouldTriggerCall, setShouldTriggerCall] = useState(false);
-  const [customAudioUri, setCustomAudioUri] = useState<string | null>(null);
-  const [customAudioName, setCustomAudioName] = useState<string>('');
+  const [savedVoices, setSavedVoices] = useState<SavedVoice[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
+  
+  // Modal states for adding voice
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newVoiceName, setNewVoiceName] = useState('');
+  const [pendingAudioAsset, setPendingAudioAsset] = useState<any>(null);
 
-  // Load custom audio on mount
+  // Load saved voices on mount
   useEffect(() => {
-    loadCustomAudio();
+    loadSavedVoices();
   }, []);
 
-  const loadCustomAudio = async () => {
+  const loadSavedVoices = async () => {
     try {
-      const uri = await AsyncStorage.getItem('customVoiceUri');
-      const name = await AsyncStorage.getItem('customVoiceName');
-      if (uri) setCustomAudioUri(uri);
-      if (name) setCustomAudioName(name);
+      // First try to get user email
+      const userJson = await AsyncStorage.getItem('user');
+      if (!userJson) {
+        console.log('No user found, skipping voice profile load');
+        return;
+      }
+
+      const user = JSON.parse(userJson);
+      const email = user.email;
+
+      // Fetch voice profiles from backend
+      const response = await api.get(`/voiceProfiles/${email}`);
+      const voices = response.data.voiceProfiles || [];
+      
+      setSavedVoices(voices);
+      
+      // Also cache locally for offline access
+      await AsyncStorage.setItem('savedVoices', JSON.stringify(voices));
     } catch (error) {
-      console.error('Failed to load custom audio:', error);
+      console.error('Failed to load saved voices from server:', error);
+      
+      // Fallback to local storage if server fails
+      try {
+        const voicesJson = await AsyncStorage.getItem('savedVoices');
+        if (voicesJson) {
+          const voices = JSON.parse(voicesJson);
+          setSavedVoices(voices);
+        }
+      } catch (localError) {
+        console.error('Failed to load from local storage:', localError);
+      }
     }
   };
 
-  const pickAudioFile = async () => {
-    // Temporarily disabled - need to rebuild app with expo-document-picker
-    Alert.alert(
-      'Feature Unavailable',
-      'Custom audio file selection requires rebuilding the app.\n\nRun: npm run android\n\nFor now, use the default voice profiles.'
-    );
-    /* 
+  const addNewVoice = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: 'audio/*',
@@ -57,37 +82,121 @@ export default function FakeCallScreen() {
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const asset = result.assets[0];
-        await AsyncStorage.setItem('customVoiceUri', asset.uri);
-        await AsyncStorage.setItem('customVoiceName', asset.name);
-        setCustomAudioUri(asset.uri);
-        setCustomAudioName(asset.name);
-        Alert.alert('Success', 'Custom voice file selected successfully!');
+        
+        // Store asset and show modal for Android compatibility
+        setPendingAudioAsset(asset);
+        setNewVoiceName('');
+        setShowNameModal(true);
       }
     } catch (error) {
       console.error('Error picking audio file:', error);
       Alert.alert('Error', 'Failed to select audio file');
     }
-    */
   };
 
-  const removeCustomAudio = async () => {
+  const saveVoiceProfile = async () => {
+    if (!newVoiceName.trim()) {
+      Alert.alert('Error', 'Please enter a name for the voice profile');
+      return;
+    }
+
+    if (!pendingAudioAsset) {
+      Alert.alert('Error', 'No audio file selected');
+      return;
+    }
+
     try {
-      await AsyncStorage.removeItem('customVoiceUri');
-      await AsyncStorage.removeItem('customVoiceName');
-      setCustomAudioUri(null);
-      setCustomAudioName('');
-      Alert.alert('Removed', 'Custom voice file removed');
-    } catch (error) {
-      console.error('Error removing custom audio:', error);
+      // Get user email
+      const userJson = await AsyncStorage.getItem('user');
+      if (!userJson) {
+        Alert.alert('Error', 'User not found. Please login again.');
+        return;
+      }
+
+      const user = JSON.parse(userJson);
+      const email = user.email;
+
+      // Prepare form data for upload
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('name', newVoiceName.trim());
+      formData.append('id', Date.now().toString());
+      formData.append('dateAdded', new Date().toISOString());
+
+      // Add audio file
+      const audioFile: any = {
+        uri: pendingAudioAsset.uri,
+        type: pendingAudioAsset.mimeType || 'audio/mpeg',
+        name: pendingAudioAsset.name || 'audio.mp3',
+      };
+      formData.append('audioFile', audioFile);
+
+      // Upload to server
+      const response = await api.post('/voiceProfiles/add', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Reload voice profiles from server
+      await loadSavedVoices();
+      
+      // Close modal and reset
+      setShowNameModal(false);
+      setNewVoiceName('');
+      setPendingAudioAsset(null);
+      
+      Alert.alert('Success', `Voice profile "${newVoiceName.trim()}" added and synced!`);
+    } catch (error: any) {
+      console.error('Error saving voice profile:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to save voice profile');
     }
   };
 
-  // Memoize the caller name to avoid recalculation
-  const callerName = useMemo(() => {
-    if (customName.trim()) return customName;
-    const profile = VOICE_PROFILES.find(v => v.id === selectedVoice);
-    return profile?.name || 'Unknown';
-  }, [customName, selectedVoice]);
+  const deleteVoice = async (voiceId: string) => {
+    Alert.alert(
+      'Delete Voice',
+      'Are you sure you want to delete this voice profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Get user email
+              const userJson = await AsyncStorage.getItem('user');
+              if (userJson) {
+                const user = JSON.parse(userJson);
+                const email = user.email;
+
+                // Delete from server
+                await api.delete(`/voiceProfiles/${email}/${voiceId}`);
+              }
+
+              // Update local state
+              const updatedVoices = savedVoices.filter(v => v.id !== voiceId);
+              await AsyncStorage.setItem('savedVoices', JSON.stringify(updatedVoices));
+              setSavedVoices(updatedVoices);
+              
+              if (selectedVoiceId === voiceId) {
+                setSelectedVoiceId(null);
+              }
+
+              Alert.alert('Success', 'Voice profile deleted');
+            } catch (error) {
+              console.error('Error deleting voice:', error);
+              Alert.alert('Error', 'Failed to delete voice profile');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getSelectedVoice = () => {
+    return savedVoices.find(v => v.id === selectedVoiceId);
+  };
 
   // Handle countdown timer
   useEffect(() => {
@@ -114,31 +223,48 @@ export default function FakeCallScreen() {
   // Handle navigation when call should trigger
   useEffect(() => {
     if (shouldTriggerCall) {
-      console.log('📱 Should trigger call is TRUE, navigating to active-call...');
+      const selectedVoice = getSelectedVoice();
+      
+      if (!selectedVoice) {
+        Alert.alert('No Voice Selected', 'Please select a voice profile first.');
+        setShouldTriggerCall(false);
+        return;
+      }
+
+      console.log('📱 Starting fake call...');
       setShouldTriggerCall(false);
-      console.log('📞 Caller Name:', callerName, 'Voice:', selectedVoice, 'Vibration:', vibration);
+      
       router.push({
         pathname: '/dashboard/active-call',
         params: { 
-          name: callerName,
+          name: callerName || selectedVoice.name,
           hasVibration: vibration ? 'yes' : 'no',
-          voiceType: selectedVoice,
-          customAudioUri: customAudioUri || ''
+          voiceType: 'custom',
+          customAudioUri: selectedVoice.audioUri
         }
       });
     }
-  }, [shouldTriggerCall, callerName, selectedVoice, vibration, router]);
+  }, [shouldTriggerCall, callerName, vibration, router]);
 
   const handleStart = useCallback(() => {
+    if (savedVoices.length === 0) {
+      Alert.alert('No Voice Profiles', 'Please add at least one voice profile first.');
+      return;
+    }
+    
+    if (!selectedVoiceId) {
+      Alert.alert('No Voice Selected', 'Please select a voice profile to use.');
+      return;
+    }
+
     console.log('🔔 Starting fake call countdown with delay:', callDelay);
     setIsCountingDown(true);
     Alert.alert("Timer Started", `Fake call will ring in ${callDelay} seconds.`, [
       { text: "OK", onPress: () => {
         console.log('✅ Alert dismissed, countdown continues...');
-        // Alert just closes, countdown continues in background
       }}
     ]);
-  }, [callDelay]);
+  }, [callDelay, savedVoices.length, selectedVoiceId]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -151,85 +277,88 @@ export default function FakeCallScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Caller Name Input */}
-        <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Caller Name</Text>
-            <TextInput 
-                style={styles.input}
-                value={customName}
-                onChangeText={setCustomName}
-                placeholder="Leave empty to use voice profile"
-            />
+        
+        {/* Info Banner */}
+        <View style={styles.infoBanner}>
+          <Ionicons name="information-circle" size={20} color="#6A5ACD" />
+          <Text style={styles.infoText}>
+            Add voice profiles in advance for quick emergency use
+          </Text>
         </View>
 
-        {/* Custom Audio File Selection */}
-        <View style={styles.customAudioContainer}>
-          <Text style={styles.sectionLabel}>Custom Voice Audio</Text>
-          {customAudioUri ? (
-            <View style={styles.customAudioCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.customAudioName} numberOfLines={1}>
-                  {customAudioName || 'Custom Audio'}
-                </Text>
-                <Text style={styles.customAudioSubtext}>Tap to change or remove</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <TouchableOpacity onPress={pickAudioFile} style={styles.audioActionBtn}>
-                  <Ionicons name="refresh" size={20} color="#6A5ACD" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={removeCustomAudio} style={styles.audioActionBtn}>
-                  <Ionicons name="trash-outline" size={20} color="#FF4B4B" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.pickAudioButton} onPress={pickAudioFile}>
-              <Ionicons name="musical-notes" size={24} color="#6A5ACD" />
-              <Text style={styles.pickAudioText}>Select Audio File</Text>
-              <Text style={styles.pickAudioSubtext}>Choose from your files</Text>
+        {/* Saved Voice Profiles */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your Voice Profiles</Text>
+            <TouchableOpacity onPress={addNewVoice} style={styles.addButton}>
+              <Ionicons name="add-circle" size={24} color="#6A5ACD" />
+              <Text style={styles.addButtonText}>Add New</Text>
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
 
-        {/* Voice Selection - Horizontal Scroll */}
-        <View style={styles.voiceContainer}>
-            <Text style={styles.sectionLabel}>Default Voice Profiles</Text>
-            <Text style={styles.sectionSubtext}>Used only if no custom audio is selected</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              scrollEventThrottle={16}
-              contentContainerStyle={styles.voiceScrollContent}
-            >
-              {VOICE_PROFILES.map((voice) => (
+          {savedVoices.length === 0 ? (
+            <TouchableOpacity style={styles.emptyState} onPress={addNewVoice}>
+              <Ionicons name="mic-outline" size={48} color="#C0C0C0" />
+              <Text style={styles.emptyStateTitle}>No Voice Profiles Yet</Text>
+              <Text style={styles.emptyStateText}>
+                Tap to add your first voice profile for emergency use
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.voiceList}>
+              {savedVoices.map((voice) => (
                 <TouchableOpacity
                   key={voice.id}
                   style={[
-                    styles.voiceCard,
-                    selectedVoice === voice.id && styles.voiceCardActive
+                    styles.voiceItem,
+                    selectedVoiceId === voice.id && styles.voiceItemSelected
                   ]}
-                  onPress={() => setSelectedVoice(voice.id)}
+                  onPress={() => setSelectedVoiceId(voice.id)}
                 >
                   <View style={[
-                    styles.voiceIconContainer,
-                    selectedVoice === voice.id && styles.voiceIconContainerActive
+                    styles.voiceAvatar,
+                    selectedVoiceId === voice.id && styles.voiceAvatarSelected
                   ]}>
-                    <Text style={styles.voiceIcon}>{voice.icon}</Text>
+                    <Text style={styles.voiceAvatarText}>
+                      {voice.name.charAt(0).toUpperCase()}
+                    </Text>
                   </View>
-                  <Text style={[
-                    styles.voiceName,
-                    selectedVoice === voice.id && styles.voiceNameActive
-                  ]}>
-                    {voice.name}
-                  </Text>
-                  {selectedVoice === voice.id && (
-                    <View style={styles.activeBadge}>
-                      <Ionicons name="checkmark" size={14} color="#FFF" />
-                    </View>
+                  
+                  <View style={styles.voiceInfo}>
+                    <Text style={styles.voiceItemName}>{voice.name}</Text>
+                    <Text style={styles.voiceItemFile} numberOfLines={1}>
+                      {voice.audioName}
+                    </Text>
+                  </View>
+
+                  {selectedVoiceId === voice.id && (
+                    <Ionicons name="checkmark-circle" size={24} color="#6A5ACD" />
                   )}
+
+                  <TouchableOpacity
+                    onPress={() => deleteVoice(voice.id)}
+                    style={styles.deleteBtn}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#FF4B4B" />
+                  </TouchableOpacity>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
+          )}
+        </View>
+
+        {/* Caller Name Override */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>
+            Caller Name (Optional)
+          </Text>
+          <TextInput 
+            style={styles.input}
+            value={callerName}
+            onChangeText={setCallerName}
+            placeholder="Leave empty to use voice profile name"
+            placeholderTextColor="#A0A0A0"
+          />
         </View>
 
         {/* Vibration Toggle */}
@@ -271,6 +400,52 @@ export default function FakeCallScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Name Input Modal for Android Compatibility */}
+      <Modal
+        visible={showNameModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowNameModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Name This Voice</Text>
+            <Text style={styles.modalSubtitle}>
+              Give this voice profile a name (e.g., Mom, Dad, Boss)
+            </Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              value={newVoiceName}
+              onChangeText={setNewVoiceName}
+              placeholder="Enter name..."
+              placeholderTextColor="#A0A0A0"
+              autoFocus={true}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => {
+                  setShowNameModal(false);
+                  setNewVoiceName('');
+                  setPendingAudioAsset(null);
+                }}
+              >
+                <Text style={styles.modalButtonTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSave]}
+                onPress={saveVoiceProfile}
+              >
+                <Text style={styles.modalButtonTextSave}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -281,91 +456,112 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
   scrollContent: { padding: 20 },
   
-  inputContainer: { backgroundColor: '#F3F0FA', borderRadius: 12, padding: 15, marginBottom: 20 },
-  inputLabel: { color: '#6A5ACD', fontSize: 12, fontWeight: '600', marginBottom: 5 },
-  input: { fontSize: 16, color: '#1A1B4B', fontWeight: '500' },
-
-  customAudioContainer: { marginBottom: 25 },
-  customAudioCard: {
+  infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#6A5ACD',
-    elevation: 2,
-  },
-  customAudioName: { fontSize: 15, fontWeight: '600', color: '#1A1B4B', marginBottom: 4 },
-  customAudioSubtext: { fontSize: 12, color: '#7A7A7A' },
-  audioActionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     backgroundColor: '#F3F0FA',
-    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#6A5ACD',
+    fontWeight: '500',
+  },
+
+  section: { marginBottom: 25 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 15,
   },
-  pickAudioButton: {
-    backgroundColor: '#F3F0FA',
-    borderRadius: 12,
-    padding: 20,
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  addButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6A5ACD',
+  },
+
+  emptyState: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 40,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#E8E6F0',
     borderStyle: 'dashed',
   },
-  pickAudioText: { fontSize: 16, fontWeight: '600', color: '#6A5ACD', marginTop: 8 },
-  pickAudioSubtext: { fontSize: 13, color: '#7A7A7A', marginTop: 4 },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1B4B',
+    marginTop: 15,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: '#7A7A7A',
+    marginTop: 5,
+    textAlign: 'center',
+  },
 
-  voiceContainer: { marginBottom: 25 },
-  sectionLabel: { fontSize: 16, fontWeight: '600', color: '#1A1B4B', marginBottom: 12 },
-  sectionSubtext: { fontSize: 13, color: '#7A7A7A', marginBottom: 10 },
-  
-  voiceScrollContent: { paddingHorizontal: 0, gap: 10 },
-  voiceCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
+  voiceList: { gap: 12 },
+  voiceItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 100,
-    marginRight: 10,
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: '#E8E6F0',
-    elevation: 1,
+    gap: 12,
   },
-  voiceCardActive: {
+  voiceItemSelected: {
     borderColor: '#6A5ACD',
-    backgroundColor: '#F3F0FA',
-    elevation: 3,
+    backgroundColor: '#F8F6FF',
   },
-  voiceIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#F5F5F5',
+  voiceAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F3F0FA',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  voiceIconContainerActive: {
+  voiceAvatarSelected: {
     backgroundColor: '#E8DFF5',
   },
-  voiceIcon: { fontSize: 20, fontWeight: '700', color: '#6A5ACD' },
-  voiceName: { fontSize: 13, fontWeight: '500', color: '#1A1B4B', textAlign: 'center' },
-  voiceNameActive: { color: '#6A5ACD', fontWeight: '600' },
-  activeBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#6A5ACD',
-    justifyContent: 'center',
-    alignItems: 'center',
+  voiceAvatarText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#6A5ACD',
   },
+  voiceInfo: { flex: 1 },
+  voiceItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1B4B',
+    marginBottom: 4,
+  },
+  voiceItemFile: {
+    fontSize: 12,
+    color: '#7A7A7A',
+  },
+  deleteBtn: {
+    padding: 8,
+  },
+  
+  inputContainer: { backgroundColor: '#F3F0FA', borderRadius: 12, padding: 15, marginBottom: 20 },
+  inputLabel: { color: '#6A5ACD', fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  input: { fontSize: 16, color: '#1A1B4B', fontWeight: '500' },
 
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
   label: { fontSize: 16, color: '#1A1B4B', fontWeight: '500' },
@@ -375,7 +571,6 @@ const styles = StyleSheet.create({
   timerBtnText: { fontSize: 18, fontWeight: 'bold', color: '#6A5ACD' },
   timerValue: { marginHorizontal: 15, fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },
   
-  // Countdown display styles
   countdownContainer: {
     backgroundColor: '#6A5ACD',
     borderRadius: 16,
@@ -402,5 +597,73 @@ const styles = StyleSheet.create({
     color: '#F0F0F0',
     fontWeight: '500',
     textAlign: 'center',
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 25,
+    width: '100%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A1B4B',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#7A7A7A',
+    marginBottom: 20,
+  },
+  modalInput: {
+    backgroundColor: '#F3F0FA',
+    borderRadius: 12,
+    padding: 15,
+    fontSize: 16,
+    color: '#1A1B4B',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#E8E6F0',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#F3F0FA',
+  },
+  modalButtonSave: {
+    backgroundColor: '#6A5ACD',
+  },
+  modalButtonTextCancel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1B4B',
+  },
+  modalButtonTextSave: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
   },
 });

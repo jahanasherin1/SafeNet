@@ -1,9 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import Constants from 'expo-constants';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Get base URL for audio files
+const getAudioBaseUrl = () => {
+  const LAPTOP_IP = '172.20.10.2';
+  const PORT = 5000;
+  
+  const debuggerHost = Constants.expoConfig?.hostUri;
+  if (debuggerHost) {
+    const ipAddress = debuggerHost.split(':')[0];
+    return `http://${ipAddress}:${PORT}`;
+  }
+  return `http://${LAPTOP_IP}:${PORT}`;
+};
+
+const AUDIO_BASE_URL = getAudioBaseUrl();
 
 export default function ActiveCallScreen() {
   const router = useRouter();
@@ -88,8 +104,6 @@ export default function ActiveCallScreen() {
     }
 
     try {
-      // Use local ringtone file
-      const ringtoneSource = require('../../assets/voice/ringtone.mp3');
       const audioSound = new Audio.Sound();
       
       // Add error listener
@@ -99,16 +113,26 @@ export default function ActiveCallScreen() {
         }
       });
       
-      await audioSound.loadAsync(ringtoneSource);
-      setRingtoneSound(audioSound);
-      
-      // Set to loop and play
-      await audioSound.setIsLoopingAsync(true);
-      await audioSound.playAsync();
-      
-      console.log("Ringtone started successfully");
+      // Try to load local ringtone file
+      try {
+        await audioSound.loadAsync(
+          require('../../assets/voice/ringtone.mp3'),
+          { shouldPlay: false }
+        );
+        setRingtoneSound(audioSound);
+        
+        // Set to loop and play
+        await audioSound.setIsLoopingAsync(true);
+        await audioSound.playAsync();
+        
+        console.log("Ringtone started successfully");
+      } catch (loadError) {
+        console.log("Ringtone file not found, continuing with vibration only");
+        // Continue without ringtone - vibration will still work
+      }
     } catch (error) {
-      console.error("Error loading ringtone:", error);
+      console.error("Error in startRinging:", error);
+      // Continue without ringtone if it fails
     }
   };
 
@@ -133,22 +157,30 @@ export default function ActiveCallScreen() {
     try {
       const audioSound = new Audio.Sound();
       
-      // Use custom audio if available, otherwise use default voice
+      // Use custom audio if available
       if (customAudioUri && customAudioUri.trim() !== '') {
         console.log('Using custom audio file:', customAudioUri);
-        await audioSound.loadAsync({ uri: customAudioUri });
+        
+        // Check if it's a server URL or local file
+        let audioUri = customAudioUri;
+        if (customAudioUri.startsWith('/uploads/')) {
+          // It's a server file, construct full URL
+          audioUri = `${AUDIO_BASE_URL}${customAudioUri}`;
+          console.log('Full audio URL:', audioUri);
+        }
+        
+        await audioSound.loadAsync({ uri: audioUri });
+        
+        // Set voice to loop continuously
+        await audioSound.setIsLoopingAsync(true);
+        setVoiceSound(audioSound);
+        
+        console.log('Playing custom voice in loop');
+        await audioSound.playAsync();
       } else {
-        console.log('Using default voice profile');
-        const source = require('../../assets/voice/voice.mp3');
-        await audioSound.loadAsync(source);
+        console.log('No custom audio available - fake call will be silent');
+        // No audio to play, but call UI will still show
       }
-      
-      // Set voice to loop continuously
-      await audioSound.setIsLoopingAsync(true);
-      setVoiceSound(audioSound);
-      
-      console.log(`Playing voice in loop: ${customAudioUri ? 'custom' : voiceType}`);
-      await audioSound.playAsync();
     } catch (error) {
       console.log("Error loading voice", error);
     }

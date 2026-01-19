@@ -24,6 +24,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Check if email exists
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    
+    res.status(200).json({ 
+      exists: !!existingUser,
+      message: existingUser ? 'Email already registered' : 'Email available'
+    });
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 // 1. Signup
 router.post('/signup', async (req, res) => {
   try {

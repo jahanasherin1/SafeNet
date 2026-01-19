@@ -19,6 +19,33 @@ const PasswordResetSchema = new mongoose.Schema({
 
 export const PasswordReset = mongoose.model('PasswordReset', PasswordResetSchema);
 
+// --- ALERT/NOTIFICATION SCHEMA ---
+const AlertSchema = new mongoose.Schema({
+  userEmail: { type: String, required: true, index: true },
+  userName: { type: String, required: true },
+  type: { 
+    type: String, 
+    required: true,
+    enum: ['sos', 'journey_started', 'journey_delayed', 'journey_completed', 'location_shared', 'fake_call_activated']
+  },
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  location: {
+    latitude: Number,
+    longitude: Number
+  },
+  metadata: { type: mongoose.Schema.Types.Mixed }, // Additional data specific to alert type
+  isRead: { type: Boolean, default: false },
+  readAt: { type: Date }, // Timestamp when alert was marked as read
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+
+// Index for efficient queries
+AlertSchema.index({ userEmail: 1, createdAt: -1 });
+AlertSchema.index({ isRead: 1, readAt: 1 }); // For cleanup queries
+
+export const Alert = mongoose.model('Alert', AlertSchema);
+
 // --- USER SCHEMA ---
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -49,6 +76,17 @@ const UserSchema = new mongoose.Schema({
 
   sosActive: { type: Boolean, default: false },
   lastSosTime: { type: Date, default: null },
+  
+  // Voice Profiles for Fake Call
+  voiceProfiles: [
+    {
+      id: String,
+      name: String,
+      audioUri: String,
+      audioName: String,
+      dateAdded: { type: Date, default: Date.now }
+    }
+  ],
   
   currentLocation: {
     latitude: { type: Number, default: 0 },

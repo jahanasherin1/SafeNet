@@ -150,11 +150,33 @@ export default function DashboardHome() {
         return;
       }
 
-      // Force high accuracy for SOS
+      // Force high accuracy for SOS with timeout
       console.log("Getting high-accuracy location for SOS...");
-      let location = await Location.getCurrentPositionAsync({ 
-        accuracy: Location.Accuracy.High
-      });
+      
+      let location;
+      try {
+        location = await Location.getCurrentPositionAsync({ 
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 0
+        });
+      } catch (locationError: any) {
+        console.log("High accuracy failed, trying balanced accuracy...");
+        // Fallback to balanced accuracy if high accuracy fails
+        try {
+          location = await Location.getCurrentPositionAsync({ 
+            accuracy: Location.Accuracy.Balanced
+          });
+        } catch (fallbackError) {
+          console.log("Balanced accuracy failed, trying last known location...");
+          // Final fallback to last known location
+          location = await Location.getLastKnownPositionAsync();
+          
+          if (!location) {
+            throw new Error("Unable to get location. Please check your GPS settings.");
+          }
+        }
+      }
       
       console.log("SOS Location:", location.coords);
 
