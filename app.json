@@ -27,7 +27,8 @@
         "WAKE_LOCK",
         "RECEIVE_BOOT_COMPLETED",
         "CHANGE_DEVICE_SLEEP_STATE",
-        "INTERNET"
+        "INTERNET",
+        "ACTIVITY_RECOGNITION"
       ],
       "package": "com.safenet.app"
     },

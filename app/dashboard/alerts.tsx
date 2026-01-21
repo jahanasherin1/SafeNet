@@ -134,6 +134,20 @@ export default function UserAlertsScreen() {
     }
   };
 
+  const openLocation = (latitude: number, longitude: number) => {
+    const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    Alert.alert(
+      'Open Location',
+      'View location in Google Maps?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open', onPress: () => {
+          console.log('Open maps:', mapsUrl);
+        }}
+      ]
+    );
+  };
+
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'sos':
@@ -233,6 +247,16 @@ export default function UserAlertsScreen() {
           
           <Text style={styles.alertMessage}>{userMessage.message}</Text>
           
+          {item.location && (
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={() => openLocation(item.location!.latitude, item.location!.longitude)}
+            >
+              <Ionicons name="location" size={16} color="#6A5ACD" />
+              <Text style={styles.locationText}>View Location</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
         </View>
       </TouchableOpacity>

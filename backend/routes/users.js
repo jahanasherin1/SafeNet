@@ -32,11 +32,18 @@ router.post('/update-location', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Log background updates differently
+    // Log background updates differently with timestamp
+    const timestamp = new Date().toLocaleTimeString('en-US', { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+    
     if (isBackgroundUpdate) {
-      console.log(`📍 Background location update for ${email}: (${latitude}, ${longitude})`);
+      console.log(`📍 [${timestamp}] Background location for ${user.name || email}: (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`);
     } else {
-      console.log(`📍 Manual location update for ${email}: (${latitude}, ${longitude})`);
+      console.log(`📍 [${timestamp}] Manual location for ${user.name || email}: (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`);
     }
 
     res.status(200).json({ 

@@ -6,7 +6,7 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   
   // 1. Define screens that should NOT appear in the bottom bar
-  const hiddenRoutes = ['edit-profile', 'start-journey','monitor-journey','fake-call','active-call', '_sitemap', '+not-found'];
+  const hiddenRoutes = ['edit-profile', 'start-journey','monitor-journey','fake-call','active-call','monitor', '_sitemap', '+not-found'];
   
   // 2. Check if current screen should hide the entire tab bar
   const currentRoute = state.routes[state.index];

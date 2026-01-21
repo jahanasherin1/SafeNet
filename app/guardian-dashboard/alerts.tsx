@@ -117,7 +117,21 @@ export default function GuardianAlertsScreen() {
 
   const applyFilter = (type: string) => {
     setFilterType(type);
-    fetchAlerts(selectedUser, type);
+    fetchAlerts(selectedUser, type === 'journey_started' ? 'all' : type);
+  };
+
+  // Filter alerts based on selected filter
+  const getFilteredAlerts = () => {
+    if (filterType === 'all') return alerts;
+    if (filterType === 'journey_started') {
+      // Show all journey-related alerts
+      return alerts.filter(alert => 
+        alert.type === 'journey_started' || 
+        alert.type === 'journey_delayed' || 
+        alert.type === 'journey_completed'
+      );
+    }
+    return alerts.filter(alert => alert.type === filterType);
   };
 
   const markAsRead = async (alertIds: string[]) => {
@@ -142,6 +156,20 @@ export default function GuardianAlertsScreen() {
       console.error('Error marking all as read:', error);
       Alert.alert('Error', 'Failed to mark all as read');
     }
+  };
+
+  const openLocation = (latitude: number, longitude: number) => {
+    const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    Alert.alert(
+      'Open Location',
+      'View location in Google Maps?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open', onPress: () => {
+          console.log('Open maps:', mapsUrl);
+        }}
+      ]
+    );
   };
 
   const getAlertIcon = (type: string) => {
@@ -202,6 +230,16 @@ export default function GuardianAlertsScreen() {
           
           <Text style={styles.alertMessage}>{item.message}</Text>
           
+          {item.location && (
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={() => openLocation(item.location!.latitude, item.location!.longitude)}
+            >
+              <Ionicons name="location" size={16} color="#6A5ACD" />
+              <Text style={styles.locationText}>View Location</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
         </View>
       </TouchableOpacity>
@@ -253,10 +291,10 @@ export default function GuardianAlertsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterType === 'journey_started' && styles.filterChipActive]}
+            style={[styles.filterChip, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterChipActive]}
             onPress={() => applyFilter('journey_started')}
           >
-            <Text style={[styles.filterText, filterType === 'journey_started' && styles.filterTextActive]}>Journey</Text>
+            <Text style={[styles.filterText, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterTextActive]}>Journey</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -268,17 +306,20 @@ export default function GuardianAlertsScreen() {
         </View>
       </View>
 
-      {alerts.length === 0 ? (
+      {getFilteredAlerts().length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off-outline" size={64} color="#C0C0C0" />
           <Text style={styles.emptyTitle}>No Alerts</Text>
           <Text style={styles.emptyText}>
-            You'll see alerts here when the user triggers SOS, starts a journey, or shares their location
+            {filterType === 'all' 
+              ? "You'll see alerts here when the user triggers SOS, starts a journey, or shares their location"
+              : `No ${filterType.replace('_', ' ')} alerts found`
+            }
           </Text>
         </View>
       ) : (
         <FlatList
-          data={alerts}
+          data={getFilteredAlerts()}
           renderItem={renderAlert}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}

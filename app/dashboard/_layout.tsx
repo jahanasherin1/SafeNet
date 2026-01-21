@@ -49,6 +49,12 @@ export default function DashboardLayout() {
           href: null
         }} 
       />
+      <Tabs.Screen 
+        name="monitor" 
+        options={{ 
+          href: null
+        }} 
+      />
     
     </Tabs>
   );

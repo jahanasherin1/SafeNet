@@ -8,7 +8,7 @@ const router = express.Router();
 // 9. Trigger SOS
 router.post('/trigger', async (req, res) => {
   try {
-    const { userEmail, location } = req.body;
+    const { userEmail, location, reason } = req.body;
     const { latitude, longitude } = location;
 
     const user = await User.findOne({ email: userEmail });
@@ -26,8 +26,9 @@ router.post('/trigger', async (req, res) => {
     await user.save();
 
     const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-    const emailSubject = "🚨 SOS ALERT! Help Needed!";
-    const emailBody = `URGENT: ${user.name} triggered an SOS.\nLocation: ${mapsLink}`;
+    const alertReason = reason || "SOS Button Triggered"; // Default if not provided
+    const emailSubject = `🚨 EMERGENCY: ${alertReason}!`;
+    const emailBody = `URGENT: ${user.name} requires help.\n\nReason: ${alertReason}\n\nLocation: ${mapsLink}`;
 
     user.guardians.forEach(g => {
       if (g.email) sendEmail(g.email, emailSubject, emailBody);
@@ -39,15 +40,16 @@ router.post('/trigger', async (req, res) => {
       userName: user.name,
       type: 'sos',
       title: '🚨 SOS Alert',
-      message: `${user.name} triggered an emergency SOS alert and needs immediate help!`,
+      message: `${user.name} triggered an emergency alert: ${alertReason}!`,
       location: { latitude, longitude },
       metadata: {
         mapsLink,
+        reason: alertReason,
         guardianCount: user.guardians.length
       }
     });
 
-    console.log(`SOS Triggered for ${user.name}`);
+    console.log(`SOS Triggered for ${user.name} - Reason: ${alertReason}`);
     res.status(200).json({ message: 'SOS Active' });
 
   } catch (error) {

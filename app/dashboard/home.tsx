@@ -337,6 +337,20 @@ export default function DashboardHome() {
           </LinearGradient>
         </View>
 
+        <View style={styles.actionRow}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.actionTitle}>Activity Monitoring</Text>
+            <Text style={styles.actionDesc}>AI detects falls, sudden stops, and running</Text>
+            <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/dashboard/monitor')}>
+              <Text style={styles.smallButtonText}>Monitor</Text>
+              <Ionicons name="analytics-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
+          </View>
+          <LinearGradient colors={['#FF6B6B', '#EE5A6F']} style={styles.actionImageContainer}>
+             <Ionicons name="pulse" size={40} color="#FFF" />
+          </LinearGradient>
+        </View>
+
         {/* Trusted Guardians */}
         <Text style={styles.sectionTitle}>Trusted Guardians</Text>
         <View style={styles.guardianCard}>

@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
 // ========================================
 const LAPTOP_IP = '172.20.10.2';        // ← Home
 // const LAPTOP_IP = '192.168.128.244';  // ← Home Alt
-// const LAPTOP_IP = '192.168.1.23';     // ← College
+//const LAPTOP_IP = '192.168.1.23';     // ← College
 // ========================================
 
 const PORT = 5000; 

@@ -30,11 +30,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState(true);
   const [isTrackingActive, setIsTrackingActive] = useState(false);
   const [queuedLocations, setQueuedLocations] = useState(0);
+  const [sessionInitialized, setSessionInitialized] = useState(false);
 
   const isLoggedIn = !!user && !!token;
 
   // Initialize session on app start
   useEffect(() => {
+    // Prevent multiple initializations
+    if (sessionInitialized) return;
+
     const initializeSession = async () => {
       try {
         const storedUser = await AsyncStorage.getItem('user');
@@ -53,14 +57,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             // Restart tracking if it should be active but isn't
             console.log('🔄 Restoring background location tracking...');
             await startBackgroundLocationTracking();
-          } else if (shouldBeTracking) {
+            setIsTrackingActive(true);
+          } else if (isTracking) {
             console.log('✅ Background tracking already active');
+            console.log('ℹ️  Location updates should be appearing every 10 seconds...');
+            setIsTrackingActive(true);
           } else {
             // Start tracking by default for logged-in users
+            console.log('🚀 Starting background tracking for logged-in user...');
             await startBackgroundLocationTracking();
+            setIsTrackingActive(true);
           }
-          
-          setIsTrackingActive(true);
           
           // Acquire partial wake lock to keep tracking active
           await acquirePartialWakeLock();
@@ -73,9 +80,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (queueStatus.count > 0) {
             setTimeout(() => processLocationQueue(), 5000);
           }
-
-          console.log('✅ Session restored and background tracking started');
         }
+        
+        setSessionInitialized(true);
       } catch (error) {
         console.error('Error initializing session:', error);
       } finally {
