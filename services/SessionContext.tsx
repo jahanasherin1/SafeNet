@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { isActivityMonitoringActive, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
@@ -20,6 +21,8 @@ interface SessionContextType {
   isLoggedIn: boolean;
   isTrackingActive: boolean;
   queuedLocations: number;
+  isActivityMonitoringActive: boolean;
+  toggleActivityMonitoring: (enabled: boolean) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -30,6 +33,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState(true);
   const [isTrackingActive, setIsTrackingActive] = useState(false);
   const [queuedLocations, setQueuedLocations] = useState(0);
+  const [isActivityMonitoringActiveState, setIsActivityMonitoringActive] = useState(false);
   const [sessionInitialized, setSessionInitialized] = useState(false);
 
   const isLoggedIn = !!user && !!token;
@@ -44,6 +48,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const storedUser = await AsyncStorage.getItem('user');
         const storedToken = await AsyncStorage.getItem('token');
         const shouldBeTracking = await isTrackingEnabled();
+        const activityMonEnabled = await isActivityMonitoringActive();
 
         if (storedUser && storedToken) {
           const parsedUser = JSON.parse(storedUser);
@@ -62,6 +67,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           } else {
             console.warn('⚠️ Failed to start background tracking');
             setIsTrackingActive(false);
+          }
+          
+          // Restart activity monitoring if it was enabled
+          if (activityMonEnabled) {
+            console.log('🔄 (Re)starting activity monitoring...');
+            const activityMonStarted = await startActivityMonitoring();
+            setIsActivityMonitoringActive(activityMonStarted);
           }
           
           // Acquire partial wake lock to keep tracking active
@@ -148,6 +160,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await stopBackgroundLocationTracking();
       setIsTrackingActive(false);
       
+      // Stop activity monitoring
+      await stopActivityMonitoring();
+      setIsActivityMonitoringActive(false);
+      
       // Release wake lock
       await releaseWakeLock();
       
@@ -166,6 +182,25 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const toggleActivityMonitoring = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        const started = await startActivityMonitoring();
+        setIsActivityMonitoringActive(started);
+        if (started) {
+          console.log('✅ Activity monitoring started');
+        }
+      } else {
+        await stopActivityMonitoring();
+        setIsActivityMonitoringActive(false);
+        console.log('✅ Activity monitoring stopped');
+      }
+    } catch (error) {
+      console.error('Error toggling activity monitoring:', error);
+      throw error;
+    }
+  };
+
   return (
     <SessionContext.Provider
       value={{
@@ -177,6 +212,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isLoggedIn,
         isTrackingActive,
         queuedLocations,
+        isActivityMonitoringActive: isActivityMonitoringActiveState,
+        toggleActivityMonitoring,
       }}
     >
       {children}

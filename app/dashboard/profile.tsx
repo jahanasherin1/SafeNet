@@ -3,14 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 import { useSession } from '../../services/SessionContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { logout, user } = useSession();
+  const { logout, user, isActivityMonitoringActive, toggleActivityMonitoring } = useSession();
   
   // State for user data
   const [userName, setUserName] = useState('User');
@@ -19,7 +19,7 @@ export default function ProfileScreen() {
 
   // State for toggles
   const [isBatteryMode, setIsBatteryMode] = useState(false);
-  const [isMonitoring, setIsMonitoring] = useState(true);
+  const [togglingActivity, setTogglingActivity] = useState(false);
 
   // --- 2. REFRESH DATA WHEN SCREEN IS FOCUSED ---
   useFocusEffect(
@@ -124,8 +124,19 @@ export default function ProfileScreen() {
           <View style={styles.prefItem}>
             <Text style={styles.prefText}>Monitoring Status</Text>
             <Switch 
-              value={isMonitoring} 
-              onValueChange={setIsMonitoring}
+              value={isActivityMonitoringActive}
+              onValueChange={async (value) => {
+                setTogglingActivity(true);
+                try {
+                  await toggleActivityMonitoring(value);
+                  Alert.alert('Success', value ? 'Activity monitoring enabled' : 'Activity monitoring disabled');
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to toggle activity monitoring');
+                } finally {
+                  setTogglingActivity(false);
+                }
+              }}
+              disabled={togglingActivity}
               trackColor={{ false: "#E0E0E0", true: "#6A5ACD" }}
               thumbColor="#FFFFFF"
             />

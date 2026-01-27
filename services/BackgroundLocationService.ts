@@ -15,6 +15,7 @@ let appStateSubscription: any = null;
 let lastLoggedTime = 0;
 let heartbeatInterval: any = null;
 let foregroundPollingInterval: any = null; // Fallback polling when background task isn't firing
+let trackingStartTime = 0; // Track when tracking was started to skip old buffered locations
 const LOG_THROTTLE_MS = 5000; // Only log location every 5 seconds
 const HEARTBEAT_INTERVAL = 30000; // Check tracking health every 30 seconds
 const FOREGROUND_POLLING_INTERVAL = 5000; // Poll every 5 seconds as fallback
@@ -157,7 +158,16 @@ const defineBackgroundTask = () => {
       const coords = location.coords;
       const locationTimestamp = location.timestamp;
       
-      // Skip old buffered locations (older than 30 seconds only)
+      // Skip locations that are older than when tracking started (cached/buffered locations)
+      if (trackingStartTime > 0 && locationTimestamp < trackingStartTime) {
+        if (VERBOSE_LOGGING) {
+          const bufferAge = trackingStartTime - locationTimestamp;
+          console.log(`⏭️ Skipping buffered location from before tracking started (${Math.round(bufferAge/1000)}s before start)`);
+        }
+        return; // Skip locations from before tracking started
+      }
+      
+      // Skip locations that are too old (older than 30 seconds)
       const locationAge = now - locationTimestamp;
       if (locationAge > 30000) {
         if (VERBOSE_LOGGING) {
@@ -306,6 +316,10 @@ const sendLocationToBackend = async (
 export const startBackgroundLocationTracking = async () => {
   try {
     console.log('🚀 Starting background location tracking...');
+    
+    // Set tracking start time to skip old buffered locations
+    trackingStartTime = Date.now();
+    console.log(`⏱️ Tracking start time set: ${new Date(trackingStartTime).toLocaleTimeString()}`);
 
     // Allow starting in any app state for real-time tracking
     const appState = AppState.currentState;

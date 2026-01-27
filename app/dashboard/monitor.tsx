@@ -1,317 +1,82 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { Accelerometer, Pedometer } from 'expo-sensors';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api from '../../services/api';
-
-// --- CONFIGURATION ---
-const FALL_THRESHOLD = 2.5; // G-force
-const RUNNING_CADENCE = 2.5; // Steps per second (approx 150 steps/min)
-const SUDDEN_STOP_THRESHOLD = 2.0; // Deceleration G-force
-const PRE_ALERT_TIMER = 15; // Time to cancel alert
-const RUNNING_ALERT_DELAY = 30; // Alert after 30 seconds of continuous running
-const SUDDEN_STOP_COOLDOWN = 60; // Wait 60 seconds before another sudden stop alert
+import { setActivityUpdateCallback, setAlertCallback } from '../../services/ActivityMonitoringService';
+import { useSession } from '../../services/SessionContext';
 
 export default function ActivityMonitorScreen() {
   const router = useRouter();
+  const { isActivityMonitoringActive, toggleActivityMonitoring } = useSession();
   
-  // State
-  const [monitoring, setMonitoring] = useState(false);
-  const [currentActivity, setCurrentActivity] = useState('Still');
+  // UI State
+  const [currentActivity, setCurrentActivity] = useState('Monitoring Status...');
   const [stepCount, setStepCount] = useState(0);
-  const [lastStepTime, setLastStepTime] = useState(Date.now());
-  const [sensorsAvailable, setSensorsAvailable] = useState(true);
-  
-  // Alert State
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertReason, setAlertReason] = useState('');
-  const [countdown, setCountdown] = useState(PRE_ALERT_TIMER);
+  const [countdown, setCountdown] = useState(15);
   const [sendingAlert, setSendingAlert] = useState(false);
 
-  // Refs for subscriptions & logic
-  const accelSubscription = useRef<any>(null);
-  const pedometerSubscription = useRef<any>(null);
   const countdownInterval = useRef<NodeJS.Timeout | null>(null);
-  
-  // Tracking history for logic
-  const recentGForces = useRef<number[]>([]);
-  const wasRunning = useRef(false);
-  const baselineStepCount = useRef(0);
-  const activityCheckInterval = useRef<NodeJS.Timeout | null>(null);
-  const isFirstStepUpdate = useRef(true);
-  const runningStartTime = useRef<number | null>(null);
-  const lastSuddenStopAlert = useRef<number>(0);
 
-  // --- START / STOP LOGIC ---
-  const toggleMonitoring = async () => {
-    if (monitoring) {
-      stopMonitoring();
-    } else {
-      if (!sensorsAvailable) {
-        Alert.alert("Permission Required", "Activity permission is required to use fall detection. Please enable it in settings.");
-        return;
-      }
-      startMonitoring();
-    }
-  };
+  // Register callbacks for activity updates
+  useEffect(() => {
+    setActivityUpdateCallback((activity, steps) => {
+      setCurrentActivity(activity);
+      setStepCount(steps);
+    });
 
-  const startMonitoring = async () => {
-    setMonitoring(true);
-    setAlertVisible(false);
-    setCurrentActivity('Monitoring...');
-    wasRunning.current = false;
-    isFirstStepUpdate.current = true;
+    setAlertCallback((reason) => {
+      handleAlertTriggered(reason);
+    });
 
-    // Reset step tracking
-    baselineStepCount.current = 0;
-    setStepCount(0);
-    setLastStepTime(Date.now());
-    
-    // Reset unusual behavior tracking
-    runningStartTime.current = null;
-    lastSuddenStopAlert.current = 0;
+    return () => {
+      setActivityUpdateCallback(null as any);
+      setAlertCallback(null as any);
+    };
+  }, []);
 
-    // 1. ACCELEROMETER (Fall & Sudden Stop)
-    try {
-      Accelerometer.setUpdateInterval(100); // Fast updates (10 per sec)
-      accelSubscription.current = Accelerometer.addListener((data: any) => {
-          analyzeMotion(data);
-      });
-    } catch (e) {
-      console.log('⚠️ Accelerometer initialization failed:', e);
-      setCurrentActivity('Fall Detection Not Available');
-      return;
-    }
-
-    // 2. PEDOMETER (Running & Walking)
-    // Note: On Android, we can't get historical step count, so we track from when monitoring starts
-    try {
-      pedometerSubscription.current = Pedometer.watchStepCount((result: any) => {
-          // On first update, set this as baseline
-          if (isFirstStepUpdate.current) {
-            baselineStepCount.current = result.steps;
-            isFirstStepUpdate.current = false;
-            console.log('📊 Set baseline step count:', result.steps);
-            return;
-          }
-          
-          const relativeSteps = result.steps - baselineStepCount.current;
-          analyzeSteps(relativeSteps);
-      });
+  // Update initial activity status
+  useEffect(() => {
+    if (isActivityMonitoringActive) {
       setCurrentActivity('Monitoring Activity...');
-    } catch (e) {
-      console.log('⚠️ Pedometer initialization failed:', e);
-      setCurrentActivity('Fall Detection Active (Accelerometer Only)');
+    } else {
+      setCurrentActivity('Monitoring Inactive');
     }
+  }, [isActivityMonitoringActive]);
 
-    // 3. ACTIVITY CHECK INTERVAL (detect when user stops moving)
-    activityCheckInterval.current = setInterval(() => {
-      checkActivityTimeout();
-    }, 3000); // Check every 3 seconds
-  };
-
-  const stopMonitoring = () => {
-    setMonitoring(false);
-    setCurrentActivity('Stopped');
-    if (accelSubscription.current) {
-      try {
-        accelSubscription.current.remove();
-      } catch (e) {
-        console.log('Cleanup:', e);
-      }
-    }
-    if (pedometerSubscription.current) {
-      try {
-        pedometerSubscription.current.remove();
-      } catch (e) {
-        console.log('Pedometer cleanup:', e);
-      }
-    }
-    if (activityCheckInterval.current) {
-      clearInterval(activityCheckInterval.current);
-      activityCheckInterval.current = null;
-    }
-  };
-
-  // --- ANALYZE STEPS (Walking vs Running) ---
-  const analyzeSteps = (totalSteps: number) => {
-    const now = Date.now();
-    const timeDiff = (now - lastStepTime) / 1000; // Seconds since last check
-    
-    // Only calculate cadence if steps actually increased and enough time has passed
-    if (totalSteps > stepCount && timeDiff > 0.5) {
-        const stepsDiff = totalSteps - stepCount;
-        const cadence = stepsDiff / timeDiff; // Steps per second
-
-        console.log(`📊 Steps: ${totalSteps}, Cadence: ${cadence.toFixed(2)} steps/sec`);
-
-        if (cadence > RUNNING_CADENCE) {
-            setCurrentActivity('Running 🏃‍♂️');
-            wasRunning.current = true;
-            
-            // Start tracking running time
-            if (runningStartTime.current === null) {
-                runningStartTime.current = now;
-                console.log('🏃 Started running detection timer');
-            } else {
-                // Check if running for extended period (unusual behavior)
-                const runningDuration = (now - runningStartTime.current) / 1000;
-                if (runningDuration >= RUNNING_ALERT_DELAY && !alertVisible) {
-                    console.log(`⚠️ Sustained running detected: ${runningDuration.toFixed(0)}s`);
-                    triggerAlert('UNUSUAL BEHAVIOR - RUNNING');
-                    runningStartTime.current = null; // Reset after alert
-                }
-            }
-        } else if (cadence > 0.5) {
-            setCurrentActivity('Walking 🚶');
-            wasRunning.current = false;
-            runningStartTime.current = null; // Reset running timer
-        } else if (cadence > 0.1) {
-            setCurrentActivity('Slow Walk 🚶');
-            wasRunning.current = false;
-            runningStartTime.current = null;
-        } else {
-            setCurrentActivity('Moving Slowly 🧍');
-            wasRunning.current = false;
-            runningStartTime.current = null;
-        }
-        
-        setLastStepTime(now);
-    }
-    
-    setStepCount(totalSteps);
-  };
-
-  // --- CHECK ACTIVITY TIMEOUT (detect when user stops moving) ---
-  const checkActivityTimeout = () => {
-    const now = Date.now();
-    const timeSinceLastStep = (now - lastStepTime) / 1000; // Seconds
-    
-    // If no steps for 5 seconds, user is standing/still
-    if (timeSinceLastStep > 5 && monitoring) {
-      setCurrentActivity('Standing Still 🧍');
-      wasRunning.current = false;
-      runningStartTime.current = null; // Reset running timer
-    }
-  };
-
-  // --- ANALYZE MOTION (Falls & Stops) ---
-  const analyzeMotion = ({ x, y, z }: { x: number, y: number, z: number }) => {
-    const totalForce = Math.sqrt(x * x + y * y + z * z);
-    const now = Date.now();
-    
-    // Keep a small history for trend analysis
-    recentGForces.current.push(totalForce);
-    if (recentGForces.current.length > 10) recentGForces.current.shift();
-
-    // 1. FALL DETECTION
-    if (totalForce > FALL_THRESHOLD) {
-        // High impact detected
-        triggerAlert('FALL DETECTED');
-        return; // Don't check other conditions after fall
-    }
-
-    // 2. SUDDEN STOP DETECTION
-    // Logic: High deceleration (force spike) AND activity was "Running" just before
-    // Add cooldown to prevent multiple alerts in quick succession
-    const timeSinceLastSuddenStop = (now - lastSuddenStopAlert.current) / 1000;
-    if (totalForce > SUDDEN_STOP_THRESHOLD && wasRunning.current && timeSinceLastSuddenStop > SUDDEN_STOP_COOLDOWN) {
-        console.log('⚠️ Sudden stop detected while running');
-        triggerAlert('UNUSUAL BEHAVIOR - SUDDEN STOP');
-        lastSuddenStopAlert.current = now;
-        wasRunning.current = false; // Reset running state
-        runningStartTime.current = null; // Reset running timer
-    }
-  };
-
-  // --- ALERT SYSTEM ---
-  const triggerAlert = (reason: string) => {
-    if (alertVisible) return; // Prevent double alerts
-
-    stopMonitoring(); // Pause sensors
-    Vibration.vibrate([500, 500, 500]); // Vibrate pattern
+  const handleAlertTriggered = (reason: string) => {
     setAlertReason(reason);
     setAlertVisible(true);
-    setCountdown(PRE_ALERT_TIMER);
+    setCountdown(15);
 
-    // Start Countdown
     countdownInterval.current = setInterval(() => {
-        setCountdown((prev) => {
-            if (prev <= 1) {
-                clearInterval(countdownInterval.current!);
-                sendEmergencyAlert(reason);
-                return 0;
-            }
-            return prev - 1;
-        });
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
   };
 
   const handleImOkay = () => {
     if (countdownInterval.current) clearInterval(countdownInterval.current);
     setAlertVisible(false);
-    startMonitoring(); // Resume
   };
 
-  const sendEmergencyAlert = async (reason: string) => {
-    setSendingAlert(true);
+  const handleToggleMonitoring = async () => {
     try {
-        const userData = await AsyncStorage.getItem('user');
-        if (!userData) return;
-        const { email } = JSON.parse(userData);
-
-        // Get Location for context
-        let location = { latitude: 0, longitude: 0 };
-        try {
-            const loc = await Location.getCurrentPositionAsync({});
-            location = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-        } catch(e) {}
-
-        // Send to Backend
-        // NOTE: Ensure your /sos/trigger route handles the 'reason' field in the email body
-        await api.post('/sos/trigger', { 
-            userEmail: email,
-            location: location,
-            reason: reason // "FALL DETECTED", "SUDDEN STOP", etc.
-        });
-
-        Alert.alert("Alert Sent", `Guardians notified: ${reason}`);
+      await toggleActivityMonitoring(!isActivityMonitoringActive);
+      Alert.alert(
+        'Activity Guard',
+        isActivityMonitoringActive ? 'Monitoring Deactivated' : 'Monitoring Activated'
+      );
     } catch (error) {
-        Alert.alert("Error", "Failed to send alert.");
-    } finally {
-        setSendingAlert(false);
-        setAlertVisible(false);
-    }
-  };
-
-  // Cleanup & Request Permissions
-  useEffect(() => {
-    requestActivityPermission();
-    return () => {
-        stopMonitoring();
-        if (countdownInterval.current) clearInterval(countdownInterval.current);
-        if (activityCheckInterval.current) clearInterval(activityCheckInterval.current);
-    };
-  }, []);
-
-  const requestActivityPermission = async () => {
-    try {
-      const { status } = await Pedometer.requestPermissionsAsync();
-      if (status === 'granted') {
-        console.log('✅ Pedometer permission granted');
-        setSensorsAvailable(true);
-      } else {
-        console.log('⚠️ Pedometer permission denied');
-        setSensorsAvailable(false);
-      }
-    } catch (e) {
-      console.log('⚠️ Error requesting Pedometer permission:', e);
-      setSensorsAvailable(false);
+      Alert.alert('Error', 'Failed to toggle activity monitoring');
     }
   };
 
@@ -330,22 +95,25 @@ export default function ActivityMonitorScreen() {
         {/* Status Circle */}
         <View style={styles.radarContainer}>
             <LinearGradient
-                colors={monitoring ? ['#E0F7FA', '#B2EBF2'] : ['#FFEBEE', '#FFCDD2']}
+                colors={isActivityMonitoringActive ? ['#E0F7FA', '#B2EBF2'] : ['#FFEBEE', '#FFCDD2']}
                 style={styles.radarCircle}
             >
                 {/* Dynamic Icon based on Activity */}
                 <Ionicons 
                     name={
                         currentActivity.includes('Running') ? "bicycle" : 
+                        currentActivity.includes('Fast') ? "speedometer" :
                         currentActivity.includes('Walking') ? "walk" : 
-                        "body"
+                        isActivityMonitoringActive ? "pulse" : "body"
                     } 
                     size={80} 
-                    color={monitoring ? "#FFF" : "#AAA"} 
+                    color={isActivityMonitoringActive ? "#FFF" : "#AAA"} 
                 />
             </LinearGradient>
             <Text style={styles.statusText}>{currentActivity}</Text>
-            {monitoring && <Text style={styles.subText}>AI analyzing movement patterns...</Text>}
+            {isActivityMonitoringActive && <Text style={styles.subText}>AI analyzing movement patterns...</Text>}
+            {isActivityMonitoringActive && <Text style={styles.stepText}>Steps: {stepCount}</Text>}
+            {!isActivityMonitoringActive && <Text style={styles.inactiveText}>Enable monitoring from dashboard</Text>}
         </View>
 
         {/* Feature Grid */}
@@ -364,13 +132,27 @@ export default function ActivityMonitorScreen() {
             </View>
         </View>
 
-        {/* Toggle Button */}
-        <TouchableOpacity 
-            style={[styles.mainButton, monitoring ? styles.btnStop : styles.btnStart]}
-            onPress={toggleMonitoring}
-        >
-            <Text style={styles.btnText}>{monitoring ? "DEACTIVATE GUARD" : "ACTIVATE GUARD"}</Text>
-        </TouchableOpacity>
+        {/* Status Info */}
+        <View style={styles.infoContainer}>
+            <View style={styles.infoBox}>
+                <Ionicons 
+                    name={isActivityMonitoringActive ? "checkmark-circle" : "close-circle"} 
+                    size={20} 
+                    color={isActivityMonitoringActive ? "#4CAF50" : "#FF6B6B"} 
+                />
+                <Text style={styles.infoText}>
+                    {isActivityMonitoringActive ? 'Monitoring Active' : 'Monitoring Inactive'}
+                </Text>
+            </View>
+            <TouchableOpacity 
+                style={[styles.toggleButton, isActivityMonitoringActive ? styles.btnDeactivate : styles.btnActivate]}
+                onPress={handleToggleMonitoring}
+            >
+                <Text style={styles.toggleButtonText}>
+                    {isActivityMonitoringActive ? 'DEACTIVATE' : 'ACTIVATE'}
+                </Text>
+            </TouchableOpacity>
+        </View>
 
       </View>
 
@@ -386,14 +168,12 @@ export default function ActivityMonitorScreen() {
                 <Text style={styles.modalReason}>Pattern Detected: {alertReason}</Text>
                 
                 <Text style={styles.modalDesc}>
-                    Guardians will be notified in <Text style={{fontWeight:'bold', color: '#FF4B4B'}}>{countdown}s</Text> with your location and activity data.
+                    Guardians have been notified with your location and activity data.
                 </Text>
 
-                {sendingAlert ? (
-                    <ActivityIndicator size="large" color="#FF4B4B" />
-                ) : (
+                {!sendingAlert && (
                     <TouchableOpacity style={styles.okayButton} onPress={handleImOkay}>
-                        <Text style={styles.okayText}>I AM OKAY - CANCEL</Text>
+                        <Text style={styles.okayText}>DISMISS</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -414,15 +194,20 @@ const styles = StyleSheet.create({
   radarCircle: { width: 200, height: 200, borderRadius: 100, justifyContent: 'center', alignItems: 'center', marginBottom: 20, elevation: 15, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10 },
   statusText: { fontSize: 24, fontWeight: 'bold', color: '#1A1B4B' },
   subText: { fontSize: 13, color: '#777', marginTop: 5 },
+  inactiveText: { fontSize: 12, color: '#999', marginTop: 5, fontStyle: 'italic' },
+  stepText: { fontSize: 14, color: '#555', marginTop: 5, fontWeight: '600' },
 
   grid: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 40 },
   card: { backgroundColor: '#FFF', width: '30%', padding: 15, borderRadius: 15, alignItems: 'center', elevation: 3, shadowColor: '#6A5ACD', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
   cardLabel: { fontSize: 12, fontWeight: '600', color: '#1A1B4B', marginTop: 8, textAlign: 'center' },
 
-  mainButton: { width: '100%', padding: 20, borderRadius: 15, alignItems: 'center', marginTop: 'auto', marginBottom: 10, elevation: 5 },
-  btnStart: { backgroundColor: '#6A5ACD' },
-  btnStop: { backgroundColor: '#FF4B4B' },
-  btnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
+  infoContainer: { width: '100%', marginBottom: 20, alignItems: 'center' },
+  infoBox: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  infoText: { fontSize: 14, fontWeight: '600', color: '#1A1B4B', marginLeft: 10 },
+  toggleButton: { width: '100%', padding: 15, borderRadius: 12, alignItems: 'center', elevation: 3 },
+  btnActivate: { backgroundColor: '#6A5ACD' },
+  btnDeactivate: { backgroundColor: '#FF4B4B' },
+  toggleButtonText: { color: '#FFF', fontSize: 14, fontWeight: 'bold', letterSpacing: 0.5 },
 
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },

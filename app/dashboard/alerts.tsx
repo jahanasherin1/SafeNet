@@ -157,7 +157,7 @@ export default function UserAlertsScreen() {
       case 'journey_delayed':
         return { name: 'timer-alert-outline', color: '#FF9800', IconComponent: MaterialCommunityIcons };
       case 'journey_completed':
-        return { name: 'check-circle', color: '#4CAF50', IconComponent: Ionicons };
+        return { name: 'checkmark-circle', color: '#4CAF50', IconComponent: Ionicons };
       case 'location_shared':
         return { name: 'location-on', color: '#2196F3', IconComponent: MaterialIcons };
       case 'fake_call_activated':

@@ -342,7 +342,7 @@ export default function DashboardHome() {
             <Text style={styles.actionTitle}>Activity Monitoring</Text>
             <Text style={styles.actionDesc}>AI detects falls, sudden stops, and running</Text>
             <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/dashboard/monitor')}>
-              <Text style={styles.smallButtonText}>Monitor</Text>
+              <Text style={styles.smallButtonText}>View</Text>
               <Ionicons name="analytics-outline" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
           </View>

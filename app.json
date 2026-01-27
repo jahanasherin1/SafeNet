@@ -58,6 +58,15 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow SafeNet to use your location."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#6A5ACD",
+          "sounds": [],
+          "mode": "production"
+        }
       ]
     ]
   }

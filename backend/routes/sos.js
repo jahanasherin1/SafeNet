@@ -5,11 +5,11 @@ import { createAlert } from './alerts.js';
 
 const router = express.Router();
 
-// 9. Trigger SOS
+// 9. Trigger SOS / Activity Alert
 router.post('/trigger', async (req, res) => {
   try {
-    const { userEmail, location, reason } = req.body;
-    const { latitude, longitude } = location;
+    const { userEmail, userName, location, reason, alertType, timestamp } = req.body;
+    const { latitude, longitude } = location || { latitude: 0, longitude: 0 };
 
     const user = await User.findOne({ email: userEmail });
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -17,43 +17,96 @@ router.post('/trigger', async (req, res) => {
     user.sosActive = true;
     user.lastSosTime = new Date();
     
-    user.currentLocation = {
-        latitude,
-        longitude,
-        timestamp: new Date()
-    };
+    if (latitude && longitude) {
+      user.currentLocation = {
+          latitude,
+          longitude,
+          timestamp: new Date()
+      };
+    }
 
     await user.save();
 
     const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-    const alertReason = reason || "SOS Button Triggered"; // Default if not provided
-    const emailSubject = `🚨 EMERGENCY: ${alertReason}!`;
-    const emailBody = `URGENT: ${user.name} requires help.\n\nReason: ${alertReason}\n\nLocation: ${mapsLink}`;
+    const alertReason = reason || "SOS Button Triggered";
+    const displayName = userName || user.name || 'User';
+    
+    // Customize email based on alert type
+    let emailSubject, emailBody, alertTitle, alertIcon;
+    
+    if (alertType === 'ACTIVITY_MONITOR') {
+      // Activity monitoring alerts (fall, running, sudden stop)
+      if (reason.includes('FALL')) {
+        alertIcon = '🆘';
+        alertTitle = 'Fall Detected Alert';
+        emailSubject = `🆘 URGENT: ${displayName} may have fallen!`;
+        emailBody = `URGENT ALERT\n\n${displayName}'s safety app has detected a potential FALL.\n\nThis alert was triggered by unusual movement patterns detected by their phone's sensors.\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check on them immediately!\n\nIf you cannot reach them, consider contacting emergency services.`;
+      } else if (reason.includes('SUDDEN STOP')) {
+        alertIcon = '⚠️';
+        alertTitle = 'Sudden Stop Alert';
+        emailSubject = `⚠️ Alert: ${displayName} stopped suddenly while running`;
+        emailBody = `SAFETY ALERT\n\n${displayName}'s safety app detected a sudden stop while they were running.\n\nThis could indicate they:\n- Stopped to rest\n- Encountered an obstacle\n- May need assistance\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check in with them to ensure they're okay.`;
+      } else if (reason.includes('RUNNING') || reason.includes('PROLONGED')) {
+        alertIcon = '🏃';
+        alertTitle = 'Prolonged Running Alert';
+        emailSubject = `🏃 Alert: ${displayName} has been running for an extended period`;
+        emailBody = `ACTIVITY ALERT\n\n${displayName}'s safety app detected prolonged running activity.\n\nThis could indicate they:\n- Are exercising\n- May be fleeing from a situation\n- Need to be checked on\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease reach out to verify they are safe.`;
+      } else {
+        alertIcon = '📱';
+        alertTitle = 'Activity Alert';
+        emailSubject = `📱 Safety Alert: ${displayName} - ${alertReason}`;
+        emailBody = `SAFETY ALERT\n\n${displayName}'s safety app detected unusual activity.\n\nAlert: ${alertReason}\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check on them.`;
+      }
+    } else {
+      // Standard SOS alert
+      alertIcon = '🚨';
+      alertTitle = 'SOS Emergency Alert';
+      emailSubject = `🚨 EMERGENCY: ${displayName} needs help!`;
+      emailBody = `URGENT: ${displayName} has triggered an emergency SOS alert.\n\nReason: ${alertReason}\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease respond immediately!`;
+    }
 
-    user.guardians.forEach(g => {
-      if (g.email) sendEmail(g.email, emailSubject, emailBody);
-    });
+    // Send email to all guardians
+    let emailsSent = 0;
+    for (const guardian of user.guardians) {
+      if (guardian.email) {
+        try {
+          await sendEmail(guardian.email, emailSubject, emailBody);
+          emailsSent++;
+          console.log(`📧 Alert email sent to ${guardian.name} (${guardian.email})`);
+        } catch (emailError) {
+          console.error(`Failed to send email to ${guardian.email}:`, emailError.message);
+        }
+      }
+    }
 
-    // Create alert notification
+    // Create alert notification for guardian dashboard
     await createAlert({
       userEmail: user.email,
-      userName: user.name,
-      type: 'sos',
-      title: '🚨 SOS Alert',
-      message: `${user.name} triggered an emergency alert: ${alertReason}!`,
+      userName: displayName,
+      type: alertType === 'ACTIVITY_MONITOR' ? 'activity' : 'sos',
+      title: `${alertIcon} ${alertTitle}`,
+      message: `${displayName}: ${alertReason}`,
       location: { latitude, longitude },
       metadata: {
         mapsLink,
         reason: alertReason,
-        guardianCount: user.guardians.length
+        alertType: alertType || 'sos',
+        guardianCount: user.guardians.length,
+        emailsSent,
+        timestamp: timestamp || new Date().toISOString()
       }
     });
 
-    console.log(`SOS Triggered for ${user.name} - Reason: ${alertReason}`);
-    res.status(200).json({ message: 'SOS Active' });
+    console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails sent)`);
+    res.status(200).json({ 
+      message: 'Alert sent successfully',
+      emailsSent,
+      guardianCount: user.guardians.length
+    });
 
   } catch (error) {
-    res.status(500).json({ message: 'Failed to trigger SOS' });
+    console.error('SOS/Alert trigger error:', error);
+    res.status(500).json({ message: 'Failed to trigger alert' });
   }
 });
 

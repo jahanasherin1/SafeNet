@@ -210,7 +210,7 @@ export default function GuardianAlertsScreen() {
       case 'journey_delayed':
         return { name: 'timer-alert-outline', color: '#FF9800', IconComponent: MaterialCommunityIcons };
       case 'journey_completed':
-        return { name: 'check-circle', color: '#4CAF50', IconComponent: Ionicons };
+        return { name: 'checkmark-circle', color: '#4CAF50', IconComponent: Ionicons };
       case 'location_shared':
         return { name: 'location-on', color: '#2196F3', IconComponent: MaterialIcons };
       case 'fake_call_activated':
@@ -235,14 +235,60 @@ export default function GuardianAlertsScreen() {
     return date.toLocaleDateString();
   };
 
+  const isFallOrSuddenStop = (item: AlertItem): boolean => {
+    if (item.type !== 'sos') return false;
+    const reason = item.metadata?.reason || item.title || '';
+    return reason.includes('FALL') || reason.includes('SUDDEN STOP') || reason.includes('Fall') || reason.includes('Sudden Stop');
+  };
+
+  const handleMarkSafe = (alertId: string) => {
+    Alert.alert(
+      'Mark Safe',
+      'Confirm that the user is safe?',
+      [
+        { text: 'Cancel', onPress: () => {} },
+        {
+          text: 'Yes, Mark Safe',
+          onPress: () => {
+            markAsRead([alertId]);
+            Alert.alert('Success', 'Alert marked as resolved');
+          },
+          style: 'default',
+        },
+      ]
+    );
+  };
+
+  const handleEmergency = (alertId: string, location?: { latitude: number; longitude: number }) => {
+    Alert.alert(
+      'Emergency Contact',
+      'Contact emergency services?',
+      [
+        { text: 'Cancel', onPress: () => {} },
+        {
+          text: 'Contact Emergency',
+          onPress: () => {
+            // In a real app, this would trigger emergency call or SMS
+            Alert.alert('Emergency', 'Emergency services will be contacted. Location will be shared.');
+            if (location) {
+              openLocation(location.latitude, location.longitude);
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   const renderAlert = ({ item }: { item: AlertItem }) => {
     const { name, color, IconComponent } = getAlertIcon(item.type);
+    const isEmergency = isFallOrSuddenStop(item);
     
     return (
       <TouchableOpacity
         style={[styles.alertCard, !item.isRead && styles.unreadCard]}
         onPress={() => {
-          if (!item.isRead) {
+          if (!item.isRead && !isEmergency) {
             markAsRead([item._id]);
           }
         }}
@@ -267,6 +313,25 @@ export default function GuardianAlertsScreen() {
               <Ionicons name="location" size={16} color="#6A5ACD" />
               <Text style={styles.locationText}>View Location</Text>
             </TouchableOpacity>
+          )}
+
+          {isEmergency && (
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.safeButton]}
+                onPress={() => handleMarkSafe(item._id)}
+              >
+                <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                <Text style={styles.actionButtonText}>Mark Safe</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.emergencyButton]}
+                onPress={() => handleEmergency(item._id, item.location)}
+              >
+                <Ionicons name="call" size={16} color="#FFF" />
+                <Text style={styles.actionButtonText}>Emergency</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
@@ -395,4 +460,9 @@ const styles = StyleSheet.create({
   filterChipActive: { backgroundColor: '#6A5ACD', borderColor: '#6A5ACD' },
   filterText: { fontSize: 13, fontWeight: '600', color: '#6A5ACD' },
   filterTextActive: { color: '#FFF' },
+  actionButtonsContainer: { flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 8 },
+  actionButton: { flex: 1, flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center', gap: 6 },
+  safeButton: { backgroundColor: '#4CAF50' },
+  emergencyButton: { backgroundColor: '#FF4B4B' },
+  actionButtonText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
 });
