@@ -14,8 +14,10 @@ const VERBOSE_LOGGING = true; // Set to true for debugging
 let appStateSubscription: any = null;
 let lastLoggedTime = 0;
 let heartbeatInterval: any = null;
+let foregroundPollingInterval: any = null; // Fallback polling when background task isn't firing
 const LOG_THROTTLE_MS = 5000; // Only log location every 5 seconds
 const HEARTBEAT_INTERVAL = 30000; // Check tracking health every 30 seconds
+const FOREGROUND_POLLING_INTERVAL = 5000; // Poll every 5 seconds as fallback
 
 interface LocationUpdate {
   latitude: number;
@@ -109,62 +111,113 @@ export const processLocationQueue = async (): Promise<void> => {
   }
 };
 
-// Define the background task only once
-if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-  TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
-    console.log('🔔 Background task triggered at', new Date().toLocaleTimeString());
-    
-    if (error) {
-      console.error('❌ Background location error:', error);
-      return;
-    }
+// Track last sent location to prevent rapid duplicates
+let lastSentTime = 0;
+const MIN_UPDATE_INTERVAL = 0; // No rate limiting for real-time tracking - send all updates
 
-    if (data) {
-      const { locations } = data as { locations: Location.LocationObject[] };
-      
-      console.log(`📦 Received ${locations?.length || 0} location(s) from system`);
-      
-      if (!locations || locations.length === 0) {
-        console.warn('⚠️ No locations in background update');
+// Define the background task - unregister first if exists to ensure clean state
+const defineBackgroundTask = () => {
+  const isAlreadyDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+  
+  if (isAlreadyDefined) {
+    console.log('🔄 Task already defined, will use existing definition');
+    return; // Task already defined
+  }
+
+  console.log('📝 Defining background location task...');
+
+  TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
+    try {
+      if (error) {
+        console.error('❌ Background location error:', error);
+        // Don't return - continue to next update
         return;
       }
+
+      if (!data) {
+        console.warn('⚠️ Background task called but no data received');
+        // Don't return - wait for next update
+        return;
+      }
+
+      if (data) {
+        const { locations } = data as { locations: Location.LocationObject[] };
       
-      // Process only the most recent location to avoid batching
-      const location = locations[locations.length - 1];
+        if (!locations || locations.length === 0) {
+          console.warn('⚠️ Background task received empty locations array');
+          // Don't return - wait for next update
+          return;
+        }
+
+        console.log(`🔔 Background task received ${locations.length} location(s)`);
+
+        // Process only the most recent location
+        const location = locations[locations.length - 1];
       const now = Date.now();
+      const coords = location.coords;
+      const locationTimestamp = location.timestamp;
       
-      console.log(`📍 [${new Date(now).toLocaleTimeString()}] Location:`, {
-        lat: location.coords.latitude.toFixed(7),
-        lng: location.coords.longitude.toFixed(7),
-        accuracy: location.coords.accuracy,
+      // Skip old buffered locations (older than 30 seconds only)
+      const locationAge = now - locationTimestamp;
+      if (locationAge > 30000) {
+        if (VERBOSE_LOGGING) {
+          console.log(`⏭️ Skipping stale location (age: ${locationAge}ms)`);
+        }
+        return; // Skip very stale buffered location
+      }
+      
+      // No rate limiting - send all updates for real-time tracking
+      const timeSinceLastSent = now - lastSentTime;
+      if (VERBOSE_LOGGING && lastSentTime > 0) {
+        console.log(`⏱️ Time since last update: ${timeSinceLastSent}ms`);
+      }
+      
+      const timestamp = new Date().toLocaleTimeString('en-US', { 
+        hour12: true,
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+      
+      console.log(`📍 [${timestamp}] Location update:`, {
+        lat: coords.latitude.toFixed(7),
+        lng: coords.longitude.toFixed(7),
+        accuracy: coords.accuracy?.toFixed(0) + 'm',
       });
 
-      // Send to backend immediately, one at a time
+      // Send to backend
       try {
         await sendLocationToBackend({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy ?? undefined,
-          altitude: location.coords.altitude ?? undefined,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy ?? undefined,
+          altitude: coords.altitude ?? undefined,
         });
+        
+        // Update last sent time after successful send
+        lastSentTime = now;
       } catch (err) {
-        if (VERBOSE_LOGGING) {
-          console.warn('⚠️ Failed to send background location, queuing:', err);
-        }
+        console.warn('⚠️ Failed to send, queuing...');
         await queueLocationForSync({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy ?? undefined,
-          altitude: location.coords.altitude ?? undefined,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy ?? undefined,
+          altitude: coords.altitude ?? undefined,
         });
       }
-    } else {
-      console.warn('⚠️ Background task called with no data');
+      }
+    } catch (taskError) {
+      // Catch any errors to prevent task from crashing
+      console.error('❌ Error in background task (will continue):', taskError);
+      // Task will continue to receive updates despite error
     }
   });
 
   console.log('✅ Background location task registered');
-}
+};
+
+// Initialize task definition
+defineBackgroundTask();
 
 // Queue location for later sync if offline
 const queueLocationForSync = async (location: {
@@ -228,8 +281,9 @@ const sendLocationToBackend = async (
     });
 
     // Log successful send with timestamp
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-      hour12: false, 
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('en-US', { 
+      hour12: true,
       hour: '2-digit', 
       minute: '2-digit', 
       second: '2-digit' 
@@ -253,13 +307,9 @@ export const startBackgroundLocationTracking = async () => {
   try {
     console.log('🚀 Starting background location tracking...');
 
-    // Check if app is in foreground - delay start if in background
+    // Allow starting in any app state for real-time tracking
     const appState = AppState.currentState;
-    if (appState !== 'active') {
-      console.warn('⚠️ App is in background, deferring tracking start...');
-      // Defer to next foreground state
-      return true;
-    }
+    console.log(`ℹ️ Starting tracking in ${appState} state...`);
 
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
@@ -286,12 +336,31 @@ export const startBackgroundLocationTracking = async () => {
       }
     }
 
-    // Check if task is already running
+    // Stop existing tracking if running to ensure clean restart
+    const isTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (isTracking) {
+      console.log('🔄 Stopping existing location tracking...');
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      await new Promise(resolve => setTimeout(resolve, 300)); // Wait 300ms only
+    }
+
+    // Check if task is defined
     const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
     if (!isTaskDefined) {
-      console.warn('❌ Location task is not defined');
+      console.warn('❌ Location task is not defined, defining now...');
+      defineBackgroundTask();
+      // Wait a moment for task to register
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    // Double check task is now defined
+    const isNowDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+    if (!isNowDefined) {
+      console.error('❌ Failed to define location task');
       return false;
     }
+
+    console.log('✅ Location task confirmed defined');
 
     // Request to ignore battery optimization (Doze mode)
     if (Platform.OS === 'android') {
@@ -306,45 +375,107 @@ export const startBackgroundLocationTracking = async () => {
       }
     }
 
-    // Start location updates with optimized settings for consistent real-time tracking
+    // Start location updates with aggressive settings for true real-time tracking
     const locationOptions: any = {
-      accuracy: Location.Accuracy.High, // High accuracy for real-time updates
-      timeInterval: 10000, // Update every 10 seconds consistently
-      distanceInterval: 0, // Update based on time only, not movement
+      accuracy: Location.Accuracy.BestForNavigation, // Best possible accuracy for real-time tracking
+      timeInterval: 1000, // Update every 1 second for true real-time
+      distanceInterval: 1, // Update even for 1 meter movement
+      deferredUpdatesInterval: 0, // Process updates IMMEDIATELY - no batching
+      deferredUpdatesDistance: 0, // Process updates IMMEDIATELY - no batching
       showsBackgroundLocationIndicator: true,
       pausesUpdatesAutomatically: false, // Never pause
-      mayShowUserSettingsDialog: false, // Don't interrupt user
+      mayShowUserSettingsDialog: true, // Show dialog if location is disabled
       foregroundService: {
-        notificationTitle: 'SafeNet Location Tracking',
-        notificationBody: 'Your location is being shared with your guardians for safety',
+        notificationTitle: 'SafeNet Active',
+        notificationBody: 'Real-time location tracking active',
         notificationColor: '#6A5ACD',
-        killServiceOnDestroy: false, // Keep running
       },
     };
 
     // iOS-specific settings
     if (Platform.OS === 'ios') {
-      locationOptions.deferredUpdatesInterval = 10000; // Deliver updates every 10 seconds
-      locationOptions.deferredUpdatesDistance = 0; // Don't batch by distance
-      locationOptions.activityType = Location.ActivityType.Other; // Continuous tracking
+      locationOptions.activityType = Location.ActivityType.Other;
+      locationOptions.showsBackgroundLocationIndicator = true;
     }
 
-    // Android-specific settings for better real-time performance
+    // Android-specific settings for real-time updates
     if (Platform.OS === 'android') {
-      locationOptions.fastestInterval = 10000; // Fastest update rate
-      locationOptions.maxWaitTime = 10000; // Don't batch updates
+      locationOptions.foregroundService.killServiceOnDestroy = false;
+      // Enable high-frequency updates on Android
+      locationOptions.timeInterval = 1000; // 1 second
+      locationOptions.fastestInterval = 500; // Accept updates every 500ms if available
+      locationOptions.deferredUpdatesInterval = 0; // No batching
     }
+
+    console.log('🚀 Starting location updates with task:', LOCATION_TASK_NAME);
+    console.log('📋 Options:', JSON.stringify(locationOptions, null, 2));
 
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, locationOptions);
 
-    console.log('📡 Location updates started with config:', {
-      accuracy: 'High',
-      timeInterval: '10s',
-      distanceInterval: '0m',
-      platform: Platform.OS,
-    });
-    
-    console.log('⏱️  Waiting for location updates... (should appear every 10 seconds)');
+    // Small delay to let the system register the updates
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Verify tracking started successfully
+    const verifyTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    console.log('🔍 Tracking verification:', verifyTracking ? 'ACTIVE ✅' : 'FAILED ❌');
+
+    if (!verifyTracking) {
+      console.error('❌ Location updates failed to start');
+      return false;
+    }
+
+    // Get current location options to verify what was set
+    try {
+      console.log('🔍 Verifying location service is generating updates...');
+      // Start a foreground watcher to verify the background task is being called
+      setTimeout(async () => {
+        const stillTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        console.log('🔍 [5s check] Tracking still active:', stillTracking ? 'YES ✅' : 'NO ❌');
+        if (!stillTracking) {
+          console.error('❌ Tracking stopped unexpectedly after 5 seconds!');
+        }
+      }, 5000);
+
+      setTimeout(async () => {
+        const stillTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        console.log('🔍 [15s check] Tracking still active:', stillTracking ? 'YES ✅' : 'NO ❌');
+      }, 15000);
+    } catch (verifyError) {
+      console.warn('⚠️ Could not verify location service:', verifyError);
+    }
+
+    // Try to get last known location (instant, no GPS wait)
+    console.log('🧪 Fetching last known location...');
+    try {
+      const lastKnownLocation = await Location.getLastKnownPositionAsync();
+      if (lastKnownLocation) {
+        console.log('✅ Using cached location:', {
+          lat: lastKnownLocation.coords.latitude.toFixed(6),
+          lng: lastKnownLocation.coords.longitude.toFixed(6),
+        });
+        
+        // Send cached location immediately (non-blocking)
+        sendLocationToBackend({
+          latitude: lastKnownLocation.coords.latitude,
+          longitude: lastKnownLocation.coords.longitude,
+          accuracy: lastKnownLocation.coords.accuracy ?? undefined,
+          altitude: lastKnownLocation.coords.altitude ?? undefined,
+        }).catch(err => console.warn('⚠️ Could not send cached location'));
+      } else {
+        console.log('ℹ️ No cached location, waiting for GPS...');
+      }
+    } catch (testError) {
+      console.warn('⚠️ Could not get cached location:', testError);
+    }
+
+    // Reset rate limiter for fresh start to allow immediate first update
+    lastSentTime = 0;
+
+    console.log('✅ Location tracking active (TRUE REAL-TIME MODE)');
+    console.log('ℹ️  Updates every 1 second OR when moving 1+ meter');
+    console.log('📱 Platform:', Platform.OS);
+    console.log('⚡ Real-time tracking enabled - no rate limiting');
+    console.log('⏰ Waiting for background location updates...');
 
     // Save tracking state
     await AsyncStorage.setItem(TRACKING_STATE_KEY, 'active');
@@ -356,8 +487,11 @@ export const startBackgroundLocationTracking = async () => {
     // Setup heartbeat to monitor tracking health
     setupTrackingHeartbeat();
 
+    // Start foreground polling as fallback (for when background task doesn't fire)
+    startForegroundPolling();
+
     // Process any queued locations after starting
-    setTimeout(() => processLocationQueue(), 10000);
+    setTimeout(() => processLocationQueue(), 5000);
 
     console.log('✅ Background location tracking started (aggressive mode)');
     return true;
@@ -375,6 +509,14 @@ export const stopBackgroundLocationTracking = async () => {
     if (isTracking) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       await AsyncStorage.setItem(TRACKING_STATE_KEY, 'inactive');
+      await AsyncStorage.setItem(TRACKING_ENABLED_KEY, 'false');
+      
+      // Reset rate limiter
+      lastSentTime = 0;
+      
+      // Stop foreground polling
+      stopForegroundPolling();
+      
       console.log('✅ Background location tracking stopped');
       return true;
     }
@@ -494,6 +636,125 @@ export const cleanupAppStateListener = () => {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;
     console.log('💔 Heartbeat stopped');
+  }
+  
+  stopForegroundPolling();
+};
+
+// Foreground polling as fallback when background task isn't firing
+const startForegroundPolling = () => {
+  if (foregroundPollingInterval) {
+    clearInterval(foregroundPollingInterval);
+  }
+
+  console.log('🔄 Starting foreground polling fallback (every 5s)...');
+  
+  let pollCount = 0;
+  
+  // Poll immediately on start
+  pollLocation(++pollCount);
+  
+  foregroundPollingInterval = setInterval(async () => {
+    pollLocation(++pollCount);
+  }, FOREGROUND_POLLING_INTERVAL);
+  
+  console.log('✅ Foreground polling started - will update every 5 seconds');
+};
+
+const pollLocation = async (pollCount: number) => {
+  try {
+    // Get current position with timeout
+    const position = await Promise.race([
+      Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced, // Use Balanced instead of BestForNavigation for faster response
+        mayShowUserSettingsDialog: false,
+        timeInterval: 1000,
+      }),
+      new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Location timeout')), 8000)
+      )
+    ]) as Location.LocationObject | null;
+
+    if (!position) {
+      console.warn(`⚠️ [POLL #${pollCount}] Location request timed out`);
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastSent = now - lastSentTime;
+    
+    const timestamp = new Date().toLocaleTimeString('en-US', { 
+      hour12: true,
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+    
+    console.log(`📍 [POLL #${pollCount}] [${timestamp}] Location:`, {
+      lat: position.coords.latitude.toFixed(7),
+      lng: position.coords.longitude.toFixed(7),
+      accuracy: position.coords.accuracy?.toFixed(0) + 'm',
+      timeSinceLastSent: timeSinceLastSent + 'ms'
+    });
+
+    // Send if it's been more than 4 seconds OR first poll
+    if (timeSinceLastSent > 4000 || pollCount === 1) {
+      await sendLocationToBackend({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy ?? undefined,
+        altitude: position.coords.altitude ?? undefined,
+      });
+      
+      lastSentTime = now;
+      console.log(`✅ [POLL #${pollCount}] Location sent to backend`);
+    } else {
+      console.log(`⏭️ [POLL #${pollCount}] Skipped (sent ${timeSinceLastSent}ms ago)`);
+    }
+  } catch (error: any) {
+    // GPS timeout is expected - fallback to cached location silently
+    const isTimeout = error?.message?.includes('timeout');
+    
+    // Try to get last known position as fallback
+    try {
+      const lastKnown = await Location.getLastKnownPositionAsync();
+      if (lastKnown) {
+        const timestamp = new Date().toLocaleTimeString('en-US', { 
+          hour12: true,
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit' 
+        });
+        
+        console.log(`📍 [POLL #${pollCount}] [${timestamp}] Using cached location:`, {
+          lat: lastKnown.coords.latitude.toFixed(7),
+          lng: lastKnown.coords.longitude.toFixed(7),
+          accuracy: lastKnown.coords.accuracy?.toFixed(0) + 'm',
+        });
+        
+        await sendLocationToBackend({
+          latitude: lastKnown.coords.latitude,
+          longitude: lastKnown.coords.longitude,
+          accuracy: lastKnown.coords.accuracy ?? undefined,
+          altitude: lastKnown.coords.altitude ?? undefined,
+        });
+        
+        lastSentTime = Date.now();
+      }
+    } catch (fallbackError) {
+      // Only log if it's NOT a timeout (timeout is expected and handled)
+      if (!isTimeout) {
+        console.warn(`⚠️ [POLL #${pollCount}] GPS error, using cached location`);
+      }
+    }
+  }
+};
+
+const stopForegroundPolling = () => {
+  if (foregroundPollingInterval) {
+    clearInterval(foregroundPollingInterval);
+    foregroundPollingInterval = null;
+    console.log('🔄 Foreground polling stopped');
   }
 };
 

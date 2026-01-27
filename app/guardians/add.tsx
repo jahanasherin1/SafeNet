@@ -36,10 +36,23 @@ export default function AddGuardianScreen() {
       showAlert("Error", "Guardian Name is required");
       return;
     }
-    if (phone.length !== 10) {
+    
+    // Enhanced Phone Number Validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phone.trim()) {
+      showAlert("Error", "Phone number is required");
+      return;
+    }
+    if (!phoneRegex.test(phone)) {
       showAlert("Error", "Please enter a valid 10-digit phone number");
       return;
     }
+    // Check if phone starts with a valid digit (2-9 for most regions)
+    if (phone[0] === '0' || phone[0] === '1') {
+      showAlert("Error", "Phone number cannot start with 0 or 1");
+      return;
+    }
+    
     // Simple Email Regex
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         showAlert("Error", "Please enter a valid email address");

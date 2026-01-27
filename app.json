@@ -30,7 +30,12 @@
         "INTERNET",
         "ACTIVITY_RECOGNITION"
       ],
-      "package": "com.safenet.app"
+      "package": "com.safenet.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDXZ9Xq8Xq8Xq8Xq8Xq8Xq8Xq8Xq8Xq8"
+        }
+      }
     },
     "ios": {
       "supportsTablet": true,

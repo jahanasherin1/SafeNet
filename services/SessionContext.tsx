@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { cleanupAppStateListener, getQueueStatus, isBackgroundTrackingActive, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
+import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
 interface User {
@@ -50,23 +50,18 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setUser(parsedUser);
           setToken(storedToken);
 
-          // Check if tracking should be active
-          const isTracking = await isBackgroundTrackingActive();
+          // Always restart tracking for logged-in users to ensure it's working
+          // This handles cases where the task was registered but not receiving updates
+          console.log('🔄 (Re)starting background location tracking...');
+          const trackingStarted = await startBackgroundLocationTracking();
           
-          if (shouldBeTracking && !isTracking) {
-            // Restart tracking if it should be active but isn't
-            console.log('🔄 Restoring background location tracking...');
-            await startBackgroundLocationTracking();
-            setIsTrackingActive(true);
-          } else if (isTracking) {
-            console.log('✅ Background tracking already active');
-            console.log('ℹ️  Location updates should be appearing every 10 seconds...');
+          if (trackingStarted) {
+            console.log('✅ Background tracking active');
+            console.log('ℹ️  Location updates should be appearing every 5 seconds...');
             setIsTrackingActive(true);
           } else {
-            // Start tracking by default for logged-in users
-            console.log('🚀 Starting background tracking for logged-in user...');
-            await startBackgroundLocationTracking();
-            setIsTrackingActive(true);
+            console.warn('⚠️ Failed to start background tracking');
+            setIsTrackingActive(false);
           }
           
           // Acquire partial wake lock to keep tracking active

@@ -14,6 +14,8 @@ const FALL_THRESHOLD = 2.5; // G-force
 const RUNNING_CADENCE = 2.5; // Steps per second (approx 150 steps/min)
 const SUDDEN_STOP_THRESHOLD = 2.0; // Deceleration G-force
 const PRE_ALERT_TIMER = 15; // Time to cancel alert
+const RUNNING_ALERT_DELAY = 30; // Alert after 30 seconds of continuous running
+const SUDDEN_STOP_COOLDOWN = 60; // Wait 60 seconds before another sudden stop alert
 
 export default function ActivityMonitorScreen() {
   const router = useRouter();
@@ -39,6 +41,11 @@ export default function ActivityMonitorScreen() {
   // Tracking history for logic
   const recentGForces = useRef<number[]>([]);
   const wasRunning = useRef(false);
+  const baselineStepCount = useRef(0);
+  const activityCheckInterval = useRef<NodeJS.Timeout | null>(null);
+  const isFirstStepUpdate = useRef(true);
+  const runningStartTime = useRef<number | null>(null);
+  const lastSuddenStopAlert = useRef<number>(0);
 
   // --- START / STOP LOGIC ---
   const toggleMonitoring = async () => {
@@ -53,11 +60,21 @@ export default function ActivityMonitorScreen() {
     }
   };
 
-  const startMonitoring = () => {
+  const startMonitoring = async () => {
     setMonitoring(true);
     setAlertVisible(false);
     setCurrentActivity('Monitoring...');
     wasRunning.current = false;
+    isFirstStepUpdate.current = true;
+
+    // Reset step tracking
+    baselineStepCount.current = 0;
+    setStepCount(0);
+    setLastStepTime(Date.now());
+    
+    // Reset unusual behavior tracking
+    runningStartTime.current = null;
+    lastSuddenStopAlert.current = 0;
 
     // 1. ACCELEROMETER (Fall & Sudden Stop)
     try {
@@ -72,15 +89,30 @@ export default function ActivityMonitorScreen() {
     }
 
     // 2. PEDOMETER (Running & Walking)
+    // Note: On Android, we can't get historical step count, so we track from when monitoring starts
     try {
       pedometerSubscription.current = Pedometer.watchStepCount((result: any) => {
-          analyzeSteps(result.steps);
+          // On first update, set this as baseline
+          if (isFirstStepUpdate.current) {
+            baselineStepCount.current = result.steps;
+            isFirstStepUpdate.current = false;
+            console.log('📊 Set baseline step count:', result.steps);
+            return;
+          }
+          
+          const relativeSteps = result.steps - baselineStepCount.current;
+          analyzeSteps(relativeSteps);
       });
       setCurrentActivity('Monitoring Activity...');
     } catch (e) {
       console.log('⚠️ Pedometer initialization failed:', e);
       setCurrentActivity('Fall Detection Active (Accelerometer Only)');
     }
+
+    // 3. ACTIVITY CHECK INTERVAL (detect when user stops moving)
+    activityCheckInterval.current = setInterval(() => {
+      checkActivityTimeout();
+    }, 3000); // Check every 3 seconds
   };
 
   const stopMonitoring = () => {
@@ -100,6 +132,10 @@ export default function ActivityMonitorScreen() {
         console.log('Pedometer cleanup:', e);
       }
     }
+    if (activityCheckInterval.current) {
+      clearInterval(activityCheckInterval.current);
+      activityCheckInterval.current = null;
+    }
   };
 
   // --- ANALYZE STEPS (Walking vs Running) ---
@@ -107,30 +143,67 @@ export default function ActivityMonitorScreen() {
     const now = Date.now();
     const timeDiff = (now - lastStepTime) / 1000; // Seconds since last check
     
-    // Only calculate cadence if steps actually increased
-    if (totalSteps > stepCount && timeDiff > 0) {
+    // Only calculate cadence if steps actually increased and enough time has passed
+    if (totalSteps > stepCount && timeDiff > 0.5) {
         const stepsDiff = totalSteps - stepCount;
         const cadence = stepsDiff / timeDiff; // Steps per second
+
+        console.log(`📊 Steps: ${totalSteps}, Cadence: ${cadence.toFixed(2)} steps/sec`);
 
         if (cadence > RUNNING_CADENCE) {
             setCurrentActivity('Running 🏃‍♂️');
             wasRunning.current = true;
+            
+            // Start tracking running time
+            if (runningStartTime.current === null) {
+                runningStartTime.current = now;
+                console.log('🏃 Started running detection timer');
+            } else {
+                // Check if running for extended period (unusual behavior)
+                const runningDuration = (now - runningStartTime.current) / 1000;
+                if (runningDuration >= RUNNING_ALERT_DELAY && !alertVisible) {
+                    console.log(`⚠️ Sustained running detected: ${runningDuration.toFixed(0)}s`);
+                    triggerAlert('UNUSUAL BEHAVIOR - RUNNING');
+                    runningStartTime.current = null; // Reset after alert
+                }
+            }
         } else if (cadence > 0.5) {
             setCurrentActivity('Walking 🚶');
             wasRunning.current = false;
-        } else {
-            setCurrentActivity('Standing 🧍');
+            runningStartTime.current = null; // Reset running timer
+        } else if (cadence > 0.1) {
+            setCurrentActivity('Slow Walk 🚶');
             wasRunning.current = false;
+            runningStartTime.current = null;
+        } else {
+            setCurrentActivity('Moving Slowly 🧍');
+            wasRunning.current = false;
+            runningStartTime.current = null;
         }
+        
+        setLastStepTime(now);
     }
     
     setStepCount(totalSteps);
-    setLastStepTime(now);
+  };
+
+  // --- CHECK ACTIVITY TIMEOUT (detect when user stops moving) ---
+  const checkActivityTimeout = () => {
+    const now = Date.now();
+    const timeSinceLastStep = (now - lastStepTime) / 1000; // Seconds
+    
+    // If no steps for 5 seconds, user is standing/still
+    if (timeSinceLastStep > 5 && monitoring) {
+      setCurrentActivity('Standing Still 🧍');
+      wasRunning.current = false;
+      runningStartTime.current = null; // Reset running timer
+    }
   };
 
   // --- ANALYZE MOTION (Falls & Stops) ---
   const analyzeMotion = ({ x, y, z }: { x: number, y: number, z: number }) => {
     const totalForce = Math.sqrt(x * x + y * y + z * z);
+    const now = Date.now();
     
     // Keep a small history for trend analysis
     recentGForces.current.push(totalForce);
@@ -140,12 +213,19 @@ export default function ActivityMonitorScreen() {
     if (totalForce > FALL_THRESHOLD) {
         // High impact detected
         triggerAlert('FALL DETECTED');
+        return; // Don't check other conditions after fall
     }
 
     // 2. SUDDEN STOP DETECTION
     // Logic: High deceleration (force spike) AND activity was "Running" just before
-    if (totalForce > SUDDEN_STOP_THRESHOLD && wasRunning.current) {
-        triggerAlert('SUDDEN STOP');
+    // Add cooldown to prevent multiple alerts in quick succession
+    const timeSinceLastSuddenStop = (now - lastSuddenStopAlert.current) / 1000;
+    if (totalForce > SUDDEN_STOP_THRESHOLD && wasRunning.current && timeSinceLastSuddenStop > SUDDEN_STOP_COOLDOWN) {
+        console.log('⚠️ Sudden stop detected while running');
+        triggerAlert('UNUSUAL BEHAVIOR - SUDDEN STOP');
+        lastSuddenStopAlert.current = now;
+        wasRunning.current = false; // Reset running state
+        runningStartTime.current = null; // Reset running timer
     }
   };
 
@@ -215,6 +295,7 @@ export default function ActivityMonitorScreen() {
     return () => {
         stopMonitoring();
         if (countdownInterval.current) clearInterval(countdownInterval.current);
+        if (activityCheckInterval.current) clearInterval(activityCheckInterval.current);
     };
   }, []);
 

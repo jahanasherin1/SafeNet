@@ -39,7 +39,7 @@ export default function MonitorJourney() {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 3000); // Poll every 3 seconds for real-time updates
+    const interval = setInterval(fetchStatus, 1000); // Poll every 1 second for true real-time updates
     return () => clearInterval(interval);
   }, [fetchStatus]);
 

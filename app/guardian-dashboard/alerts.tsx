@@ -69,11 +69,38 @@ export default function GuardianAlertsScreen() {
     }
   };
 
+  // Filter out read alerts older than 24 hours
+  const filterOldReadAlerts = (alertsList: AlertItem[]) => {
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    return alertsList.filter(alert => {
+      if (alert.isRead) {
+        const alertDate = new Date(alert.createdAt).getTime();
+        return alertDate > oneDayAgo; // Keep only if less than 24 hours old
+      }
+      return true; // Keep all unread alerts
+    });
+  };
+
+  // Cleanup old read alerts from backend
+  const cleanupOldAlerts = async () => {
+    try {
+      if (selectedUser) {
+        await api.delete(`/alerts/cleanup/${selectedUser}`);
+        console.log('✅ Old alerts cleaned up');
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  };
+
   const fetchAlerts = async (email: string, type?: string) => {
     try {
       setLoading(true);
       console.log('===== FETCHING ALERTS =====');
       console.log('Email:', email);
+      
+      // Clean up old read alerts first (client-side filter)
+      cleanupOldAlerts();
       
       // Build query params
       let url = `/alerts/user/${email}?limit=100`;
@@ -84,9 +111,11 @@ export default function GuardianAlertsScreen() {
       console.log('Alerts response:', JSON.stringify(response.data, null, 2));
       
       if (response.data && response.data.alerts) {
-        setAlerts(response.data.alerts);
+        // Filter out alerts that are read and older than 24 hours
+        const filteredAlerts = filterOldReadAlerts(response.data.alerts);
+        setAlerts(filteredAlerts);
         setUnreadCount(response.data.pagination?.unread || 0);
-        console.log(`Loaded ${response.data.alerts.length} alerts`);
+        console.log(`Loaded ${filteredAlerts.length} alerts (filtered)`);
       } else {
         console.log('No alerts data in response');
         setAlerts([]);
