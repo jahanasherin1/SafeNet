@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Accelerometer, Pedometer } from 'expo-sensors';
 import { Vibration } from 'react-native';
+import { sendFallDetectedNotification, sendSuddenStopNotification } from './LocalNotificationService';
 
 // --- CONFIGURATION ---
 const PRE_ALERT_TIMER = 15;
@@ -222,13 +223,21 @@ const triggerAlert = async (reason: string) => {
   console.log(`🚨 Activity Alert Triggered: ${reason}`);
   Vibration.vibrate([500, 500, 500]);
 
-  // Don't send alert immediately - let the modal handle it
-  // The modal will show for 30 seconds and auto-send if not cancelled
+  // Send system notification for the alert
+  if (reason === 'FALL DETECTED') {
+    await sendFallDetectedNotification('Fall detected! Emergency alert sent to guardians.');
+  } else if (reason === 'SUDDEN STOP DETECTED') {
+    await sendSuddenStopNotification('Sudden stop detected! Alert sent to guardians.');
+  } else {
+    await sendFallDetectedNotification(reason);
+  }
+
+  // Also trigger in-app callback for modal if user is viewing the app
   if (onAlertTriggered) {
     onAlertTriggered(reason);
   }
   
-  console.log('✅ Alert modal triggered - waiting for user confirmation or 30 second timeout');
+  console.log('✅ Alert notification sent - waiting for user action');
 };
 
 export const startActivityMonitoring = async () => {

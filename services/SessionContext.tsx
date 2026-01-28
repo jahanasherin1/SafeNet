@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { isActivityMonitoringActive, setAlertCallback, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
+import { initializeLocalNotifications, setupNotificationListeners } from './LocalNotificationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
 interface User {
@@ -93,6 +94,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (queueStatus.count > 0) {
             setTimeout(() => processLocationQueue(), 5000);
           }
+
+          // Initialize local notifications for alerts
+          console.log('📱 Initializing local notifications...');
+          try {
+            await initializeLocalNotifications();
+            console.log('✅ Local notifications initialized');
+          } catch (notificationError) {
+            console.warn('⚠️ Local notifications setup warning:', notificationError);
+          }
         }
         
         setSessionInitialized(true);
@@ -131,6 +141,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 60000); // Check every 60 seconds
 
     return () => clearInterval(interval);
+  }, [isLoggedIn]);
+
+  // Setup notification listeners
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    console.log('🔔 Setting up notification listeners...');
+    const cleanup = setupNotificationListeners();
+    return cleanup;
   }, [isLoggedIn]);
 
   const login = async (userData: User, authToken: string) => {
