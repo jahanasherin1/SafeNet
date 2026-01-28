@@ -1,8 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
 import { Accelerometer, Pedometer } from 'expo-sensors';
 import { Vibration } from 'react-native';
-import api from './api';
 
 // --- CONFIGURATION ---
 const PRE_ALERT_TIMER = 15;
@@ -224,42 +222,13 @@ const triggerAlert = async (reason: string) => {
   console.log(`🚨 Activity Alert Triggered: ${reason}`);
   Vibration.vibrate([500, 500, 500]);
 
-  try {
-    const userData = await AsyncStorage.getItem('user');
-    if (!userData) {
-      console.error('User session not found');
-      return;
-    }
-    const { email, name } = JSON.parse(userData);
-
-    // Get Location for context
-    let location = { latitude: 0, longitude: 0 };
-    try {
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      location = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-    } catch (e) {
-      console.log('⚠️ Could not get location for alert');
-    }
-
-    // Send activity alert to backend
-    await api.post('/sos/trigger', {
-      userEmail: email,
-      userName: name || 'User',
-      location: location,
-      reason: reason,
-      alertType: 'ACTIVITY_MONITOR',
-      sendPushNotification: true,
-      timestamp: new Date().toISOString()
-    });
-
-    console.log('✅ Activity alert sent successfully');
-
-    if (onAlertTriggered) {
-      onAlertTriggered(reason);
-    }
-  } catch (error) {
-    console.error('❌ Failed to send activity alert:', error);
+  // Don't send alert immediately - let the modal handle it
+  // The modal will show for 30 seconds and auto-send if not cancelled
+  if (onAlertTriggered) {
+    onAlertTriggered(reason);
   }
+  
+  console.log('✅ Alert modal triggered - waiting for user confirmation or 30 second timeout');
 };
 
 export const startActivityMonitoring = async () => {

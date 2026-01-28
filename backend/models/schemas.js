@@ -26,7 +26,7 @@ const AlertSchema = new mongoose.Schema({
   type: { 
     type: String, 
     required: true,
-    enum: ['sos', 'journey_started', 'journey_delayed', 'journey_completed', 'location_shared', 'fake_call_activated']
+    enum: ['sos', 'activity', 'journey_started', 'journey_delayed', 'journey_completed', 'location_shared', 'fake_call_activated']
   },
   title: { type: String, required: true },
   message: { type: String, required: true },

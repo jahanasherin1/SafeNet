@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { setActivityUpdateCallback, setAlertCallback } from '../../services/ActivityMonitoringService';
+import { setActivityUpdateCallback } from '../../services/ActivityMonitoringService';
 import { useSession } from '../../services/SessionContext';
 
 export default function ActivityMonitorScreen() {
@@ -14,12 +14,6 @@ export default function ActivityMonitorScreen() {
   // UI State
   const [currentActivity, setCurrentActivity] = useState('Monitoring Status...');
   const [stepCount, setStepCount] = useState(0);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertReason, setAlertReason] = useState('');
-  const [countdown, setCountdown] = useState(15);
-  const [sendingAlert, setSendingAlert] = useState(false);
-
-  const countdownInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Register callbacks for activity updates
   useEffect(() => {
@@ -28,13 +22,11 @@ export default function ActivityMonitorScreen() {
       setStepCount(steps);
     });
 
-    setAlertCallback((reason) => {
-      handleAlertTriggered(reason);
-    });
+    // Alert callback is now handled globally in SessionContext
+    // so we don't need to set it here anymore
 
     return () => {
       setActivityUpdateCallback(null as any);
-      setAlertCallback(null as any);
     };
   }, []);
 
@@ -46,27 +38,6 @@ export default function ActivityMonitorScreen() {
       setCurrentActivity('Monitoring Inactive');
     }
   }, [isActivityMonitoringActive]);
-
-  const handleAlertTriggered = (reason: string) => {
-    setAlertReason(reason);
-    setAlertVisible(true);
-    setCountdown(15);
-
-    countdownInterval.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval.current!);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleImOkay = () => {
-    if (countdownInterval.current) clearInterval(countdownInterval.current);
-    setAlertVisible(false);
-  };
 
   const handleToggleMonitoring = async () => {
     try {
@@ -156,29 +127,6 @@ export default function ActivityMonitorScreen() {
 
       </View>
 
-      {/* --- ALERT MODAL --- */}
-      <Modal transparent={true} visible={alertVisible} animationType="fade">
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-                <View style={styles.warningIcon}>
-                    <Ionicons name="warning" size={50} color="#FFF" />
-                </View>
-                
-                <Text style={styles.modalTitle}>Safety Check</Text>
-                <Text style={styles.modalReason}>Pattern Detected: {alertReason}</Text>
-                
-                <Text style={styles.modalDesc}>
-                    Guardians have been notified with your location and activity data.
-                </Text>
-
-                {!sendingAlert && (
-                    <TouchableOpacity style={styles.okayButton} onPress={handleImOkay}>
-                        <Text style={styles.okayText}>DISMISS</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-        </View>
-      </Modal>
 
     </SafeAreaView>
   );
@@ -208,14 +156,4 @@ const styles = StyleSheet.create({
   btnActivate: { backgroundColor: '#6A5ACD' },
   btnDeactivate: { backgroundColor: '#FF4B4B' },
   toggleButtonText: { color: '#FFF', fontSize: 14, fontWeight: 'bold', letterSpacing: 0.5 },
-
-  // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#FFF', width: '85%', padding: 30, borderRadius: 25, alignItems: 'center' },
-  warningIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#6A5ACD', justifyContent: 'center', alignItems: 'center', marginBottom: 20, marginTop: -50, borderWidth: 4, borderColor: '#FFF' },
-  modalTitle: { fontSize: 26, fontWeight: 'bold', color: '#1A1B4B' },
-  modalReason: { fontSize: 16, fontWeight: '700', color: '#FF4B4B', marginTop: 5, textTransform: 'uppercase' },
-  modalDesc: { textAlign: 'center', color: '#555', marginVertical: 20, lineHeight: 22 },
-  okayButton: { backgroundColor: '#00C851', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 30, width: '100%', alignItems: 'center' },
-  okayText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 });

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Linking, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, Linking, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View, WebView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 
@@ -117,6 +117,21 @@ export default function GuardianLocationScreen() {
             const parsed = JSON.parse(data);
             setGuardianEmail(parsed.guardianEmail);
             if (parsed.guardianEmail) fetchAllUsers(parsed.guardianEmail);
+          }
+
+          // Check if there's a focus location from alerts
+          const focusLocationData = await AsyncStorage.getItem('focusLocation');
+          if (focusLocationData) {
+            const focusLocation = JSON.parse(focusLocationData);
+            setLocation({
+              latitude: focusLocation.latitude,
+              longitude: focusLocation.longitude,
+              latitudeDelta: focusLocation.latitudeDelta || 0.05,
+              longitudeDelta: focusLocation.longitudeDelta || 0.05,
+            });
+            console.log('📍 Focused on alert location:', focusLocation);
+            // Clear the focus location after using it
+            await AsyncStorage.removeItem('focusLocation');
           }
         } catch(e) { console.error(e); }
       };
@@ -238,43 +253,104 @@ export default function GuardianLocationScreen() {
   const selectedUser = allUsers.find(u => u._id === selectedUserId);
   const selectedUserTime = selectedUser?.individualLastUpdated || 'Fetching...';
 
+  // Generate Leaflet HTML for Android
+  const generateLeafletHTML = () => {
+    const markers = allUsers.map(user => {
+      const loc = user.location || user.currentLocation;
+      if (!loc || loc.latitude === 0) return '';
+      const color = user.sosActive ? '#FF4B4B' : '#6A5ACD';
+      return `
+        L.circleMarker([${loc.latitude}, ${loc.longitude}], {
+          radius: 15,
+          fillColor: '${color}',
+          color: '#FFF',
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).bindPopup('<div style="text-align:center; font-weight: bold;">${user.name}<br/>${user.sosActive ? '🚨 SOS Active' : '✅ Safe'}</div>').addTo(map);
+      `;
+    }).join('');
+
+    const selectedLoc = selectedUser?.location || selectedUser?.currentLocation;
+    const centerLat = selectedLoc?.latitude || location.latitude;
+    const centerLng = selectedLoc?.longitude || location.longitude;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>
+        <style>
+          body { margin: 0; padding: 0; }
+          #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+          .leaflet-popup-content { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script>
+          const map = L.map('map').setView([${centerLat}, ${centerLng}], 14);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
+          ${markers}
+        </script>
+      </body>
+      </html>
+    `;
+  };
+
   return (
     <View style={styles.container}>
       
-      {/* 1. MAP */}
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFillObject}
-        provider={PROVIDER_GOOGLE}
-        initialRegion={location}
-        rotateEnabled={false}
-        mapType={mapType}
-        showsBuildings={true}
-        showsIndoors={true}
-        showsPointsOfInterest={true}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        showsScale={true}
-        showsCompass={true}
-        mapPadding={{ top: 0, right: 0, bottom: SHEET_MIN_HEIGHT, left: 0 }}
-      >
-        {allUsers.map((user) => {
-          const loc = user.location || user.currentLocation;
-          if (!loc || loc.latitude === 0) return null;
-          return (
-            <Marker 
-              key={user._id}
-              coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
-              title={user.name}
-              onPress={() => setSelectedUserId(user._id)}
-            >
-              <View style={[styles.markerRing, user.sosActive && styles.markerSos]}>
-                 <Ionicons name="person" size={20} color="#FFF" />
-              </View>
-            </Marker>
-          );
-        })}
-      </MapView>
+      {/* MAP - CONDITIONAL RENDERING */}
+      {Platform.OS === 'android' ? (
+        // Android: Use Leaflet Map
+        <WebView
+          style={StyleSheet.absoluteFillObject}
+          source={{ html: generateLeafletHTML() }}
+          scrollEnabled={true}
+          scalesPageToFit={true}
+          startInLoadingState={true}
+        />
+      ) : (
+        // iOS: Use React Native Maps
+        <MapView
+          ref={mapRef}
+          style={StyleSheet.absoluteFillObject}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={location}
+          rotateEnabled={false}
+          mapType={mapType}
+          showsBuildings={true}
+          showsIndoors={true}
+          showsPointsOfInterest={true}
+          showsUserLocation={false}
+          showsMyLocationButton={false}
+          showsScale={true}
+          showsCompass={true}
+          mapPadding={{ top: 0, right: 0, bottom: SHEET_MIN_HEIGHT, left: 0 }}
+        >
+          {allUsers.map((user) => {
+            const loc = user.location || user.currentLocation;
+            if (!loc || loc.latitude === 0) return null;
+            return (
+              <Marker 
+                key={user._id}
+                coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
+                title={user.name}
+                onPress={() => setSelectedUserId(user._id)}
+              >
+                <View style={[styles.markerRing, user.sosActive && styles.markerSos]}>
+                   <Ionicons name="person" size={20} color="#FFF" />
+                </View>
+              </Marker>
+            );
+          })}
+        </MapView>
+      )}
 
       {/* 2. TOP HEADER */}
       <SafeAreaView style={styles.headerOverlay} edges={['top']}>

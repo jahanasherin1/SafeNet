@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import GlobalAlertModal from '../components/GlobalAlertModal';
 import '../services/BackgroundLocationService'; // Initialize background location task on app start
 import { SessionProvider } from '../services/SessionContext';
 
@@ -21,6 +22,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
         <RootLayoutContent />
+        <GlobalAlertModal />
       </SessionProvider>
     </GestureHandlerRootView>
   );

@@ -9,54 +9,28 @@ import MapComponent from '../../components/MapComponent';
 import api from '../../services/api';
 import { useSession } from '../../services/SessionContext';
 
-// Dummy Data for Safe Places (Kerala locations)
+// Dummy Data for Safe Places
 const SAFE_PLACES = [
-  {
-    id: '1',
-    type: 'Police',
-    name: 'Kochi Police Station',
-    address: 'Ernakulathappan Road, Kochi, Kerala',
-    hours: 'Open 24 hours',
-    icon: 'car-sport',
-    coords: { latitude: 9.9816, longitude: 76.2856 }
-  },
-  {
-    id: '2',
-    type: 'Hospital',
-    name: 'General Hospital Kochi',
-    address: 'West Fort, Kochi, Kerala',
-    hours: 'Open 24 hours',
-    icon: 'medkit',
-    coords: { latitude: 9.9689, longitude: 76.2532 }
-  },
-  {
-    id: '3',
-    type: 'SafeZone',
-    name: 'Community Safe Zone',
-    address: 'Panampilly Nagar, Kochi, Kerala',
-    hours: 'Open 24 hours',
-    icon: 'shield-checkmark',
-    coords: { latitude: 9.9901, longitude: 76.3247 }
-  },
+  { id: '1', type: 'Police', name: 'Kochi Police Station', address: 'Ernakulathappan Road, Kochi, Kerala', hours: 'Open 24 hours', icon: 'car-sport', coords: { latitude: 9.9816, longitude: 76.2856 } },
+  { id: '2', type: 'Hospital', name: 'General Hospital Kochi', address: 'West Fort, Kochi, Kerala', hours: 'Open 24 hours', icon: 'medkit', coords: { latitude: 9.9689, longitude: 76.2532 } },
+  { id: '3', type: 'SafeZone', name: 'Community Safe Zone', address: 'Panampilly Nagar, Kochi, Kerala', hours: 'Open 24 hours', icon: 'shield-checkmark', coords: { latitude: 9.9901, longitude: 76.3247 } },
 ];
 
 export default function UserLocationScreen() {
   const router = useRouter();
   const { user } = useSession();
   const mapRef = useRef<any>(null);
+  
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('My Location');
   const [loadingLocation, setLoadingLocation] = useState(true);
-  const [zoomLevel, setZoomLevel] = useState(13);
-
-  // User's Current Location
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
 
   useFocusEffect(
     React.useCallback(() => {
       const loadUserData = async () => {
         try {
-          // Use session context if available, otherwise fall back to AsyncStorage
           if (user) {
             setUserEmail(user.email);
             setUserName(user.name || 'My Location');
@@ -79,126 +53,78 @@ export default function UserLocationScreen() {
     }, [user])
   );
 
+  // --- FIX: UNIVERSAL MAP CENTER FUNCTION ---
+  const centerMapOnLocation = (lat: number, lng: number) => {
+    if (!mapRef.current) return;
+
+    if (Platform.OS === 'android') {
+        // ANDROID (WebView): Inject JS to pan Leaflet map
+        const script = `
+            if (typeof map !== 'undefined') {
+                map.setView([${lat}, ${lng}], 16);
+            }
+            true; // Required for injectJavaScript
+        `;
+        mapRef.current.injectJavaScript(script);
+    } else {
+        // iOS (Native): Use animateToRegion if function exists
+        if (typeof mapRef.current.animateToRegion === 'function') {
+            mapRef.current.animateToRegion({
+                latitude: lat,
+                longitude: lng,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+            }, 1000);
+        }
+    }
+  };
+
   const requestAndUpdateLocation = async () => {
     setLoadingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to show your location');
+        Alert.alert('Permission Denied', 'Location permission is required.');
         setLoadingLocation(false);
         return;
       }
 
-      let currentLocation = null;
-
-      // Try to get current location
-      try {
-        currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 5000
-        });
-      } catch (locationError) {
-        console.warn('Failed to get current location, attempting to use last known location:', locationError);
-        // Fallback to last known location
-        const lastKnown = await Location.getLastKnownPositionAsync();
-        if (lastKnown) {
-          currentLocation = lastKnown;
-          console.log('Using last known location');
-        } else {
-          throw new Error('Unable to get location. Please ensure location services are enabled.');
-        }
+      let currentLocation = await Location.getLastKnownPositionAsync();
+      if (!currentLocation) {
+        currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       }
 
-      const newLocation = {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude
-      };
+      if (currentLocation) {
+        const newLocation = {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude
+        };
+        setUserLocation(newLocation);
+        
+        // Use the fixed helper function
+        centerMapOnLocation(newLocation.latitude, newLocation.longitude);
 
-      setUserLocation(newLocation);
-
-      // Send location to backend
-      const emailToSend = userEmail || user?.email;
-      if (emailToSend) {
-        try {
-          await api.post('/user/update-location', {
-            latitude: newLocation.latitude,
-            longitude: newLocation.longitude,
-            email: emailToSend
-          });
-          console.log('Location updated successfully on backend');
-        } catch (apiError) {
-          console.warn('Failed to update location on backend:', apiError);
-          // Don't fail the entire operation if backend update fails
+        const emailToSend = userEmail || user?.email;
+        if (emailToSend) {
+            api.post('/user/update-location', {
+                latitude: newLocation.latitude,
+                longitude: newLocation.longitude,
+                email: emailToSend
+            }).catch(() => {});
         }
-      } else {
-        console.warn('No email available to send location update');
       }
     } catch (error) {
-      console.error('Location error:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to get your location. Make sure location services are enabled.');
+      console.log("Location Error", error);
     } finally {
       setLoadingLocation(false);
     }
   };
 
   const handleDirections = (place: any) => {
-    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
     const label = place.name;
     const url = Platform.select({
       ios: `maps://maps.apple.com/?daddr=${place.coords.latitude},${place.coords.longitude}&q=${label}`,
       android: `geo:${place.coords.latitude},${place.coords.longitude}?q=${place.coords.latitude},${place.coords.longitude}(${label})`,
-    });
-    if (url) Linking.openURL(url);
-  };
-
-  const handleZoomIn = () => {
-    if (mapRef.current && zoomLevel < 20) {
-      const newZoom = zoomLevel + 1;
-      setZoomLevel(newZoom);
-      mapRef.current.animateToRegion({
-        latitude: userLocation?.latitude || 9.9816,
-        longitude: userLocation?.longitude || 76.2856,
-        latitudeDelta: 20 / newZoom,
-        longitudeDelta: 20 / newZoom,
-      });
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (mapRef.current && zoomLevel > 5) {
-      const newZoom = zoomLevel - 1;
-      setZoomLevel(newZoom);
-      mapRef.current.animateToRegion({
-        latitude: userLocation?.latitude || 9.9816,
-        longitude: userLocation?.longitude || 76.2856,
-        latitudeDelta: 20 / newZoom,
-        longitudeDelta: 20 / newZoom,
-      });
-    }
-  };
-
-  const handleCenterView = () => {
-    if (mapRef.current && userLocation) {
-      mapRef.current.animateToRegion({
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      });
-    } else {
-      Alert.alert('Location Not Available', 'Unable to center on your location');
-    }
-  };
-
-  const handleNavigateToMyLocation = async () => {
-    if (!userLocation) {
-      Alert.alert('Location Not Available', 'Unable to navigate');
-      return;
-    }
-    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
-    const url = Platform.select({
-      ios: `maps://maps.apple.com/?daddr=${userLocation.latitude},${userLocation.longitude}&q=My Location`,
-      android: `geo:${userLocation.latitude},${userLocation.longitude}?q=${userLocation.latitude},${userLocation.longitude}(My Location)`,
     });
     if (url) Linking.openURL(url);
   };
@@ -221,6 +147,7 @@ export default function UserLocationScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}> 
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -228,18 +155,17 @@ export default function UserLocationScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={styles.headerTitle}>Live Location</Text>
-          {userLocation && (
-            <Text style={styles.headerSubtitle}>
-              {loadingLocation ? 'Getting location...' : '📍 Active'}
-            </Text>
-          )}
+          <Text style={styles.headerSubtitle}>
+            {loadingLocation ? 'Updating...' : userLocation ? '📍 Active' : 'Waiting...'}
+          </Text>
         </View>
         <TouchableOpacity onPress={requestAndUpdateLocation} style={{ padding: 8 }}>
-          <Ionicons name={loadingLocation ? "hourglass" : "refresh"} size={24} color="#6A5ACD" />
+          <Ionicons name="refresh" size={24} color="#6A5ACD" />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
         {/* --- MAP SECTION --- */}
         <View style={styles.mapContainer}>
           {userLocation ? (
@@ -248,15 +174,8 @@ export default function UserLocationScreen() {
                 initialLatitude={userLocation.latitude}
                 initialLongitude={userLocation.longitude}
                 mapRef={mapRef}
+                mapType={mapType}
                 markers={[
-                  {
-                    id: 'user',
-                    latitude: userLocation.latitude,
-                    longitude: userLocation.longitude,
-                    title: userName,
-                    description: 'Your current location',
-                    color: '#6A5ACD',
-                  },
                   ...SAFE_PLACES.map((place) => ({
                     id: place.id,
                     latitude: place.coords.latitude,
@@ -267,28 +186,28 @@ export default function UserLocationScreen() {
                   })),
                 ]}
                 onMarkerPress={(marker: any) => {
-                  const place = SAFE_PLACES.find((p) => p.id === marker.id);
-                  if (place) {
-                    handleDirections(place);
-                  }
+                    const place = SAFE_PLACES.find(p => p.id === marker.id);
+                    if(place) handleDirections(place);
                 }}
               />
 
-              {/* Map Controls */}
-              <View style={styles.mapControls}>
-                <TouchableOpacity style={styles.controlBtn} onPress={handleCenterView}>
-                  <Ionicons name="locate" size={24} color="#1A1B4B" />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.controlBtn} onPress={handleNavigateToMyLocation}>
-                  <Ionicons name="navigate" size={24} color="#1A1B4B" />
-                </TouchableOpacity>
-              </View>
+              {/* Map Type Toggle */}
+              <TouchableOpacity 
+                style={styles.mapTypeToggle}
+                onPress={() => {
+                  const types: Array<'standard' | 'satellite' | 'hybrid' | 'terrain'> = ['standard', 'satellite', 'hybrid', 'terrain'];
+                  const currentIndex = types.indexOf(mapType);
+                  setMapType(types[(currentIndex + 1) % types.length]);
+                }}
+              >
+                <Ionicons name={mapType === 'satellite' ? 'layers' : 'map'} size={20} color="#FFF" />
+                <Text style={styles.mapTypeText}>{mapType === 'standard' ? 'Map' : mapType === 'satellite' ? 'Satellite' : mapType === 'hybrid' ? 'Hybrid' : 'Terrain'}</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <View style={styles.mapLoadingContainer}>
               <Ionicons name="map" size={50} color="#6A5ACD" />
-              <Text style={{color: '#666', marginTop: 10}}>Getting location...</Text>
+              <Text style={{color: '#666', marginTop: 10}}>Acquiring GPS...</Text>
             </View>
           )}
         </View>
@@ -335,22 +254,42 @@ const styles = StyleSheet.create({
   backButton: { padding: 5 },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
   headerSubtitle: { fontSize: 12, color: '#6A5ACD', marginTop: 4, fontWeight: '600' },
+  
   scrollContent: { flexGrow: 1 },
-  mapContainer: { height: 350, width: '100%', position: 'relative', marginBottom: 20, borderRadius: 15, overflow: 'hidden' },
-  mapLoadingContainer: { width: '100%', height: '100%', backgroundColor: '#F3F0FA', justifyContent: 'center', alignItems: 'center', borderRadius: 15 },
-  mapControls: { position: 'absolute', bottom: 20, right: 20, gap: 10 },
-  controlBtn: { 
-    width: 50, height: 50, backgroundColor: '#FFF', borderRadius: 12, 
-    justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }
+
+  // Map
+  mapContainer: { height: 350, width: '100%', position: 'relative', marginBottom: 20 },
+  mapLoadingContainer: { width: '100%', height: '350', backgroundColor: '#F3F0FA', justifyContent: 'center', alignItems: 'center', borderRadius: 15 },
+  mapTypeToggle: { 
+    position: 'absolute', 
+    top: 20, 
+    right: 20, 
+    backgroundColor: '#6A5ACD', 
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
-  chipsContainer: { flexDirection: 'row', paddingHorizontal: 20, marginTop: 15, marginBottom: 15 },
+  mapTypeText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
+  
+  // Chips
+  chipsContainer: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 15 },
   chip: { 
     flexDirection: 'row', backgroundColor: '#E8E6F0', paddingHorizontal: 15, paddingVertical: 10, 
     borderRadius: 20, marginRight: 10, alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.1
   },
   chipText: { marginLeft: 8, fontWeight: '600', color: '#1A1B4B' },
+
+  // List
   listSection: { paddingHorizontal: 20, marginTop: 10 },
   sectionHeader: { fontSize: 16, fontWeight: '600', color: '#1A1B4B', marginBottom: 15 },
+  
   placeCard: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   placeIconBox: { 
     width: 50, height: 50, backgroundColor: '#F3F0FA', borderRadius: 12, 
@@ -360,8 +299,11 @@ const styles = StyleSheet.create({
   placeName: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },
   placeAddress: { fontSize: 13, color: '#6A5ACD', marginVertical: 2 },
   placeHours: { fontSize: 12, color: '#7A7A7A' },
+  
   directionsBtn: { backgroundColor: '#E8E6F0', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10 },
   directionsText: { fontSize: 12, fontWeight: 'bold', color: '#1A1B4B' },
+
+  // Heat Zones
   heatZoneContainer: { paddingHorizontal: 20, marginTop: 10 },
   heatZoneTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 10 },
   heatZoneButton: { backgroundColor: '#E8E6F0', padding: 15, borderRadius: 12, alignItems: 'center' },

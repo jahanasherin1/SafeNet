@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { isActivityMonitoringActive, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
+import { isActivityMonitoringActive, setAlertCallback, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
@@ -23,6 +23,10 @@ interface SessionContextType {
   queuedLocations: number;
   isActivityMonitoringActive: boolean;
   toggleActivityMonitoring: (enabled: boolean) => Promise<void>;
+  alertReason: string | null;
+  isAlertVisible: boolean;
+  setAlertVisible: (visible: boolean) => void;
+  dismissAlert: () => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -35,6 +39,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [queuedLocations, setQueuedLocations] = useState(0);
   const [isActivityMonitoringActiveState, setIsActivityMonitoringActive] = useState(false);
   const [sessionInitialized, setSessionInitialized] = useState(false);
+  const [alertReason, setAlertReason] = useState<string | null>(null);
+  const [isAlertVisible, setAlertVisible] = useState(false);
 
   const isLoggedIn = !!user && !!token;
 
@@ -201,6 +207,22 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const dismissAlert = () => {
+    setAlertVisible(false);
+    setAlertReason(null);
+  };
+
+  // Register global alert callback
+  useEffect(() => {
+    console.log('📢 Registering global alert callback in SessionContext');
+    setAlertCallback((reason: string) => {
+      console.log('📨 Global alert callback triggered with reason:', reason);
+      setAlertReason(reason);
+      setAlertVisible(true);
+      console.log('✅ Alert state updated - isAlertVisible set to true');
+    });
+  }, []);
+
   return (
     <SessionContext.Provider
       value={{
@@ -214,6 +236,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         queuedLocations,
         isActivityMonitoringActive: isActivityMonitoringActiveState,
         toggleActivityMonitoring,
+        alertReason,
+        isAlertVisible,
+        setAlertVisible,
+        dismissAlert,
       }}
     >
       {children}

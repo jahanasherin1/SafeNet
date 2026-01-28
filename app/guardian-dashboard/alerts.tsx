@@ -187,18 +187,22 @@ export default function GuardianAlertsScreen() {
     }
   };
 
-  const openLocation = (latitude: number, longitude: number) => {
-    const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-    Alert.alert(
-      'Open Location',
-      'View location in Google Maps?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open', onPress: () => {
-          console.log('Open maps:', mapsUrl);
-        }}
-      ]
-    );
+  const openLocation = async (latitude: number, longitude: number, alertItem?: AlertItem) => {
+    try {
+      // Store location data temporarily for the location screen
+      await AsyncStorage.setItem('focusLocation', JSON.stringify({
+        latitude,
+        longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+        userName: alertItem?.userName || 'User'
+      }));
+      
+      router.push('/guardian-dashboard/location');
+    } catch (error) {
+      console.error('Error navigating to location:', error);
+      Alert.alert('Error', 'Failed to open location');
+    }
   };
 
   const getAlertIcon = (type: string) => {
@@ -308,7 +312,7 @@ export default function GuardianAlertsScreen() {
           {item.location && (
             <TouchableOpacity
               style={styles.locationButton}
-              onPress={() => openLocation(item.location!.latitude, item.location!.longitude)}
+              onPress={() => openLocation(item.location!.latitude, item.location!.longitude, item)}
             >
               <Ionicons name="location" size={16} color="#6A5ACD" />
               <Text style={styles.locationText}>View Location</Text>
