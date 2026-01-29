@@ -5,9 +5,9 @@ import Constants from 'expo-constants';
 // ========================================
 // 🌐 NETWORK SETUP - CHANGE IP HERE 👇
 // ========================================
-const LAPTOP_IP = '172.20.10.4';        // ← Home
+//const LAPTOP_IP = '172.20.10.4';        // ← Home
 //const LAPTOP_IP = '192.168.221.244';  // ← Home Alt
-//const LAPTOP_IP = '192.168.1.8';     // ← College IP
+const LAPTOP_IP = '192.168.1.7';     // ← College IP
 // ========================================
 
 const PORT = 5000; 

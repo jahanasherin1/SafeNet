@@ -173,6 +173,23 @@ export default function GuardianLocationScreen() {
              const data = match.res.data;
              const loc = data.location;
              
+             // Calculate distance moved from last location
+             const lastLoc = u.location || u.currentLocation;
+             const hasMoved = lastLoc && loc && (
+               Math.abs(loc.latitude - lastLoc.latitude) > 0.0001 || // ~10m
+               Math.abs(loc.longitude - lastLoc.longitude) > 0.0001
+             );
+             
+             // Only update if location has actually changed significantly
+             // OR if this is the first location update for this user
+             // OR if accuracy has significantly improved
+             const shouldUpdate = !lastLoc || hasMoved || 
+               (loc && lastLoc && (lastLoc.accuracy || 100) - (loc.accuracy || 0) > 5);
+             
+             if (!shouldUpdate) {
+               return u; // Don't update if location hasn't changed
+             }
+             
              // Format timestamp for display
              const timeStr = new Date(loc?.timestamp || data.lastSosTime || new Date())
                 .toLocaleString([], { 

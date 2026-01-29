@@ -13,12 +13,17 @@ const VERBOSE_LOGGING = true; // Set to true for debugging
 
 let appStateSubscription: any = null;
 let lastLoggedTime = 0;
+let lastLocationSent: { latitude: number; longitude: number; accuracy?: number } | null = null; // Track last location to avoid duplicates
 let heartbeatInterval: any = null;
 let foregroundPollingInterval: any = null; // Fallback polling when background task isn't firing
+let backgroundWatcherSubscription: any = null; // Persistent background location watcher
 let trackingStartTime = 0; // Track when tracking was started to skip old buffered locations
 const LOG_THROTTLE_MS = 5000; // Only log location every 5 seconds
 const HEARTBEAT_INTERVAL = 30000; // Check tracking health every 30 seconds
 const FOREGROUND_POLLING_INTERVAL = 5000; // Poll every 5 seconds as fallback
+const BACKGROUND_WATCH_INTERVAL = 3000; // Watch position every 3 seconds in background
+const MIN_ACCURACY = 30; // Reject locations with accuracy worse than 30m
+const MIN_DISTANCE_TO_SEND = 0; // Send all updates in real-time (no movement threshold)
 
 interface LocationUpdate {
   latitude: number;
@@ -114,7 +119,7 @@ export const processLocationQueue = async (): Promise<void> => {
 
 // Track last sent location to prevent rapid duplicates
 let lastSentTime = 0;
-const MIN_UPDATE_INTERVAL = 0; // No rate limiting for real-time tracking - send all updates
+const MIN_UPDATE_INTERVAL = 100; // Minimum 100ms between updates to avoid server overload
 
 // Define the background task - unregister first if exists to ensure clean state
 const defineBackgroundTask = () => {
@@ -176,8 +181,14 @@ const defineBackgroundTask = () => {
         return; // Skip very stale buffered location
       }
       
-      // No rate limiting - send all updates for real-time tracking
+      // Rate limit to avoid overwhelming the server
       const timeSinceLastSent = now - lastSentTime;
+      if (lastSentTime > 0 && timeSinceLastSent < MIN_UPDATE_INTERVAL) {
+        if (VERBOSE_LOGGING) {
+          console.log(`⏭️ Throttled (only ${timeSinceLastSent}ms since last update, need ${MIN_UPDATE_INTERVAL}ms)`);
+        }
+        return; // Skip this update, send next batch
+      }
       if (VERBOSE_LOGGING && lastSentTime > 0) {
         console.log(`⏱️ Time since last update: ${timeSinceLastSent}ms`);
       }
@@ -264,6 +275,22 @@ const sendLocationToBackend = async (
   email?: string
 ) => {
   try {
+    // Filter 1: Reject locations with poor accuracy (worse than 30m)
+    const accuracy = location.accuracy || 999;
+    if (accuracy > MIN_ACCURACY) {
+      console.log(`⏭️ Skipping location with poor accuracy (${accuracy.toFixed(0)}m, threshold: ${MIN_ACCURACY}m)`);
+      return;
+    }
+
+    // For real-time tracking, send all updates regardless of movement
+    // We'll track the distance moved for informational purposes only
+    if (lastLocationSent && VERBOSE_LOGGING) {
+      const latDiff = Math.abs(location.latitude - lastLocationSent.latitude);
+      const lonDiff = Math.abs(location.longitude - lastLocationSent.longitude);
+      const distanceMoved = Math.sqrt(latDiff ** 2 + lonDiff ** 2) * 111000; // Convert to meters
+      console.log(`⏭️ Location unchanged (moved only ${distanceMoved.toFixed(0)}m)`);
+    }
+
     let userEmail = email;
     if (!userEmail) {
       const storedUser = await AsyncStorage.getItem('user');
@@ -290,6 +317,13 @@ const sendLocationToBackend = async (
       timestamp: Date.now(),
     });
 
+    // Update last sent location
+    lastLocationSent = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy: location.accuracy
+    };
+
     // Log successful send with timestamp
     const now = new Date();
     const timestamp = now.toLocaleTimeString('en-US', { 
@@ -298,10 +332,10 @@ const sendLocationToBackend = async (
       minute: '2-digit', 
       second: '2-digit' 
     });
-    console.log(`✅ [${timestamp}] Location sent to backend`);
+    console.log(`✅ [${timestamp}] Location sent to backend (accuracy: ${accuracy.toFixed(0)}m)`);
     
-    // Process any queued items after successful sync
-    setTimeout(() => processLocationQueue(), 5000);
+    // Process any queued items immediately after successful sync
+    setTimeout(() => processLocationQueue(), 1000);
 
     return response.data;
   } catch (error) {
@@ -325,18 +359,23 @@ export const startBackgroundLocationTracking = async () => {
     const appState = AppState.currentState;
     console.log(`ℹ️ Starting tracking in ${appState} state...`);
 
+    console.log('📍 Requesting location permissions...');
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       console.warn('❌ Foreground location permission not granted');
+      console.log('   User needs to grant permission in Settings > Apps > SafeNet > Permissions > Location');
       return false;
     }
+    console.log('✅ Foreground permission granted');
 
-    // Request background permissions (requires explicit user consent on Android 11+)
+    console.log('📍 Requesting background location permissions...');
     const bgStatus = await Location.requestBackgroundPermissionsAsync();
     if (bgStatus.status !== 'granted') {
       console.warn('❌ Background location permission not granted');
+      console.log('   User needs to select "Allow all the time" when prompted');
       return false;
     }
+    console.log('✅ Background permission granted');
 
     // On Android 12+, request FOREGROUND_SERVICE permission
     if (Platform.OS === 'android' && Platform.Version >= 31) {
@@ -501,6 +540,9 @@ export const startBackgroundLocationTracking = async () => {
     // Setup heartbeat to monitor tracking health
     setupTrackingHeartbeat();
 
+    // Start background watcher for continuous tracking (works when app is minimized)
+    await startBackgroundWatcher();
+
     // Start foreground polling as fallback (for when background task doesn't fire)
     startForegroundPolling();
 
@@ -527,6 +569,9 @@ export const stopBackgroundLocationTracking = async () => {
       
       // Reset rate limiter
       lastSentTime = 0;
+      
+      // Stop background watcher
+      stopBackgroundWatcher();
       
       // Stop foreground polling
       stopForegroundPolling();
@@ -652,7 +697,89 @@ export const cleanupAppStateListener = () => {
     console.log('💔 Heartbeat stopped');
   }
   
+  stopBackgroundWatcher();
   stopForegroundPolling();
+};
+
+// Background location watcher - works even when app is minimized
+const startBackgroundWatcher = async () => {
+  try {
+    // Stop existing watcher if any
+    if (backgroundWatcherSubscription) {
+      backgroundWatcherSubscription.remove();
+      backgroundWatcherSubscription = null;
+    }
+
+    console.log('👁️ Starting continuous location watcher (keeps app alive in background)...');
+
+    // Use watchPositionAsync - this is the only reliable way to keep tracking when minimized
+    backgroundWatcherSubscription = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 2000, // Check every 2 seconds
+        distanceInterval: 0, // Update on any movement
+        mayShowUserSettingsDialog: false,
+      },
+      async (location) => {
+        try {
+          const coords = location.coords;
+          const now = Date.now();
+          
+          // Only send if enough time has passed
+          const timeSinceLastSent = now - lastSentTime;
+          if (timeSinceLastSent < 3000) {
+            return; // Skip if sent too recently
+          }
+
+          // Log background location
+          const timestamp = new Date().toLocaleTimeString('en-US', { 
+            hour12: true,
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          console.log(`📍 [${timestamp}] Location (background): ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${coords.accuracy?.toFixed(0)}m)`);
+
+          // Send to backend
+          try {
+            await sendLocationToBackend({
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              accuracy: coords.accuracy ?? undefined,
+              altitude: coords.altitude ?? undefined,
+            });
+            lastSentTime = now;
+          } catch (sendError) {
+            // Queue if offline
+            await queueLocationForSync({
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              accuracy: coords.accuracy ?? undefined,
+              altitude: coords.altitude ?? undefined,
+            });
+          }
+        } catch (error) {
+          console.error('❌ Background watcher callback error:', error);
+        }
+      },
+      (error) => {
+        console.error('❌ Background watcher error:', error);
+      }
+    );
+
+    console.log('✅ Continuous location watcher started - will track even when minimized');
+  } catch (error) {
+    console.error('❌ Failed to start background watcher:', error);
+  }
+};
+
+// Stop background watcher
+const stopBackgroundWatcher = () => {
+  if (backgroundWatcherSubscription) {
+    backgroundWatcherSubscription.remove();
+    backgroundWatcherSubscription = null;
+    console.log('🛑 Background location watcher stopped');
+  }
 };
 
 // Foreground polling as fallback when background task isn't firing

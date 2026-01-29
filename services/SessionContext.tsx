@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { isActivityMonitoringActive, setAlertCallback, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
+import { startBackgroundActivityMonitoring, stopBackgroundActivityMonitoring } from './BackgroundActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
+import { checkBackgroundLocationStatus } from './DiagnosticsService';
 import { initializeLocalNotifications, setupNotificationListeners } from './LocalNotificationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
@@ -70,6 +72,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (trackingStarted) {
             console.log('✅ Background tracking active');
             console.log('ℹ️  Location updates should be appearing every 5 seconds...');
+            
+            // Run diagnostics to verify everything is configured
+            setTimeout(() => {
+              console.log('\n🔍 Running background location diagnostics...');
+              checkBackgroundLocationStatus();
+            }, 2000);
+            
             setIsTrackingActive(true);
           } else {
             console.warn('⚠️ Failed to start background tracking');
@@ -81,6 +90,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             console.log('🔄 (Re)starting activity monitoring...');
             const activityMonStarted = await startActivityMonitoring();
             setIsActivityMonitoringActive(activityMonStarted);
+            
+            // Also start background activity monitoring for when app is minimized
+            console.log('🔄 Starting background activity monitoring...');
+            const bgMonStarted = await startBackgroundActivityMonitoring();
+            console.log(`${bgMonStarted ? '✅' : '❌'} Background activity monitoring ${bgMonStarted ? 'active' : 'failed'}`);
+            console.log('📊 NOTE: Foreground logs show impact detection while app is open');
+            console.log('📊 In background, detection continues silently - notifications appear if fall detected');
           }
           
           // Acquire partial wake lock to keep tracking active
@@ -185,8 +201,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await stopBackgroundLocationTracking();
       setIsTrackingActive(false);
       
-      // Stop activity monitoring
+      // Stop activity monitoring (both foreground and background)
       await stopActivityMonitoring();
+      await stopBackgroundActivityMonitoring();
       setIsActivityMonitoringActive(false);
       
       // Release wake lock
@@ -214,9 +231,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsActivityMonitoringActive(started);
         if (started) {
           console.log('✅ Activity monitoring started');
+          // Also start background activity monitoring
+          await startBackgroundActivityMonitoring();
+          console.log('✅ Background activity monitoring started');
         }
       } else {
         await stopActivityMonitoring();
+        await stopBackgroundActivityMonitoring();
         setIsActivityMonitoringActive(false);
         console.log('✅ Activity monitoring stopped');
       }

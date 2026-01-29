@@ -79,9 +79,6 @@ router.post('/trigger', async (req, res) => {
       }
     }
 
-    // Send push notifications to guardians (removed - using local notifications in frontend)
-    let pushNotificationsSent = 0;
-
     // Create alert notification for guardian dashboard
     await createAlert({
       userEmail: user.email,
@@ -96,16 +93,14 @@ router.post('/trigger', async (req, res) => {
         alertType: alertType || 'sos',
         guardianCount: user.guardians.length,
         emailsSent,
-        pushNotificationsSent,
         timestamp: timestamp || new Date().toISOString()
       }
     });
 
-    console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails, ${pushNotificationsSent} push notifications sent)`);
+    console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails sent)`);
     res.status(200).json({ 
       message: 'Alert sent successfully',
       emailsSent,
-      pushNotificationsSent,
       guardianCount: user.guardians.length
     });
 

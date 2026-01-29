@@ -1,7 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Accelerometer, Pedometer } from 'expo-sensors';
-import { Vibration } from 'react-native';
+import { NativeModules, Platform, Vibration } from 'react-native';
 import { sendFallDetectedNotification, sendSuddenStopNotification } from './LocalNotificationService';
+
+// Import native activity monitoring module for background fall detection
+const ActivityMonitoringNative = Platform.OS === 'android' 
+  ? NativeModules.ActivityMonitoring 
+  : null;
 
 // --- CONFIGURATION ---
 const PRE_ALERT_TIMER = 15;
@@ -257,6 +262,22 @@ export const startActivityMonitoring = async () => {
     monitoringActive = true;
     console.log('🚀 Starting activity monitoring...');
 
+    // Start native Android foreground service for background fall detection
+    if (ActivityMonitoringNative) {
+      try {
+        console.log('📱 Using NATIVE Android foreground service - works even when app is closed');
+        await ActivityMonitoringNative.startActivityMonitoring();
+        console.log('✅ Native activity monitoring service started');
+      } catch (error) {
+        console.warn('⚠️ Failed to start native service:', error);
+        console.log('⚠️ Falling back to Expo Accelerometer (foreground only)');
+      }
+    } else {
+      console.log('⚠️ Native activity monitoring module not available');
+      console.log('⚠️  Falling back to Expo Accelerometer');
+      console.log('     ℹ️  Note: This only works when app is open or minimized');
+    }
+
     // Reset state
     accelHistory = [];
     varianceHistory = [];
@@ -307,6 +328,16 @@ export const startActivityMonitoring = async () => {
 export const stopActivityMonitoring = async () => {
   monitoringActive = false;
   console.log('🛑 Stopping activity monitoring...');
+
+  // Stop native Android foreground service
+  if (ActivityMonitoringNative) {
+    try {
+      await ActivityMonitoringNative.stopActivityMonitoring();
+      console.log('✅ Native activity monitoring service stopped');
+    } catch (error) {
+      console.warn('⚠️ Failed to stop native service:', error);
+    }
+  }
 
   if (accelSubscription) {
     try {
