@@ -121,6 +121,86 @@ router.post('/resolve', async (req, res) => {
   }
 });
 
+// Cancel False Alarm - notify guardians that alert was accidental
+router.post('/cancel-false-alarm', async (req, res) => {
+  try {
+    console.log('📥 Cancel false alarm request received');
+    console.log('📧 Request body:', req.body);
+    
+    const { userEmail } = req.body;
+    
+    if (!userEmail) {
+      console.error('❌ No user email provided');
+      return res.status(400).json({ message: 'User email is required' });
+    }
+    
+    console.log('🔍 Looking up user:', userEmail);
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      console.error('❌ User not found:', userEmail);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('✅ User found:', user.name);
+    
+    // Deactivate SOS
+    user.sosActive = false;
+    await user.save();
+    console.log('✅ SOS deactivated');
+
+    const displayName = user.name || 'User';
+    const emailSubject = `✅ False Alarm: ${displayName} is Safe`;
+    const emailBody = `SAFETY UPDATE\n\n${displayName} has confirmed they are safe and the previous alert was a false alarm.\n\nTime: ${new Date().toLocaleString()}\n\nNo further action is needed. This was likely triggered accidentally or the situation has been resolved.\n\nStay safe!`;
+
+    // Send email to all guardians
+    let emailsSent = 0;
+    console.log(`📧 Sending emails to ${user.guardians.length} guardian(s)...`);
+    for (const guardian of user.guardians) {
+      if (guardian.email) {
+        try {
+          await sendEmail(guardian.email, emailSubject, emailBody);
+          emailsSent++;
+          console.log(`📧 False alarm notification sent to ${guardian.name} (${guardian.email})`);
+        } catch (emailError) {
+          console.error(`Failed to send email to ${guardian.email}:`, emailError.message);
+        }
+      }
+    }
+
+    // Create alert notification for guardian dashboard
+    console.log('📝 Creating alert for guardian dashboard...');
+    const location = user.currentLocation || { latitude: 0, longitude: 0 };
+    await createAlert({
+      userEmail: user.email,
+      userName: displayName,
+      type: 'false_alarm',
+      title: `✅ False Alarm Cancelled`,
+      message: `${displayName} confirmed they are safe - Previous alert was accidental`,
+      location: { latitude: location.latitude, longitude: location.longitude },
+      metadata: {
+        reason: 'False alarm cancelled by user',
+        alertType: 'false_alarm',
+        guardianCount: user.guardians.length,
+        emailsSent,
+        timestamp: new Date().toISOString(),
+        cancelledAt: new Date().toLocaleString()
+      }
+    });
+    console.log('✅ Alert created for guardian dashboard');
+
+    console.log(`✅ False alarm cancelled for ${displayName} (${emailsSent} notifications sent)`);
+    res.status(200).json({ 
+      message: 'False alarm cancelled successfully',
+      emailsSent,
+      guardianCount: user.guardians.length
+    });
+
+  } catch (error) {
+    console.error('❌ False alarm cancellation error:', error);
+    res.status(500).json({ message: 'Failed to cancel false alarm', error: error.message });
+  }
+});
+
 // 11. Check Status
 router.post('/status', async (req, res) => {
   try {

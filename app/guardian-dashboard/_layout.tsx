@@ -24,6 +24,10 @@ export default function GuardianDashboardLayout() {
         name="monitor-journey"
         options={{ title: 'Monitor Journey',href:null, }}
       />
+      <Tabs.Screen
+        name="contact-authorities"
+        options={{ title: 'Contact Authorities', href: null }}
+      />
     </Tabs>
   );
 }

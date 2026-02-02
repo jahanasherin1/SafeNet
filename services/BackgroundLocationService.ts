@@ -3,6 +3,8 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { AppState, NativeModules, Platform } from 'react-native';
 import api from './api';
+import { applyLocationOptimization, getBatteryOptimizationStatus } from './BatteryOptimizationService';
+import { acquireWakeLock, releaseWakeLock } from './WakeLockService';
 
 export const LOCATION_TASK_NAME = 'SAFENET_BACKGROUND_LOCATION';
 const LOCATION_SYNC_QUEUE = 'LOCATION_SYNC_QUEUE';
@@ -22,7 +24,7 @@ const LOG_THROTTLE_MS = 5000; // Only log location every 5 seconds
 const HEARTBEAT_INTERVAL = 30000; // Check tracking health every 30 seconds
 const FOREGROUND_POLLING_INTERVAL = 5000; // Poll every 5 seconds as fallback
 const BACKGROUND_WATCH_INTERVAL = 3000; // Watch position every 3 seconds in background
-const MIN_ACCURACY = 30; // Reject locations with accuracy worse than 30m
+const MIN_ACCURACY = 200; // Reject locations with accuracy worse than 200m (allows indoor/network-based GPS)
 const MIN_DISTANCE_TO_SEND = 0; // Send all updates in real-time (no movement threshold)
 
 interface LocationUpdate {
@@ -415,6 +417,10 @@ export const startBackgroundLocationTracking = async () => {
 
     console.log('✅ Location task confirmed defined');
 
+    // Acquire wake lock to keep CPU alive for location tracking
+    await acquireWakeLock();
+    console.log('✅ Wake lock acquired - CPU will stay active');
+
     // Request to ignore battery optimization (Doze mode)
     if (Platform.OS === 'android') {
       try {
@@ -428,20 +434,31 @@ export const startBackgroundLocationTracking = async () => {
       }
     }
 
-    // Start location updates with aggressive settings for true real-time tracking
+    // Apply battery optimizations if enabled
+    const batteryStatus = await getBatteryOptimizationStatus();
+    const optimizedSettings = await applyLocationOptimization();
+
+    // Start location updates with settings adjusted for battery mode
     const locationOptions: any = {
-      accuracy: Location.Accuracy.BestForNavigation, // Best possible accuracy for real-time tracking
-      timeInterval: 1000, // Update every 1 second for true real-time
-      distanceInterval: 1, // Update even for 1 meter movement
-      deferredUpdatesInterval: 0, // Process updates IMMEDIATELY - no batching
-      deferredUpdatesDistance: 0, // Process updates IMMEDIATELY - no batching
+      accuracy: batteryStatus.isBatterySavingActive 
+        ? Location.Accuracy.Balanced 
+        : Location.Accuracy.BestForNavigation,
+      timeInterval: optimizedSettings.timeInterval,
+      distanceInterval: batteryStatus.isBatterySavingActive ? 10 : 1,
+      deferredUpdatesInterval: 0,
+      deferredUpdatesDistance: 0,
       showsBackgroundLocationIndicator: true,
-      pausesUpdatesAutomatically: false, // Never pause
-      mayShowUserSettingsDialog: true, // Show dialog if location is disabled
+      pausesUpdatesAutomatically: false,
+      mayShowUserSettingsDialog: true,
       foregroundService: {
-        notificationTitle: 'SafeNet Active',
-        notificationBody: 'Real-time location tracking active',
+        notificationTitle: batteryStatus.isBatterySavingActive 
+          ? `SafeNet Active (Battery Saver ${batteryStatus.currentBatteryLevel}%)` 
+          : 'SafeNet Active',
+        notificationBody: batteryStatus.isBatterySavingActive
+          ? 'Location tracking optimized for low battery'
+          : 'Real-time location tracking active',
         notificationColor: '#6A5ACD',
+        killServiceOnDestroy: false,
       },
     };
 
@@ -451,13 +468,16 @@ export const startBackgroundLocationTracking = async () => {
       locationOptions.showsBackgroundLocationIndicator = true;
     }
 
-    // Android-specific settings for real-time updates
+    // Android-specific settings for aggressive real-time tracking
     if (Platform.OS === 'android') {
-      locationOptions.foregroundService.killServiceOnDestroy = false;
-      // Enable high-frequency updates on Android
-      locationOptions.timeInterval = 1000; // 1 second
-      locationOptions.fastestInterval = 500; // Accept updates every 500ms if available
-      locationOptions.deferredUpdatesInterval = 0; // No batching
+      locationOptions.timeInterval = batteryStatus.isBatterySavingActive ? 10000 : 1000;
+      locationOptions.fastestInterval = batteryStatus.isBatterySavingActive ? 5000 : 1000;
+      locationOptions.deferredUpdatesInterval = 0;
+      locationOptions.pausesUpdatesAutomatically = false;
+    }
+
+    if (batteryStatus.isBatterySavingActive) {
+      console.log(`🔋 Battery Saving Mode Active - Optimized settings applied (${batteryStatus.currentBatteryLevel}%)`);
     }
 
     console.log('🚀 Starting location updates with task:', LOCATION_TASK_NAME);
@@ -524,27 +544,36 @@ export const startBackgroundLocationTracking = async () => {
     // Reset rate limiter for fresh start to allow immediate first update
     lastSentTime = 0;
 
-    console.log('✅ Location tracking active (TRUE REAL-TIME MODE)');
-    console.log('ℹ️  Updates every 1 second OR when moving 1+ meter');
-    console.log('📱 Platform:', Platform.OS);
-    console.log('⚡ Real-time tracking enabled - no rate limiting');
+    if (batteryStatus.isBatterySavingActive) {
+      console.log('✅ Location tracking active (BATTERY SAVER MODE)');
+      console.log('ℹ️  Updates every 30 seconds to conserve battery');
+      console.log('📱 Platform:', Platform.OS);
+      console.log('🔋 Battery saving optimizations applied');
+    } else {
+      console.log('✅ Location tracking active (TRUE REAL-TIME MODE)');
+      console.log('ℹ️  Updates every 1 second OR when moving 1+ meter');
+      console.log('📱 Platform:', Platform.OS);
+      console.log('⚡ Real-time tracking enabled - no rate limiting');
+    }
     console.log('⏰ Waiting for background location updates...');
 
     // Save tracking state
     await AsyncStorage.setItem(TRACKING_STATE_KEY, 'active');
     await AsyncStorage.setItem(TRACKING_ENABLED_KEY, 'true');
 
-    // Setup app state listener to restart tracking if app resumes
-    setupAppStateListener();
-
-    // Setup heartbeat to monitor tracking health
+    // Setup heartbeat to monitor tracking health (no app state listener to avoid stopping)
     setupTrackingHeartbeat();
 
-    // Start background watcher for continuous tracking (works when app is minimized)
+    // ALWAYS start background watcher for continuous tracking (works when app is minimized/locked)
     await startBackgroundWatcher();
-
+    
     // Start foreground polling as fallback (for when background task doesn't fire)
-    startForegroundPolling();
+    if (!batteryStatus.isBatterySavingActive) {
+      startForegroundPolling(3000); // 3 second intervals for real-time
+    } else {
+      console.log('🔋 Battery saving mode: Using optimized intervals');
+      startForegroundPolling(15000); // 15 second intervals for battery saving
+    }
 
     // Process any queued locations after starting
     setTimeout(() => processLocationQueue(), 5000);
@@ -575,6 +604,9 @@ export const stopBackgroundLocationTracking = async () => {
       
       // Stop foreground polling
       stopForegroundPolling();
+      
+      // Release wake lock
+      await releaseWakeLock();
       
       console.log('✅ Background location tracking stopped');
       return true;
@@ -712,11 +744,11 @@ const startBackgroundWatcher = async () => {
 
     console.log('👁️ Starting continuous location watcher (keeps app alive in background)...');
 
-    // Use watchPositionAsync - this is the only reliable way to keep tracking when minimized
+    // Use watchPositionAsync with aggressive settings for real-time tracking
     backgroundWatcherSubscription = await Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 2000, // Check every 2 seconds
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 1000, // Check every 1 second for real-time
         distanceInterval: 0, // Update on any movement
         mayShowUserSettingsDialog: false,
       },
@@ -725,9 +757,9 @@ const startBackgroundWatcher = async () => {
           const coords = location.coords;
           const now = Date.now();
           
-          // Only send if enough time has passed
+          // Only send if enough time has passed (reduced to 2 seconds for real-time)
           const timeSinceLastSent = now - lastSentTime;
-          if (timeSinceLastSent < 3000) {
+          if (timeSinceLastSent < 2000) {
             return; // Skip if sent too recently
           }
 
@@ -783,12 +815,14 @@ const stopBackgroundWatcher = () => {
 };
 
 // Foreground polling as fallback when background task isn't firing
-const startForegroundPolling = () => {
+const startForegroundPolling = (intervalMs?: number) => {
   if (foregroundPollingInterval) {
     clearInterval(foregroundPollingInterval);
   }
 
-  console.log('🔄 Starting foreground polling fallback (every 5s)...');
+  const interval = intervalMs || FOREGROUND_POLLING_INTERVAL;
+  const intervalSeconds = Math.round(interval / 1000);
+  console.log(`🔄 Starting foreground polling fallback (every ${intervalSeconds}s)...`);
   
   let pollCount = 0;
   
@@ -797,9 +831,9 @@ const startForegroundPolling = () => {
   
   foregroundPollingInterval = setInterval(async () => {
     pollLocation(++pollCount);
-  }, FOREGROUND_POLLING_INTERVAL);
+  }, interval);
   
-  console.log('✅ Foreground polling started - will update every 5 seconds');
+  console.log(`✅ Foreground polling started - will update every ${intervalSeconds} seconds`);
 };
 
 const pollLocation = async (pollCount: number) => {

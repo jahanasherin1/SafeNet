@@ -6,6 +6,8 @@ import React, { useCallback, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import { isBackgroundTrackingActive, startBackgroundLocationTracking, stopBackgroundLocationTracking } from '../../services/BackgroundLocationService';
+import { disableBatteryMode, enableBatteryMode, getBatteryInfo, isBatteryModeEnabled, startBatteryMonitoring, stopBatteryMonitoring } from '../../services/BatteryOptimizationService';
 import { useSession } from '../../services/SessionContext';
 
 export default function ProfileScreen() {
@@ -20,6 +22,7 @@ export default function ProfileScreen() {
   // State for toggles
   const [isBatteryMode, setIsBatteryMode] = useState(false);
   const [togglingActivity, setTogglingActivity] = useState(false);
+  const [batteryInfo, setBatteryInfo] = useState({ percentage: 100, state: 'Unknown', isLowBattery: false, icon: 'battery-full' });
 
   // --- 2. REFRESH DATA WHEN SCREEN IS FOCUSED ---
   useFocusEffect(
@@ -47,6 +50,14 @@ export default function ProfileScreen() {
               }
             }
           }
+
+          // Load battery mode status
+          const batteryModeEnabled = await isBatteryModeEnabled();
+          setIsBatteryMode(batteryModeEnabled);
+
+          // Get battery info
+          const info = await getBatteryInfo();
+          setBatteryInfo(info);
         } catch (error) {
           console.error("Failed to load profile", error);
         }
@@ -57,10 +68,87 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
+      // Stop battery monitoring on logout
+      stopBatteryMonitoring();
       await logout();
       router.replace('/main');
     } catch (error) {
       console.error('Logout error:', error);
+    }
+  };
+
+  const handleBatteryModeToggle = async (value: boolean) => {
+    try {
+      // Check if location tracking is currently active
+      const isTrackingActive = await isBackgroundTrackingActive();
+      
+      if (value) {
+        const success = await enableBatteryMode();
+        if (success) {
+          setIsBatteryMode(true);
+          
+          // If tracking is active, restart it to apply new settings
+          if (isTrackingActive) {
+            console.log('🔄 Restarting tracking to apply battery optimization...');
+            await stopBackgroundLocationTracking();
+            await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause
+            await startBackgroundLocationTracking();
+            console.log('✅ Tracking restarted with battery optimization');
+          }
+          
+          // Start battery monitoring
+          startBatteryMonitoring(
+            () => {
+              Alert.alert(
+                '🔋 Low Battery Mode',
+                'Battery Smart Mode has activated power-saving optimizations to ensure safety features continue working.',
+                [{ text: 'OK' }]
+              );
+            },
+            () => {
+              console.log('✅ Battery back to normal levels');
+            }
+          );
+
+          const info = await getBatteryInfo();
+          Alert.alert(
+            '✅ Battery Smart Mode Enabled',
+            `Battery optimization is now active. Location updates will now occur every 30 seconds (instead of every 5 seconds) to conserve battery.\n\n` +
+            `Benefits:\n` +
+            `• Reduced battery drain\n` +
+            `• Extended app runtime\n` +
+            `• All safety features maintained\n\n` +
+            (isTrackingActive ? `Your location tracking has been automatically restarted with the new settings.` : ''),
+            [{ text: 'Got it' }]
+          );
+        }
+      } else {
+        const success = await disableBatteryMode();
+        if (success) {
+          setIsBatteryMode(false);
+          stopBatteryMonitoring();
+          
+          // If tracking is active, restart it to apply new settings
+          if (isTrackingActive) {
+            console.log('🔄 Restarting tracking to disable battery optimization...');
+            await stopBackgroundLocationTracking();
+            await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause
+            await startBackgroundLocationTracking();
+            console.log('✅ Tracking restarted with real-time mode');
+          }
+          
+          Alert.alert(
+            'Battery Smart Mode Disabled',
+            `Location updates will now occur every 1-5 seconds for real-time tracking.\n\n` +
+            (isTrackingActive ? `Your location tracking has been automatically restarted with the new settings.` : ''),
+            [{ text: 'OK' }]
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling battery mode:', error);
+      Alert.alert('Error', 'Failed to toggle battery mode');
     }
   };
 
@@ -111,10 +199,15 @@ export default function ProfileScreen() {
 
           {/* Battery Mode */}
           <View style={styles.prefItem}>
-            <Text style={styles.prefText}>Battery Smart Mode</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.prefText}>Battery Smart Mode</Text>
+              <Text style={styles.prefSubtext}>
+                Optimizes app for low battery conditions
+              </Text>
+            </View>
             <Switch 
               value={isBatteryMode} 
-              onValueChange={setIsBatteryMode}
+              onValueChange={handleBatteryModeToggle}
               trackColor={{ false: "#E0E0E0", true: "#6A5ACD" }}
               thumbColor="#FFFFFF"
             />
@@ -251,6 +344,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2D2D2D',
     fontWeight: '500',
+  },
+  prefSubtext: {
+    fontSize: 12,
+    color: '#7A7A7A',
+    marginTop: 4,
   },
   logoutContainer: {
     marginTop: 40,

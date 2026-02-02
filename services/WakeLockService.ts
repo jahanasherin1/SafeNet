@@ -14,6 +14,24 @@ let wakeLockManager: WakeLockManager | null = null;
 // Initialize native wake lock manager
 const initWakeLockManager = (): WakeLockManager => {
   if (!wakeLockManager) {
+    // Try to use native module if available
+    try {
+      if (Platform.OS === 'android') {
+        const NativeWakeLock = NativeModules.WakeLockModule;
+        if (NativeWakeLock) {
+          wakeLockManager = {
+            acquire: () => NativeWakeLock.acquireWakeLock(),
+            release: () => NativeWakeLock.releaseWakeLock(),
+            isHeld: () => NativeWakeLock.isWakeLockHeld(),
+          };
+          console.log('✅ Native wake lock manager loaded');
+          return wakeLockManager;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Native wake lock not available, using fallback:', error);
+    }
+
     // Fallback implementation
     wakeLockManager = {
       acquire: async () => {
@@ -29,23 +47,6 @@ const initWakeLockManager = (): WakeLockManager => {
         return status === 'held';
       },
     };
-
-    // Try to use native module if available
-    try {
-      if (Platform.OS === 'android') {
-        const NativeWakeLock = NativeModules.WakeLockModule;
-        if (NativeWakeLock) {
-          wakeLockManager = {
-            acquire: () => NativeWakeLock.acquireWakeLock(),
-            release: () => NativeWakeLock.releaseWakeLock(),
-            isHeld: () => NativeWakeLock.isWakeLockHeld(),
-          };
-          console.log('✅ Native wake lock manager loaded');
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Native wake lock not available, using fallback:', error);
-    }
   }
 
   return wakeLockManager;

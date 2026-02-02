@@ -20,6 +20,7 @@ export default function DashboardHome() {
   const [isTracking, setIsTracking] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('Waiting for updates...');
   const [lastSosTime, setLastSosTime] = useState<string | null>(null);
+  const [cancelAlarmLoading, setCancelAlarmLoading] = useState(false);
 
   // --- 1. LOAD DATA & CHECK STATUS ON FOCUS ---
   useFocusEffect(
@@ -129,6 +130,71 @@ export default function DashboardHome() {
       router.replace('/main'); 
     } catch (error) {
       console.error("Logout error:", error);
+    }
+  };
+
+  const handleCancelFalseAlarm = async () => {
+    setCancelAlarmLoading(true);
+    try {
+      if (!userEmail) {
+        Alert.alert("Error", "User email not found. Please refresh the app.");
+        setCancelAlarmLoading(false);
+        return;
+      }
+
+      // Confirm with user first
+      Alert.alert(
+        "Cancel False Alarm?",
+        "This will notify your guardians that you are safe and the alert was accidental.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => setCancelAlarmLoading(false)
+          },
+          {
+            text: "Confirm",
+            style: "default",
+            onPress: async () => {
+              try {
+                console.log('🚀 Sending false alarm cancellation request...');
+                console.log('📧 User email:', userEmail);
+                
+                const response = await api.post('/sos/cancel-false-alarm', {
+                  userEmail: userEmail
+                });
+
+                console.log('✅ Response received:', response.status, response.data);
+
+                if (response.status === 200) {
+                  Alert.alert(
+                    "✅ False Alarm Cancelled",
+                    `Your guardians have been notified that you are safe. ${response.data.emailsSent} notification(s) sent.`
+                  );
+                  
+                  // Clear SOS timestamp
+                  setLastSosTime(null);
+                  await AsyncStorage.removeItem('lastSosTime');
+                }
+              } catch (error: any) {
+                console.error("❌ Cancel false alarm error:", error);
+                console.error("❌ Error response:", error.response?.data);
+                console.error("❌ Error message:", error.message);
+                Alert.alert(
+                  "Error",
+                  error.response?.data?.message || error.message || "Failed to cancel false alarm"
+                );
+              } finally {
+                setCancelAlarmLoading(false);
+              }
+            }
+          }
+        ],
+        { cancelable: true, onDismiss: () => setCancelAlarmLoading(false) }
+      );
+    } catch (error) {
+      console.error("Cancel false alarm error:", error);
+      setCancelAlarmLoading(false);
     }
   };
 
@@ -363,6 +429,29 @@ export default function DashboardHome() {
                 <Text style={styles.manageButtonText}>Manage</Text>
             </TouchableOpacity>
         </View>
+
+        {/* Cancel False Alarm Button - Below Trusted Guardians */}
+        {lastSosTime && (
+          <TouchableOpacity 
+            onPress={handleCancelFalseAlarm}
+            disabled={cancelAlarmLoading}
+            activeOpacity={0.85}
+            style={styles.cancelAlarmContainer}
+          >
+            <LinearGradient
+              colors={cancelAlarmLoading ? ['#B0A4D8', '#9B8FCB'] : ['#C18FFF', '#6A5ACD']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.cancelAlarmButton}
+            >
+              <Ionicons name="checkmark-circle" size={22} color="#FFF" />
+              <Text style={styles.cancelAlarmButtonText}>
+                {cancelAlarmLoading ? "Notifying Guardians..." : "I'm Safe - Cancel Alert"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+        
         <View style={{height: 20}} />
       </ScrollView>
     </SafeAreaView>
@@ -408,4 +497,8 @@ const styles = StyleSheet.create({
   guardianDesc: { fontSize: 12, color: '#7A7A7A', marginTop: 2 },
   manageButton: { backgroundColor: '#F3F0FA', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
   manageButtonText: { fontSize: 12, fontWeight: '600', color: '#1A1B4B' },
+  
+  cancelAlarmContainer: { marginTop: 15, marginBottom: 10, shadowColor: '#6A5ACD', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 5 },
+  cancelAlarmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 15, borderRadius: 15, gap: 10 },
+  cancelAlarmButtonText: { fontSize: 15, fontWeight: '700', color: '#FFF', letterSpacing: 0.3 },
 });

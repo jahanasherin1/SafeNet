@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 
@@ -13,6 +13,7 @@ export default function GuardianHomeScreen() {
   const [guardianEmail, setGuardianEmail] = useState('');
   const [protectingUser, setProtectingUser] = useState('User');
   const [protectingEmail, setProtectingEmail] = useState('');
+  const [protectingPhone, setProtectingPhone] = useState('');
   
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -66,6 +67,7 @@ export default function GuardianHomeScreen() {
           setSelectedUserId(response.data.users[0]._id);
           setProtectingUser(response.data.users[0].name);
           setProtectingEmail(response.data.users[0].email);
+          setProtectingPhone(response.data.users[0].phone);
         }
       }
     } catch (error) {
@@ -155,9 +157,53 @@ export default function GuardianHomeScreen() {
     setSelectedUserId(user._id);
     setProtectingUser(user.name);
     setProtectingEmail(user.email);
+    setProtectingPhone(user.phone);
     AsyncStorage.setItem('selectedUser', JSON.stringify({
-      userId: user._id, userName: user.name, userEmail: user.email
+      userId: user._id, userName: user.name, userEmail: user.email, userPhone: user.phone
     })).catch(err => console.error('Error saving selected user:', err));
+  };
+
+  const handleCallUser = () => {
+    if (!protectingPhone) {
+      Alert.alert(
+        'No Phone Number',
+        'Phone number not available for this user.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Call User',
+      `Do you want to call ${protectingUser} at ${protectingPhone}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Call',
+          onPress: () => {
+            const phoneNumber = Platform.OS === 'ios' 
+              ? `telprompt:${protectingPhone}` 
+              : `tel:${protectingPhone}`;
+            
+            Linking.canOpenURL(phoneNumber)
+              .then((supported) => {
+                if (!supported) {
+                  Alert.alert('Error', 'Phone calling is not supported on this device');
+                } else {
+                  return Linking.openURL(phoneNumber);
+                }
+              })
+              .catch((err) => {
+                console.error('Error making call:', err);
+                Alert.alert('Error', 'Failed to initiate call');
+              });
+          }
+        }
+      ]
+    );
   };
 
   const handleLogout = async () => {
@@ -258,7 +304,13 @@ export default function GuardianHomeScreen() {
                 <Text style={styles.subHeader}>Live updates from the user's device</Text>
                 <Text style={styles.userName}>{protectingUser}</Text>
                 <Text style={[styles.statusText, { color: isSosActive ? '#FF4B4B' : '#00C851' }]}>{isSosActive ? "Emergency Mode" : "Safe"}</Text>
-                <TouchableOpacity style={[styles.callButton, isSosActive && {backgroundColor: '#FF4B4B'}]}><Text style={styles.callButtonText}>Call User</Text></TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.callButton, isSosActive && {backgroundColor: '#FF4B4B'}]}
+                  onPress={handleCallUser}
+                >
+                  <Ionicons name="call" size={16} color="#FFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.callButtonText}>Call User</Text>
+                </TouchableOpacity>
             </View>
             <Image source={{ uri: userImage || 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }} style={styles.userImage} key={userImage} />
           </View>
@@ -285,11 +337,17 @@ export default function GuardianHomeScreen() {
         <Text style={styles.sectionTitle}>Zone Alert Overview</Text>
         <View style={styles.cardContainer}>
             <View style={{flex: 1, paddingRight: 10}}>
-                <Text style={styles.locationTitle}>Zone Activity: Low Risk</Text>
-                <Text style={styles.timeText}>Last activity: Just now</Text>
-                <TouchableOpacity style={styles.actionButton}><Text style={styles.actionButtonText}>View Zone Alerts</Text><Ionicons name="alert-circle-outline" size={14} color="#1A1B4B" style={{marginLeft: 5}} /></TouchableOpacity>
+                <Text style={styles.locationTitle}>Safety Zone Monitoring</Text>
+                <Text style={styles.timeText}>Real-time zone activity tracking</Text>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push('/guardian-dashboard/zone-activity')}
+                >
+                  <Text style={styles.actionButtonText}>View Zone Activity</Text>
+                  <Ionicons name="location" size={14} color="#1A1B4B" style={{marginLeft: 5}} />
+                </TouchableOpacity>
             </View>
-            <View style={[styles.mapContainer, { backgroundColor: '#E0DDCA' }]}><Ionicons name="navigate" size={50} color="#AAA" /></View>
+            <View style={[styles.mapContainer, { backgroundColor: '#E0DDCA' }]}><Ionicons name="shield-checkmark" size={50} color="#4CAF50" /></View>
         </View>
 
         {/* Journey Monitoring Section */}
@@ -322,7 +380,10 @@ export default function GuardianHomeScreen() {
             </View>
         </View>
 
-        <TouchableOpacity style={[styles.emergencyButton, isSosActive && { borderColor: 'red', borderWidth: 1 }]}>
+        <TouchableOpacity 
+          style={[styles.emergencyButton, isSosActive && { borderColor: 'red', borderWidth: 1 }]}
+          onPress={() => router.push('/guardian-dashboard/contact-authorities')}
+        >
             <Text style={[styles.emergencyButtonText, isSosActive && { color: 'red' }]}>Contact Emergency Services</Text>
         </TouchableOpacity>
         
@@ -362,7 +423,7 @@ const styles = StyleSheet.create({
   userName: { fontSize: 22, fontWeight: 'bold', color: '#1A1B4B' },
   statusText: { fontSize: 16, marginBottom: 15, fontWeight: '600' },
   userImage: { width: 100, height: 100, borderRadius: 12, backgroundColor: '#DDD', borderWidth: 2, borderColor: '#FFF' },
-  callButton: { backgroundColor: '#9D80CB', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12, alignSelf: 'flex-start' },
+  callButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#9D80CB', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12, alignSelf: 'flex-start' },
   callButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 15 },
   cardContainer: { backgroundColor: '#FFF', marginBottom: 25, flexDirection: 'row', alignItems: 'center', borderRadius: 15, padding: 15, elevation: 1 },
