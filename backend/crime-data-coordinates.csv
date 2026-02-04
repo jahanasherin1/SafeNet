@@ -1,0 +1,2658 @@
+City,Latitude,Longitude,Crime_Type,Year,Count
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2014,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2015,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2016,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2017,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2018,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2019,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2020,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2021,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2022,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2023,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2024,0
+Mukkam,11.3166,75.9497,Dowry Deaths(304(B) IPC),2025,0
+Mukkam,11.3166,75.9497,Rape,2014,3
+Mukkam,11.3166,75.9497,Rape,2015,9
+Mukkam,11.3166,75.9497,Rape,2016,7
+Mukkam,11.3166,75.9497,Rape,2017,3
+Mukkam,11.3166,75.9497,Rape,2018,3
+Mukkam,11.3166,75.9497,Rape,2019,3
+Mukkam,11.3166,75.9497,Rape,2020,12
+Mukkam,11.3166,75.9497,Rape,2021,14
+Mukkam,11.3166,75.9497,Rape,2022,3
+Mukkam,11.3166,75.9497,Rape,2023,2
+Mukkam,11.3166,75.9497,Rape,2024,0
+Mukkam,11.3166,75.9497,Rape,2025,6
+Mukkam,11.3166,75.9497,Hurt,2014,12
+Mukkam,11.3166,75.9497,Hurt,2015,18
+Mukkam,11.3166,75.9497,Hurt,2016,15
+Mukkam,11.3166,75.9497,Hurt,2017,23
+Mukkam,11.3166,75.9497,Hurt,2018,29
+Mukkam,11.3166,75.9497,Hurt,2019,41
+Mukkam,11.3166,75.9497,Hurt,2020,25
+Mukkam,11.3166,75.9497,Hurt,2021,13
+Mukkam,11.3166,75.9497,Hurt,2022,139
+Mukkam,11.3166,75.9497,Hurt,2023,125
+Mukkam,11.3166,75.9497,Hurt,2024,0
+Mukkam,11.3166,75.9497,Hurt,2025,47
+Mukkam,11.3166,75.9497,Attempt to commit murder,2014,3
+Mukkam,11.3166,75.9497,Attempt to commit murder,2015,1
+Mukkam,11.3166,75.9497,Attempt to commit murder,2016,2
+Mukkam,11.3166,75.9497,Attempt to commit murder,2017,2
+Mukkam,11.3166,75.9497,Attempt to commit murder,2018,2
+Mukkam,11.3166,75.9497,Attempt to commit murder,2019,3
+Mukkam,11.3166,75.9497,Attempt to commit murder,2020,1
+Mukkam,11.3166,75.9497,Attempt to commit murder,2021,2
+Mukkam,11.3166,75.9497,Attempt to commit murder,2022,0
+Mukkam,11.3166,75.9497,Attempt to commit murder,2023,2
+Mukkam,11.3166,75.9497,Attempt to commit murder,2024,0
+Mukkam,11.3166,75.9497,Attempt to commit murder,2025,3
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2014,20
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2015,12
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2016,17
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2017,9
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2018,4
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2019,9
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2020,0
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2021,3
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2022,6
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2023,23
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2024,0
+Mukkam,11.3166,75.9497,Cruelty by husband or relatives,2025,20
+Mukkam,11.3166,75.9497,Murder,2014,1
+Mukkam,11.3166,75.9497,Murder,2015,1
+Mukkam,11.3166,75.9497,Murder,2016,1
+Mukkam,11.3166,75.9497,Murder,2017,0
+Mukkam,11.3166,75.9497,Murder,2018,0
+Mukkam,11.3166,75.9497,Murder,2019,0
+Mukkam,11.3166,75.9497,Murder,2020,0
+Mukkam,11.3166,75.9497,Murder,2021,1
+Mukkam,11.3166,75.9497,Murder,2022,0
+Mukkam,11.3166,75.9497,Murder,2023,0
+Mukkam,11.3166,75.9497,Murder,2024,0
+Mukkam,11.3166,75.9497,Murder,2025,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2014,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2015,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2016,1
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2017,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2018,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2019,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2020,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2021,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2022,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2023,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2024,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction - of women & girls,2025,0
+Mukkam,11.3166,75.9497,Sexual harassment,2014,0
+Mukkam,11.3166,75.9497,Sexual harassment,2015,0
+Mukkam,11.3166,75.9497,Sexual harassment,2016,3
+Mukkam,11.3166,75.9497,Sexual harassment,2017,1
+Mukkam,11.3166,75.9497,Sexual harassment,2018,0
+Mukkam,11.3166,75.9497,Sexual harassment,2019,1
+Mukkam,11.3166,75.9497,Sexual harassment,2020,0
+Mukkam,11.3166,75.9497,Sexual harassment,2021,0
+Mukkam,11.3166,75.9497,Sexual harassment,2022,1
+Mukkam,11.3166,75.9497,Sexual harassment,2023,0
+Mukkam,11.3166,75.9497,Sexual harassment,2024,0
+Mukkam,11.3166,75.9497,Sexual harassment,2025,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2014,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2015,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2016,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2017,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2018,1
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2019,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2020,1
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2021,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2022,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2023,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2024,0
+Mukkam,11.3166,75.9497,Kidnapping & abduction,2025,4
+Mukkam,11.3166,75.9497,Molestation,2014,5
+Mukkam,11.3166,75.9497,Molestation,2015,11
+Mukkam,11.3166,75.9497,Molestation,2016,12
+Mukkam,11.3166,75.9497,Molestation,2017,5
+Mukkam,11.3166,75.9497,Molestation,2018,4
+Mukkam,11.3166,75.9497,Molestation,2019,7
+Mukkam,11.3166,75.9497,Molestation,2020,0
+Mukkam,11.3166,75.9497,Molestation,2021,8
+Mukkam,11.3166,75.9497,Molestation,2022,12
+Mukkam,11.3166,75.9497,Molestation,2023,6
+Mukkam,11.3166,75.9497,Molestation,2024,0
+Mukkam,11.3166,75.9497,Molestation,2025,9
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2014,1
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2015,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2016,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2017,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2018,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2019,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2020,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2021,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2022,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2023,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2024,0
+Mukkam,11.3166,75.9497,Indecent representation of women Act,2025,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2014,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2015,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2016,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2017,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2018,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2019,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2020,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2021,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2022,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2023,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2024,0
+Mukkam,11.3166,75.9497,Dowry Prohibition Act,2025,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2014,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2015,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2016,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2017,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2018,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2019,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2020,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2021,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2022,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2023,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2024,0
+Mukkam,11.3166,75.9497,Immoral Traffic (P) Act,2025,0
+Koduvally,11.3667,75.8833,Murder,2014,0
+Koduvally,11.3667,75.8833,Murder,2015,1
+Koduvally,11.3667,75.8833,Murder,2016,0
+Koduvally,11.3667,75.8833,Murder,2017,0
+Koduvally,11.3667,75.8833,Murder,2018,0
+Koduvally,11.3667,75.8833,Murder,2019,0
+Koduvally,11.3667,75.8833,Murder,2020,0
+Koduvally,11.3667,75.8833,Murder,2021,0
+Koduvally,11.3667,75.8833,Murder,2022,0
+Koduvally,11.3667,75.8833,Murder,2023,0
+Koduvally,11.3667,75.8833,Murder,2024,0
+Koduvally,11.3667,75.8833,Hurt,2014,22
+Koduvally,11.3667,75.8833,Hurt,2015,22
+Koduvally,11.3667,75.8833,Hurt,2016,22
+Koduvally,11.3667,75.8833,Hurt,2017,13
+Koduvally,11.3667,75.8833,Hurt,2018,36
+Koduvally,11.3667,75.8833,Hurt,2019,40
+Koduvally,11.3667,75.8833,Hurt,2020,34
+Koduvally,11.3667,75.8833,Hurt,2021,7
+Koduvally,11.3667,75.8833,Hurt,2022,195
+Koduvally,11.3667,75.8833,Hurt,2023,96
+Koduvally,11.3667,75.8833,Hurt,2024,151
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2014,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2015,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2016,3
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2017,7
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2018,2
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2019,1
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2020,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2021,1
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2022,7
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2023,2
+Koduvally,11.3667,75.8833,Kidnapping & abduction,2024,0
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2014,24
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2015,13
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2016,12
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2017,12
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2018,10
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2019,14
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2020,13
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2021,6
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2022,39
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2023,16
+Koduvally,11.3667,75.8833,Cruelty by husband or relatives,2024,22
+Koduvally,11.3667,75.8833,Rape,2014,2
+Koduvally,11.3667,75.8833,Rape,2015,2
+Koduvally,11.3667,75.8833,Rape,2016,3
+Koduvally,11.3667,75.8833,Rape,2017,5
+Koduvally,11.3667,75.8833,Rape,2018,10
+Koduvally,11.3667,75.8833,Rape,2019,10
+Koduvally,11.3667,75.8833,Rape,2020,4
+Koduvally,11.3667,75.8833,Rape,2021,3
+Koduvally,11.3667,75.8833,Rape,2022,3
+Koduvally,11.3667,75.8833,Rape,2023,6
+Koduvally,11.3667,75.8833,Rape,2024,0
+Koduvally,11.3667,75.8833,Sexual harassment,2014,9
+Koduvally,11.3667,75.8833,Sexual harassment,2015,6
+Koduvally,11.3667,75.8833,Sexual harassment,2016,3
+Koduvally,11.3667,75.8833,Sexual harassment,2017,8
+Koduvally,11.3667,75.8833,Sexual harassment,2018,4
+Koduvally,11.3667,75.8833,Sexual harassment,2019,3
+Koduvally,11.3667,75.8833,Sexual harassment,2020,6
+Koduvally,11.3667,75.8833,Sexual harassment,2021,2
+Koduvally,11.3667,75.8833,Sexual harassment,2022,1
+Koduvally,11.3667,75.8833,Sexual harassment,2023,0
+Koduvally,11.3667,75.8833,Sexual harassment,2024,0
+Koduvally,11.3667,75.8833,Molestation,2014,12
+Koduvally,11.3667,75.8833,Molestation,2015,12
+Koduvally,11.3667,75.8833,Molestation,2016,9
+Koduvally,11.3667,75.8833,Molestation,2017,5
+Koduvally,11.3667,75.8833,Molestation,2018,9
+Koduvally,11.3667,75.8833,Molestation,2019,10
+Koduvally,11.3667,75.8833,Molestation,2020,7
+Koduvally,11.3667,75.8833,Molestation,2021,7
+Koduvally,11.3667,75.8833,Molestation,2022,14
+Koduvally,11.3667,75.8833,Molestation,2023,15
+Koduvally,11.3667,75.8833,Molestation,2024,9
+Koduvally,11.3667,75.8833,Attempt to commit murder,2014,5
+Koduvally,11.3667,75.8833,Attempt to commit murder,2015,5
+Koduvally,11.3667,75.8833,Attempt to commit murder,2016,1
+Koduvally,11.3667,75.8833,Attempt to commit murder,2017,0
+Koduvally,11.3667,75.8833,Attempt to commit murder,2018,0
+Koduvally,11.3667,75.8833,Attempt to commit murder,2019,3
+Koduvally,11.3667,75.8833,Attempt to commit murder,2020,0
+Koduvally,11.3667,75.8833,Attempt to commit murder,2021,0
+Koduvally,11.3667,75.8833,Attempt to commit murder,2022,0
+Koduvally,11.3667,75.8833,Attempt to commit murder,2023,4
+Koduvally,11.3667,75.8833,Attempt to commit murder,2024,8
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2014,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2015,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2016,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2017,1
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2018,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2019,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2020,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2021,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2022,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2023,0
+Koduvally,11.3667,75.8833,Dowry Deaths(304(B) IPC),2024,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2014,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2015,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2016,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2017,7
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2018,2
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2019,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2020,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2021,1
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2022,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2023,0
+Koduvally,11.3667,75.8833,Kidnapping & abduction - of women & girls,2024,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2014,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2015,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2016,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2017,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2018,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2019,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2020,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2021,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2022,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2023,0
+Koduvally,11.3667,75.8833,Dowry Prohibition Act,2024,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2014,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2015,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2016,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2017,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2018,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2019,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2020,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2021,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2022,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2023,0
+Koduvally,11.3667,75.8833,Immoral Traffic (P) Act,2024,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2014,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2015,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2016,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2017,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2018,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2019,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2020,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2021,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2022,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2023,0
+Koduvally,11.3667,75.8833,Indecent representation of women Act,2024,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2014,1
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2015,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2016,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2017,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2018,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2019,1
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2020,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2021,0
+Kunnamangalam,11.332,75.7878,Dowry Deaths(304(B) IPC),2022,0
+Kunnamangalam,11.332,75.7878,Rape,2014,1
+Kunnamangalam,11.332,75.7878,Rape,2015,3
+Kunnamangalam,11.332,75.7878,Rape,2016,3
+Kunnamangalam,11.332,75.7878,Rape,2017,10
+Kunnamangalam,11.332,75.7878,Rape,2018,3
+Kunnamangalam,11.332,75.7878,Rape,2019,7
+Kunnamangalam,11.332,75.7878,Rape,2020,4
+Kunnamangalam,11.332,75.7878,Rape,2021,6
+Kunnamangalam,11.332,75.7878,Rape,2022,3
+Kunnamangalam,11.332,75.7878,Hurt,2014,55
+Kunnamangalam,11.332,75.7878,Hurt,2015,20
+Kunnamangalam,11.332,75.7878,Hurt,2016,35
+Kunnamangalam,11.332,75.7878,Hurt,2017,24
+Kunnamangalam,11.332,75.7878,Hurt,2018,42
+Kunnamangalam,11.332,75.7878,Hurt,2019,29
+Kunnamangalam,11.332,75.7878,Hurt,2020,53
+Kunnamangalam,11.332,75.7878,Hurt,2021,18
+Kunnamangalam,11.332,75.7878,Hurt,2022,30
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2014,22
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2015,15
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2016,12
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2017,7
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2018,7
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2019,19
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2020,13
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2021,3
+Kunnamangalam,11.332,75.7878,Cruelty by husband or relatives,2022,15
+Kunnamangalam,11.332,75.7878,Sexual harassment,2014,0
+Kunnamangalam,11.332,75.7878,Sexual harassment,2015,0
+Kunnamangalam,11.332,75.7878,Sexual harassment,2016,0
+Kunnamangalam,11.332,75.7878,Sexual harassment,2017,2
+Kunnamangalam,11.332,75.7878,Sexual harassment,2018,1
+Kunnamangalam,11.332,75.7878,Sexual harassment,2019,1
+Kunnamangalam,11.332,75.7878,Sexual harassment,2020,1
+Kunnamangalam,11.332,75.7878,Sexual harassment,2021,0
+Kunnamangalam,11.332,75.7878,Sexual harassment,2022,0
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2014,2
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2015,2
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2016,2
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2017,2
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2018,1
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2019,1
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2020,1
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2021,0
+Kunnamangalam,11.332,75.7878,Attempt to commit murder,2022,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2014,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2015,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2016,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2017,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2018,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2019,2
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2020,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2021,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction - of women & girls,2022,0
+Kunnamangalam,11.332,75.7878,Molestation,2014,16
+Kunnamangalam,11.332,75.7878,Molestation,2015,12
+Kunnamangalam,11.332,75.7878,Molestation,2016,14
+Kunnamangalam,11.332,75.7878,Molestation,2017,5
+Kunnamangalam,11.332,75.7878,Molestation,2018,20
+Kunnamangalam,11.332,75.7878,Molestation,2019,22
+Kunnamangalam,11.332,75.7878,Molestation,2020,10
+Kunnamangalam,11.332,75.7878,Molestation,2021,2
+Kunnamangalam,11.332,75.7878,Molestation,2022,12
+Kunnamangalam,11.332,75.7878,Murder,2014,0
+Kunnamangalam,11.332,75.7878,Murder,2015,1
+Kunnamangalam,11.332,75.7878,Murder,2016,1
+Kunnamangalam,11.332,75.7878,Murder,2017,3
+Kunnamangalam,11.332,75.7878,Murder,2018,1
+Kunnamangalam,11.332,75.7878,Murder,2019,1
+Kunnamangalam,11.332,75.7878,Murder,2020,0
+Kunnamangalam,11.332,75.7878,Murder,2021,0
+Kunnamangalam,11.332,75.7878,Murder,2022,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2014,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2015,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2016,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2017,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2018,1
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2019,2
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2020,0
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2021,2
+Kunnamangalam,11.332,75.7878,Kidnapping & abduction,2022,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2014,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2015,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2016,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2017,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2018,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2019,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2020,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2021,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2022,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2023,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2024,0
+Thamarassery,11.4152,75.9405,Dowry Deaths(304(B) IPC),2025,0
+Thamarassery,11.4152,75.9405,Rape,2014,3
+Thamarassery,11.4152,75.9405,Rape,2015,1
+Thamarassery,11.4152,75.9405,Rape,2016,3
+Thamarassery,11.4152,75.9405,Rape,2017,8
+Thamarassery,11.4152,75.9405,Rape,2018,12
+Thamarassery,11.4152,75.9405,Rape,2019,9
+Thamarassery,11.4152,75.9405,Rape,2020,6
+Thamarassery,11.4152,75.9405,Rape,2021,0
+Thamarassery,11.4152,75.9405,Rape,2022,9
+Thamarassery,11.4152,75.9405,Rape,2023,4
+Thamarassery,11.4152,75.9405,Rape,2024,10
+Thamarassery,11.4152,75.9405,Rape,2025,4
+Thamarassery,11.4152,75.9405,Hurt,2014,32
+Thamarassery,11.4152,75.9405,Hurt,2015,18
+Thamarassery,11.4152,75.9405,Hurt,2016,40
+Thamarassery,11.4152,75.9405,Hurt,2017,38
+Thamarassery,11.4152,75.9405,Hurt,2018,45
+Thamarassery,11.4152,75.9405,Hurt,2019,57
+Thamarassery,11.4152,75.9405,Hurt,2020,68
+Thamarassery,11.4152,75.9405,Hurt,2021,21
+Thamarassery,11.4152,75.9405,Hurt,2022,89
+Thamarassery,11.4152,75.9405,Hurt,2023,0
+Thamarassery,11.4152,75.9405,Hurt,2024,225
+Thamarassery,11.4152,75.9405,Hurt,2025,77
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2014,6
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2015,6
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2016,1
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2017,0
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2018,1
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2019,2
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2020,0
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2021,0
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2022,2
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2023,8
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2024,11
+Thamarassery,11.4152,75.9405,Attempt to commit murder,2025,26
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2014,35
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2015,36
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2016,21
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2017,33
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2018,16
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2019,30
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2020,25
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2021,3
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2022,50
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2023,53
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2024,42
+Thamarassery,11.4152,75.9405,Cruelty by husband or relatives,2025,57
+Thamarassery,11.4152,75.9405,Murder,2014,1
+Thamarassery,11.4152,75.9405,Murder,2015,1
+Thamarassery,11.4152,75.9405,Murder,2016,0
+Thamarassery,11.4152,75.9405,Murder,2017,0
+Thamarassery,11.4152,75.9405,Murder,2018,3
+Thamarassery,11.4152,75.9405,Murder,2019,2
+Thamarassery,11.4152,75.9405,Murder,2020,1
+Thamarassery,11.4152,75.9405,Murder,2021,0
+Thamarassery,11.4152,75.9405,Murder,2022,0
+Thamarassery,11.4152,75.9405,Murder,2023,1
+Thamarassery,11.4152,75.9405,Murder,2024,0
+Thamarassery,11.4152,75.9405,Murder,2025,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2014,1
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2015,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2016,1
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2017,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2018,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2019,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2020,1
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2021,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2022,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2023,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2024,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction - of women & girls,2025,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2014,6
+Thamarassery,11.4152,75.9405,Sexual harassment,2015,7
+Thamarassery,11.4152,75.9405,Sexual harassment,2016,7
+Thamarassery,11.4152,75.9405,Sexual harassment,2017,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2018,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2019,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2020,2
+Thamarassery,11.4152,75.9405,Sexual harassment,2021,3
+Thamarassery,11.4152,75.9405,Sexual harassment,2022,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2023,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2024,0
+Thamarassery,11.4152,75.9405,Sexual harassment,2025,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2014,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2015,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2016,1
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2017,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2018,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2019,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2020,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2021,0
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2022,3
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2023,2
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2024,1
+Thamarassery,11.4152,75.9405,Kidnapping & abduction,2025,1
+Thamarassery,11.4152,75.9405,Molestation,2014,20
+Thamarassery,11.4152,75.9405,Molestation,2015,8
+Thamarassery,11.4152,75.9405,Molestation,2016,18
+Thamarassery,11.4152,75.9405,Molestation,2017,15
+Thamarassery,11.4152,75.9405,Molestation,2018,23
+Thamarassery,11.4152,75.9405,Molestation,2019,22
+Thamarassery,11.4152,75.9405,Molestation,2020,24
+Thamarassery,11.4152,75.9405,Molestation,2021,1
+Thamarassery,11.4152,75.9405,Molestation,2022,40
+Thamarassery,11.4152,75.9405,Molestation,2023,16
+Thamarassery,11.4152,75.9405,Molestation,2024,14
+Thamarassery,11.4152,75.9405,Molestation,2025,10
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2014,24
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2015,23
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2016,333
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2017,17
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2018,15
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2019,25
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2020,27
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2021,7
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2022,41
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2023,38
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2024,23
+Balussery,11.4281,75.8394,Cruelty by husband or relatives,2025,32
+Balussery,11.4281,75.8394,Murder,2014,0
+Balussery,11.4281,75.8394,Murder,2015,3
+Balussery,11.4281,75.8394,Murder,2016,1
+Balussery,11.4281,75.8394,Murder,2017,0
+Balussery,11.4281,75.8394,Murder,2018,2
+Balussery,11.4281,75.8394,Murder,2019,1
+Balussery,11.4281,75.8394,Murder,2020,0
+Balussery,11.4281,75.8394,Murder,2021,0
+Balussery,11.4281,75.8394,Murder,2022,0
+Balussery,11.4281,75.8394,Murder,2023,0
+Balussery,11.4281,75.8394,Murder,2024,0
+Balussery,11.4281,75.8394,Murder,2025,2
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2014,1
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2015,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2016,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2017,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2018,3
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2019,2
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2020,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2021,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2022,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2023,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2024,0
+Balussery,11.4281,75.8394,Kidnapping & abduction - of women & girls,2025,0
+Balussery,11.4281,75.8394,Sexual harassment,2014,2
+Balussery,11.4281,75.8394,Sexual harassment,2015,8
+Balussery,11.4281,75.8394,Sexual harassment,2016,31
+Balussery,11.4281,75.8394,Sexual harassment,2017,0
+Balussery,11.4281,75.8394,Sexual harassment,2018,0
+Balussery,11.4281,75.8394,Sexual harassment,2019,0
+Balussery,11.4281,75.8394,Sexual harassment,2020,0
+Balussery,11.4281,75.8394,Sexual harassment,2021,0
+Balussery,11.4281,75.8394,Sexual harassment,2022,1
+Balussery,11.4281,75.8394,Sexual harassment,2023,0
+Balussery,11.4281,75.8394,Sexual harassment,2024,0
+Balussery,11.4281,75.8394,Sexual harassment,2025,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2014,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2015,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2016,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2017,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2018,3
+Balussery,11.4281,75.8394,Kidnapping & abduction,2019,2
+Balussery,11.4281,75.8394,Kidnapping & abduction,2020,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2021,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2022,1
+Balussery,11.4281,75.8394,Kidnapping & abduction,2023,1
+Balussery,11.4281,75.8394,Kidnapping & abduction,2024,0
+Balussery,11.4281,75.8394,Kidnapping & abduction,2025,0
+Balussery,11.4281,75.8394,Molestation,2014,22
+Balussery,11.4281,75.8394,Molestation,2015,14
+Balussery,11.4281,75.8394,Molestation,2016,2
+Balussery,11.4281,75.8394,Molestation,2017,26
+Balussery,11.4281,75.8394,Molestation,2018,27
+Balussery,11.4281,75.8394,Molestation,2019,32
+Balussery,11.4281,75.8394,Molestation,2020,20
+Balussery,11.4281,75.8394,Molestation,2021,5
+Balussery,11.4281,75.8394,Molestation,2022,0
+Balussery,11.4281,75.8394,Molestation,2023,24
+Balussery,11.4281,75.8394,Molestation,2024,20
+Balussery,11.4281,75.8394,Molestation,2025,8
+Balussery,11.4281,75.8394,Rape,2014,1
+Balussery,11.4281,75.8394,Rape,2015,5
+Balussery,11.4281,75.8394,Rape,2016,0
+Balussery,11.4281,75.8394,Rape,2017,10
+Balussery,11.4281,75.8394,Rape,2018,10
+Balussery,11.4281,75.8394,Rape,2019,2
+Balussery,11.4281,75.8394,Rape,2020,4
+Balussery,11.4281,75.8394,Rape,2021,3
+Balussery,11.4281,75.8394,Rape,2022,20
+Balussery,11.4281,75.8394,Rape,2023,14
+Balussery,11.4281,75.8394,Rape,2024,0
+Balussery,11.4281,75.8394,Rape,2025,6
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2014,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2015,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2016,27
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2017,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2018,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2019,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2020,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2021,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2022,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2023,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2024,0
+Balussery,11.4281,75.8394,Dowry Deaths(304(B) IPC),2025,0
+Balussery,11.4281,75.8394,Hurt,2014,22
+Balussery,11.4281,75.8394,Hurt,2015,29
+Balussery,11.4281,75.8394,Hurt,2016,0
+Balussery,11.4281,75.8394,Hurt,2017,53
+Balussery,11.4281,75.8394,Hurt,2018,50
+Balussery,11.4281,75.8394,Hurt,2019,41
+Balussery,11.4281,75.8394,Hurt,2020,59
+Balussery,11.4281,75.8394,Hurt,2021,22
+Balussery,11.4281,75.8394,Hurt,2022,250
+Balussery,11.4281,75.8394,Hurt,2023,210
+Balussery,11.4281,75.8394,Hurt,2024,253
+Balussery,11.4281,75.8394,Hurt,2025,66
+Balussery,11.4281,75.8394,Attempt to commit murder,2014,6
+Balussery,11.4281,75.8394,Attempt to commit murder,2015,1
+Balussery,11.4281,75.8394,Attempt to commit murder,2016,20
+Balussery,11.4281,75.8394,Attempt to commit murder,2017,4
+Balussery,11.4281,75.8394,Attempt to commit murder,2018,4
+Balussery,11.4281,75.8394,Attempt to commit murder,2019,0
+Balussery,11.4281,75.8394,Attempt to commit murder,2020,16
+Balussery,11.4281,75.8394,Attempt to commit murder,2021,1
+Balussery,11.4281,75.8394,Attempt to commit murder,2022,5
+Balussery,11.4281,75.8394,Attempt to commit murder,2023,6
+Balussery,11.4281,75.8394,Attempt to commit murder,2024,0
+Balussery,11.4281,75.8394,Attempt to commit murder,2025,6
+Perambra,11.7333,75.7667,Rape,2014,4
+Perambra,11.7333,75.7667,Rape,2015,4
+Perambra,11.7333,75.7667,Rape,2016,0
+Perambra,11.7333,75.7667,Rape,2017,5
+Perambra,11.7333,75.7667,Rape,2018,4
+Perambra,11.7333,75.7667,Rape,2019,4
+Perambra,11.7333,75.7667,Rape,2020,3
+Perambra,11.7333,75.7667,Rape,2021,2
+Perambra,11.7333,75.7667,Rape,2022,12
+Perambra,11.7333,75.7667,Rape,2023,12
+Perambra,11.7333,75.7667,Rape,2024,0
+Perambra,11.7333,75.7667,Rape,2025,2
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2014,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2015,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2016,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2017,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2018,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2019,1
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2020,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2021,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2022,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2023,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2024,0
+Perambra,11.7333,75.7667,Dowry Deaths(304(B) IPC),2025,0
+Perambra,11.7333,75.7667,Hurt,2014,38
+Perambra,11.7333,75.7667,Hurt,2015,23
+Perambra,11.7333,75.7667,Hurt,2016,59
+Perambra,11.7333,75.7667,Hurt,2017,43
+Perambra,11.7333,75.7667,Hurt,2018,33
+Perambra,11.7333,75.7667,Hurt,2019,30
+Perambra,11.7333,75.7667,Hurt,2020,48
+Perambra,11.7333,75.7667,Hurt,2021,17
+Perambra,11.7333,75.7667,Hurt,2022,211
+Perambra,11.7333,75.7667,Hurt,2023,163
+Perambra,11.7333,75.7667,Hurt,2024,198
+Perambra,11.7333,75.7667,Hurt,2025,65
+Perambra,11.7333,75.7667,Attempt to commit murder,2014,7
+Perambra,11.7333,75.7667,Attempt to commit murder,2015,2
+Perambra,11.7333,75.7667,Attempt to commit murder,2016,2
+Perambra,11.7333,75.7667,Attempt to commit murder,2017,3
+Perambra,11.7333,75.7667,Attempt to commit murder,2018,2
+Perambra,11.7333,75.7667,Attempt to commit murder,2019,1
+Perambra,11.7333,75.7667,Attempt to commit murder,2020,2
+Perambra,11.7333,75.7667,Attempt to commit murder,2021,0
+Perambra,11.7333,75.7667,Attempt to commit murder,2022,1
+Perambra,11.7333,75.7667,Attempt to commit murder,2023,6
+Perambra,11.7333,75.7667,Attempt to commit murder,2024,6
+Perambra,11.7333,75.7667,Attempt to commit murder,2025,5
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2014,17
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2015,17
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2016,17
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2017,14
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2018,12
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2019,18
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2020,13
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2021,4
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2022,18
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2023,14
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2024,19
+Perambra,11.7333,75.7667,Cruelty by husband or relatives,2025,27
+Perambra,11.7333,75.7667,Murder,2014,1
+Perambra,11.7333,75.7667,Murder,2015,1
+Perambra,11.7333,75.7667,Murder,2016,0
+Perambra,11.7333,75.7667,Murder,2017,0
+Perambra,11.7333,75.7667,Murder,2018,0
+Perambra,11.7333,75.7667,Murder,2019,1
+Perambra,11.7333,75.7667,Murder,2020,0
+Perambra,11.7333,75.7667,Murder,2021,0
+Perambra,11.7333,75.7667,Murder,2022,1
+Perambra,11.7333,75.7667,Murder,2023,0
+Perambra,11.7333,75.7667,Murder,2024,2
+Perambra,11.7333,75.7667,Murder,2025,1
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2014,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2015,1
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2016,1
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2017,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2018,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2019,2
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2020,1
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2021,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2022,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2023,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2024,0
+Perambra,11.7333,75.7667,Kidnapping & abduction - of women & girls,2025,0
+Perambra,11.7333,75.7667,Sexual harassment,2014,0
+Perambra,11.7333,75.7667,Sexual harassment,2015,0
+Perambra,11.7333,75.7667,Sexual harassment,2016,0
+Perambra,11.7333,75.7667,Sexual harassment,2017,9
+Perambra,11.7333,75.7667,Sexual harassment,2018,10
+Perambra,11.7333,75.7667,Sexual harassment,2019,22
+Perambra,11.7333,75.7667,Sexual harassment,2020,0
+Perambra,11.7333,75.7667,Sexual harassment,2021,0
+Perambra,11.7333,75.7667,Sexual harassment,2022,0
+Perambra,11.7333,75.7667,Sexual harassment,2023,0
+Perambra,11.7333,75.7667,Sexual harassment,2024,0
+Perambra,11.7333,75.7667,Sexual harassment,2025,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2014,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2015,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2016,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2017,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2018,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2019,2
+Perambra,11.7333,75.7667,Kidnapping & abduction,2020,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2021,0
+Perambra,11.7333,75.7667,Kidnapping & abduction,2022,6
+Perambra,11.7333,75.7667,Kidnapping & abduction,2023,2
+Perambra,11.7333,75.7667,Kidnapping & abduction,2024,4
+Perambra,11.7333,75.7667,Kidnapping & abduction,2025,1
+Perambra,11.7333,75.7667,Molestation,2014,9
+Perambra,11.7333,75.7667,Molestation,2015,18
+Perambra,11.7333,75.7667,Molestation,2016,29
+Perambra,11.7333,75.7667,Molestation,2017,26
+Perambra,11.7333,75.7667,Molestation,2018,9
+Perambra,11.7333,75.7667,Molestation,2019,6
+Perambra,11.7333,75.7667,Molestation,2020,20
+Perambra,11.7333,75.7667,Molestation,2021,5
+Perambra,11.7333,75.7667,Molestation,2022,44
+Perambra,11.7333,75.7667,Molestation,2023,30
+Perambra,11.7333,75.7667,Molestation,2024,17
+Perambra,11.7333,75.7667,Molestation,2025,7
+Kuttyadi,11.6667,75.8333,Sexual harassment,2014,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2015,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2016,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2017,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2018,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2019,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2020,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2021,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2022,2
+Kuttyadi,11.6667,75.8333,Sexual harassment,2023,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2024,0
+Kuttyadi,11.6667,75.8333,Sexual harassment,2025,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2014,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2015,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2016,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2017,1
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2018,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2019,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2020,2
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2021,1
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2022,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2023,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2024,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction - of women & girls,2025,0
+Kuttyadi,11.6667,75.8333,Molestation,2014,4
+Kuttyadi,11.6667,75.8333,Molestation,2015,17
+Kuttyadi,11.6667,75.8333,Molestation,2016,10
+Kuttyadi,11.6667,75.8333,Molestation,2017,13
+Kuttyadi,11.6667,75.8333,Molestation,2018,9
+Kuttyadi,11.6667,75.8333,Molestation,2019,6
+Kuttyadi,11.6667,75.8333,Molestation,2020,14
+Kuttyadi,11.6667,75.8333,Molestation,2021,6
+Kuttyadi,11.6667,75.8333,Molestation,2022,24
+Kuttyadi,11.6667,75.8333,Molestation,2023,16
+Kuttyadi,11.6667,75.8333,Molestation,2024,12
+Kuttyadi,11.6667,75.8333,Molestation,2025,18
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2014,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2015,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2016,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2017,1
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2018,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2019,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2020,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2021,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2022,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2023,3
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2024,0
+Kuttyadi,11.6667,75.8333,Kidnapping & abduction,2025,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2014,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2015,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2016,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2017,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2018,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2019,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2020,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2021,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2022,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2023,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2024,0
+Kuttyadi,11.6667,75.8333,Dowry Deaths(304(B) IPC),2025,0
+Kuttyadi,11.6667,75.8333,Rape,2014,4
+Kuttyadi,11.6667,75.8333,Rape,2015,1
+Kuttyadi,11.6667,75.8333,Rape,2016,4
+Kuttyadi,11.6667,75.8333,Rape,2017,4
+Kuttyadi,11.6667,75.8333,Rape,2018,3
+Kuttyadi,11.6667,75.8333,Rape,2019,4
+Kuttyadi,11.6667,75.8333,Rape,2020,5
+Kuttyadi,11.6667,75.8333,Rape,2021,3
+Kuttyadi,11.6667,75.8333,Rape,2022,2
+Kuttyadi,11.6667,75.8333,Rape,2023,4
+Kuttyadi,11.6667,75.8333,Rape,2024,1
+Kuttyadi,11.6667,75.8333,Rape,2025,4
+Kuttyadi,11.6667,75.8333,Hurt,2014,24
+Kuttyadi,11.6667,75.8333,Hurt,2015,13
+Kuttyadi,11.6667,75.8333,Hurt,2016,50
+Kuttyadi,11.6667,75.8333,Hurt,2017,58
+Kuttyadi,11.6667,75.8333,Hurt,2018,46
+Kuttyadi,11.6667,75.8333,Hurt,2019,30
+Kuttyadi,11.6667,75.8333,Hurt,2020,38
+Kuttyadi,11.6667,75.8333,Hurt,2021,16
+Kuttyadi,11.6667,75.8333,Hurt,2022,53
+Kuttyadi,11.6667,75.8333,Hurt,2023,145
+Kuttyadi,11.6667,75.8333,Hurt,2024,189
+Kuttyadi,11.6667,75.8333,Hurt,2025,79
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2014,0
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2015,0
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2016,1
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2017,4
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2018,4
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2019,1
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2020,3
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2021,1
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2022,0
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2023,6
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2024,3
+Kuttyadi,11.6667,75.8333,Attempt to commit murder,2025,10
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2014,7
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2015,10
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2016,10
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2017,10
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2018,6
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2019,6
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2020,8
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2021,1
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2022,11
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2023,14
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2024,14
+Kuttyadi,11.6667,75.8333,Cruelty by husband or relatives,2025,20
+Kuttyadi,11.6667,75.8333,Murder,2014,0
+Kuttyadi,11.6667,75.8333,Murder,2015,0
+Kuttyadi,11.6667,75.8333,Murder,2016,1
+Kuttyadi,11.6667,75.8333,Murder,2017,1
+Kuttyadi,11.6667,75.8333,Murder,2018,0
+Kuttyadi,11.6667,75.8333,Murder,2019,0
+Kuttyadi,11.6667,75.8333,Murder,2020,0
+Kuttyadi,11.6667,75.8333,Murder,2021,0
+Kuttyadi,11.6667,75.8333,Murder,2022,1
+Kuttyadi,11.6667,75.8333,Murder,2023,1
+Kuttyadi,11.6667,75.8333,Murder,2024,2
+Kuttyadi,11.6667,75.8333,Murder,2025,0
+Payyoli,11.5333,75.6833,Hurt,2014,23
+Payyoli,11.5333,75.6833,Hurt,2015,14
+Payyoli,11.5333,75.6833,Hurt,2016,28
+Payyoli,11.5333,75.6833,Hurt,2017,29
+Payyoli,11.5333,75.6833,Hurt,2018,36
+Payyoli,11.5333,75.6833,Hurt,2019,38
+Payyoli,11.5333,75.6833,Hurt,2020,25
+Payyoli,11.5333,75.6833,Hurt,2021,9
+Payyoli,11.5333,75.6833,Hurt,2022,165
+Payyoli,11.5333,75.6833,Hurt,2023,118
+Payyoli,11.5333,75.6833,Hurt,2024,166
+Payyoli,11.5333,75.6833,Hurt,2025,68
+Payyoli,11.5333,75.6833,Attempt to commit murder,2014,3
+Payyoli,11.5333,75.6833,Attempt to commit murder,2015,2
+Payyoli,11.5333,75.6833,Attempt to commit murder,2016,0
+Payyoli,11.5333,75.6833,Attempt to commit murder,2017,4
+Payyoli,11.5333,75.6833,Attempt to commit murder,2018,0
+Payyoli,11.5333,75.6833,Attempt to commit murder,2019,1
+Payyoli,11.5333,75.6833,Attempt to commit murder,2020,0
+Payyoli,11.5333,75.6833,Attempt to commit murder,2021,0
+Payyoli,11.5333,75.6833,Attempt to commit murder,2022,1
+Payyoli,11.5333,75.6833,Attempt to commit murder,2023,4
+Payyoli,11.5333,75.6833,Attempt to commit murder,2024,3
+Payyoli,11.5333,75.6833,Attempt to commit murder,2025,0
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2014,23
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2015,15
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2016,16
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2017,19
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2018,11
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2019,26
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2020,16
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2021,2
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2022,26
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2023,21
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2024,16
+Payyoli,11.5333,75.6833,Cruelty by husband or relatives,2025,30
+Payyoli,11.5333,75.6833,Murder,2014,0
+Payyoli,11.5333,75.6833,Murder,2015,1
+Payyoli,11.5333,75.6833,Murder,2016,2
+Payyoli,11.5333,75.6833,Murder,2017,0
+Payyoli,11.5333,75.6833,Murder,2018,1
+Payyoli,11.5333,75.6833,Murder,2019,0
+Payyoli,11.5333,75.6833,Murder,2020,0
+Payyoli,11.5333,75.6833,Murder,2021,0
+Payyoli,11.5333,75.6833,Murder,2022,0
+Payyoli,11.5333,75.6833,Murder,2023,0
+Payyoli,11.5333,75.6833,Murder,2024,1
+Payyoli,11.5333,75.6833,Murder,2025,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2014,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2015,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2016,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2017,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2018,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2019,5
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2020,1
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2021,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2022,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2023,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2024,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction - of women & girls,2025,0
+Payyoli,11.5333,75.6833,Sexual harassment,2014,3
+Payyoli,11.5333,75.6833,Sexual harassment,2015,0
+Payyoli,11.5333,75.6833,Sexual harassment,2016,0
+Payyoli,11.5333,75.6833,Sexual harassment,2017,10
+Payyoli,11.5333,75.6833,Sexual harassment,2018,9
+Payyoli,11.5333,75.6833,Sexual harassment,2019,3
+Payyoli,11.5333,75.6833,Sexual harassment,2020,0
+Payyoli,11.5333,75.6833,Sexual harassment,2021,0
+Payyoli,11.5333,75.6833,Sexual harassment,2022,1
+Payyoli,11.5333,75.6833,Sexual harassment,2023,0
+Payyoli,11.5333,75.6833,Sexual harassment,2024,0
+Payyoli,11.5333,75.6833,Sexual harassment,2025,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2014,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2015,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2016,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2017,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2018,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2019,5
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2020,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2021,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2022,6
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2023,2
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2024,0
+Payyoli,11.5333,75.6833,Kidnapping & abduction,2025,1
+Payyoli,11.5333,75.6833,Molestation,2014,16
+Payyoli,11.5333,75.6833,Molestation,2015,21
+Payyoli,11.5333,75.6833,Molestation,2016,16
+Payyoli,11.5333,75.6833,Molestation,2017,16
+Payyoli,11.5333,75.6833,Molestation,2018,15
+Payyoli,11.5333,75.6833,Molestation,2019,13
+Payyoli,11.5333,75.6833,Molestation,2020,20
+Payyoli,11.5333,75.6833,Molestation,2021,3
+Payyoli,11.5333,75.6833,Molestation,2022,21
+Payyoli,11.5333,75.6833,Molestation,2023,14
+Payyoli,11.5333,75.6833,Molestation,2024,10
+Payyoli,11.5333,75.6833,Molestation,2025,12
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2014,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2015,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2016,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2017,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2018,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2019,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2020,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2021,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2022,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2023,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2024,0
+Payyoli,11.5333,75.6833,Dowry Deaths(304(B) IPC),2025,0
+Payyoli,11.5333,75.6833,Rape,2014,3
+Payyoli,11.5333,75.6833,Rape,2015,6
+Payyoli,11.5333,75.6833,Rape,2016,5
+Payyoli,11.5333,75.6833,Rape,2017,7
+Payyoli,11.5333,75.6833,Rape,2018,1
+Payyoli,11.5333,75.6833,Rape,2019,8
+Payyoli,11.5333,75.6833,Rape,2020,4
+Payyoli,11.5333,75.6833,Rape,2021,3
+Payyoli,11.5333,75.6833,Rape,2022,4
+Payyoli,11.5333,75.6833,Rape,2023,7
+Payyoli,11.5333,75.6833,Rape,2024,0
+Payyoli,11.5333,75.6833,Rape,2025,4
+Koylandi,11.4353,75.71,Murder,2014,0
+Koylandi,11.4353,75.71,Murder,2015,2
+Koylandi,11.4353,75.71,Murder,2016,0
+Koylandi,11.4353,75.71,Murder,2017,0
+Koylandi,11.4353,75.71,Murder,2018,0
+Koylandi,11.4353,75.71,Murder,2019,0
+Koylandi,11.4353,75.71,Murder,2020,0
+Koylandi,11.4353,75.71,Murder,2021,0
+Koylandi,11.4353,75.71,Murder,2022,2
+Koylandi,11.4353,75.71,Murder,2023,3
+Koylandi,11.4353,75.71,Murder,2024,2
+Koylandi,11.4353,75.71,Murder,2025,1
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2014,1
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2015,4
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2016,1
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2017,3
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2018,3
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2019,1
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2020,0
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2021,1
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2022,0
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2023,0
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2024,0
+Koylandi,11.4353,75.71,Kidnapping & abduction - of women & girls,2025,0
+Koylandi,11.4353,75.71,Sexual harassment,2014,0
+Koylandi,11.4353,75.71,Sexual harassment,2015,0
+Koylandi,11.4353,75.71,Sexual harassment,2016,0
+Koylandi,11.4353,75.71,Sexual harassment,2017,0
+Koylandi,11.4353,75.71,Sexual harassment,2018,0
+Koylandi,11.4353,75.71,Sexual harassment,2019,0
+Koylandi,11.4353,75.71,Sexual harassment,2020,1
+Koylandi,11.4353,75.71,Sexual harassment,2021,2
+Koylandi,11.4353,75.71,Sexual harassment,2022,2
+Koylandi,11.4353,75.71,Sexual harassment,2023,0
+Koylandi,11.4353,75.71,Sexual harassment,2024,0
+Koylandi,11.4353,75.71,Sexual harassment,2025,0
+Koylandi,11.4353,75.71,Kidnapping & abduction,2014,0
+Koylandi,11.4353,75.71,Kidnapping & abduction,2015,0
+Koylandi,11.4353,75.71,Kidnapping & abduction,2016,0
+Koylandi,11.4353,75.71,Kidnapping & abduction,2017,3
+Koylandi,11.4353,75.71,Kidnapping & abduction,2018,3
+Koylandi,11.4353,75.71,Kidnapping & abduction,2019,1
+Koylandi,11.4353,75.71,Kidnapping & abduction,2020,8
+Koylandi,11.4353,75.71,Kidnapping & abduction,2021,0
+Koylandi,11.4353,75.71,Kidnapping & abduction,2022,5
+Koylandi,11.4353,75.71,Kidnapping & abduction,2023,2
+Koylandi,11.4353,75.71,Kidnapping & abduction,2024,4
+Koylandi,11.4353,75.71,Kidnapping & abduction,2025,1
+Koylandi,11.4353,75.71,Molestation,2014,21
+Koylandi,11.4353,75.71,Molestation,2015,30
+Koylandi,11.4353,75.71,Molestation,2016,24
+Koylandi,11.4353,75.71,Molestation,2017,29
+Koylandi,11.4353,75.71,Molestation,2018,21
+Koylandi,11.4353,75.71,Molestation,2019,26
+Koylandi,11.4353,75.71,Molestation,2020,29
+Koylandi,11.4353,75.71,Molestation,2021,14
+Koylandi,11.4353,75.71,Molestation,2022,35
+Koylandi,11.4353,75.71,Molestation,2023,23
+Koylandi,11.4353,75.71,Molestation,2024,20
+Koylandi,11.4353,75.71,Molestation,2025,18
+Koylandi,11.4353,75.71,Rape,2014,3
+Koylandi,11.4353,75.71,Rape,2015,7
+Koylandi,11.4353,75.71,Rape,2016,4
+Koylandi,11.4353,75.71,Rape,2017,5
+Koylandi,11.4353,75.71,Rape,2018,8
+Koylandi,11.4353,75.71,Rape,2019,4
+Koylandi,11.4353,75.71,Rape,2020,3
+Koylandi,11.4353,75.71,Rape,2021,3
+Koylandi,11.4353,75.71,Rape,2022,12
+Koylandi,11.4353,75.71,Rape,2023,8
+Koylandi,11.4353,75.71,Rape,2024,5
+Koylandi,11.4353,75.71,Rape,2025,5
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2014,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2015,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2016,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2017,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2018,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2019,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2020,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2021,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2022,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2023,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2024,0
+Koylandi,11.4353,75.71,Dowry Deaths(304(B) IPC),2025,0
+Koylandi,11.4353,75.71,Hurt,2014,42
+Koylandi,11.4353,75.71,Hurt,2015,27
+Koylandi,11.4353,75.71,Hurt,2016,42
+Koylandi,11.4353,75.71,Hurt,2017,48
+Koylandi,11.4353,75.71,Hurt,2018,56
+Koylandi,11.4353,75.71,Hurt,2019,59
+Koylandi,11.4353,75.71,Hurt,2020,54
+Koylandi,11.4353,75.71,Hurt,2021,42
+Koylandi,11.4353,75.71,Hurt,2022,256
+Koylandi,11.4353,75.71,Hurt,2023,192
+Koylandi,11.4353,75.71,Hurt,2024,243
+Koylandi,11.4353,75.71,Hurt,2025,60
+Koylandi,11.4353,75.71,Attempt to commit murder,2014,4
+Koylandi,11.4353,75.71,Attempt to commit murder,2015,2
+Koylandi,11.4353,75.71,Attempt to commit murder,2016,5
+Koylandi,11.4353,75.71,Attempt to commit murder,2017,8
+Koylandi,11.4353,75.71,Attempt to commit murder,2018,7
+Koylandi,11.4353,75.71,Attempt to commit murder,2019,4
+Koylandi,11.4353,75.71,Attempt to commit murder,2020,0
+Koylandi,11.4353,75.71,Attempt to commit murder,2021,0
+Koylandi,11.4353,75.71,Attempt to commit murder,2022,2
+Koylandi,11.4353,75.71,Attempt to commit murder,2023,11
+Koylandi,11.4353,75.71,Attempt to commit murder,2024,5
+Koylandi,11.4353,75.71,Attempt to commit murder,2025,7
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2014,27
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2015,22
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2016,45
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2017,29
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2018,27
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2019,40
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2020,35
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2021,17
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2022,29
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2023,46
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2024,36
+Koylandi,11.4353,75.71,Cruelty by husband or relatives,2025,22
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2014,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2015,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2016,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2017,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2018,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2019,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2020,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2021,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2022,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2023,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2024,0
+Nadapuram,11.6833,75.65,Dowry Deaths(304(B) IPC),2025,0
+Nadapuram,11.6833,75.65,Rape,2014,1
+Nadapuram,11.6833,75.65,Rape,2015,2
+Nadapuram,11.6833,75.65,Rape,2016,0
+Nadapuram,11.6833,75.65,Rape,2017,4
+Nadapuram,11.6833,75.65,Rape,2018,7
+Nadapuram,11.6833,75.65,Rape,2019,2
+Nadapuram,11.6833,75.65,Rape,2020,3
+Nadapuram,11.6833,75.65,Rape,2021,2
+Nadapuram,11.6833,75.65,Rape,2022,5
+Nadapuram,11.6833,75.65,Rape,2023,3
+Nadapuram,11.6833,75.65,Rape,2024,2
+Nadapuram,11.6833,75.65,Rape,2025,0
+Nadapuram,11.6833,75.65,Hurt,2014,34
+Nadapuram,11.6833,75.65,Hurt,2015,16
+Nadapuram,11.6833,75.65,Hurt,2016,36
+Nadapuram,11.6833,75.65,Hurt,2017,34
+Nadapuram,11.6833,75.65,Hurt,2018,73
+Nadapuram,11.6833,75.65,Hurt,2019,64
+Nadapuram,11.6833,75.65,Hurt,2020,48
+Nadapuram,11.6833,75.65,Hurt,2021,14
+Nadapuram,11.6833,75.65,Hurt,2022,118
+Nadapuram,11.6833,75.65,Hurt,2023,103
+Nadapuram,11.6833,75.65,Hurt,2024,138
+Nadapuram,11.6833,75.65,Hurt,2025,67
+Nadapuram,11.6833,75.65,Attempt to commit murder,2014,1
+Nadapuram,11.6833,75.65,Attempt to commit murder,2015,2
+Nadapuram,11.6833,75.65,Attempt to commit murder,2016,5
+Nadapuram,11.6833,75.65,Attempt to commit murder,2017,3
+Nadapuram,11.6833,75.65,Attempt to commit murder,2018,0
+Nadapuram,11.6833,75.65,Attempt to commit murder,2019,1
+Nadapuram,11.6833,75.65,Attempt to commit murder,2020,1
+Nadapuram,11.6833,75.65,Attempt to commit murder,2021,0
+Nadapuram,11.6833,75.65,Attempt to commit murder,2022,2
+Nadapuram,11.6833,75.65,Attempt to commit murder,2023,5
+Nadapuram,11.6833,75.65,Attempt to commit murder,2024,7
+Nadapuram,11.6833,75.65,Attempt to commit murder,2025,14
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2014,9
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2015,13
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2016,7
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2017,6
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2018,19
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2019,12
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2020,11
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2021,2
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2022,18
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2023,23
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2024,19
+Nadapuram,11.6833,75.65,Cruelty by husband or relatives,2025,18
+Nadapuram,11.6833,75.65,Murder,2014,0
+Nadapuram,11.6833,75.65,Murder,2015,1
+Nadapuram,11.6833,75.65,Murder,2016,1
+Nadapuram,11.6833,75.65,Murder,2017,0
+Nadapuram,11.6833,75.65,Murder,2018,1
+Nadapuram,11.6833,75.65,Murder,2019,0
+Nadapuram,11.6833,75.65,Murder,2020,1
+Nadapuram,11.6833,75.65,Murder,2021,0
+Nadapuram,11.6833,75.65,Murder,2022,1
+Nadapuram,11.6833,75.65,Murder,2023,0
+Nadapuram,11.6833,75.65,Murder,2024,0
+Nadapuram,11.6833,75.65,Murder,2025,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2014,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2015,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2016,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2017,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2018,1
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2019,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2020,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2021,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2022,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2023,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2024,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction - of women & girls,2025,0
+Nadapuram,11.6833,75.65,Sexual harassment,2014,0
+Nadapuram,11.6833,75.65,Sexual harassment,2015,0
+Nadapuram,11.6833,75.65,Sexual harassment,2016,0
+Nadapuram,11.6833,75.65,Sexual harassment,2017,0
+Nadapuram,11.6833,75.65,Sexual harassment,2018,0
+Nadapuram,11.6833,75.65,Sexual harassment,2019,0
+Nadapuram,11.6833,75.65,Sexual harassment,2020,0
+Nadapuram,11.6833,75.65,Sexual harassment,2021,0
+Nadapuram,11.6833,75.65,Sexual harassment,2022,0
+Nadapuram,11.6833,75.65,Sexual harassment,2023,0
+Nadapuram,11.6833,75.65,Sexual harassment,2024,0
+Nadapuram,11.6833,75.65,Sexual harassment,2025,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2014,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2015,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2016,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2017,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2018,1
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2019,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2020,0
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2021,2
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2022,3
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2023,1
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2024,2
+Nadapuram,11.6833,75.65,Kidnapping & abduction,2025,3
+Nadapuram,11.6833,75.65,Molestation,2014,13
+Nadapuram,11.6833,75.65,Molestation,2015,12
+Nadapuram,11.6833,75.65,Molestation,2016,15
+Nadapuram,11.6833,75.65,Molestation,2017,22
+Nadapuram,11.6833,75.65,Molestation,2018,16
+Nadapuram,11.6833,75.65,Molestation,2019,9
+Nadapuram,11.6833,75.65,Molestation,2020,6
+Nadapuram,11.6833,75.65,Molestation,2021,0
+Nadapuram,11.6833,75.65,Molestation,2022,7
+Nadapuram,11.6833,75.65,Molestation,2023,6
+Nadapuram,11.6833,75.65,Molestation,2024,8
+Nadapuram,11.6833,75.65,Molestation,2025,16
+Kozhikode city cyber,11.2588,75.7804,Murder,2019,0
+Kozhikode city cyber,11.2588,75.7804,Murder,2020,0
+Kozhikode city cyber,11.2588,75.7804,Murder,2021,0
+Kozhikode city cyber,11.2588,75.7804,Murder,2022,0
+Kozhikode city cyber,11.2588,75.7804,Murder,2023,0
+Kozhikode city cyber,11.2588,75.7804,Rape,2019,0
+Kozhikode city cyber,11.2588,75.7804,Rape,2020,0
+Kozhikode city cyber,11.2588,75.7804,Rape,2021,0
+Kozhikode city cyber,11.2588,75.7804,Rape,2022,0
+Kozhikode city cyber,11.2588,75.7804,Rape,2023,0
+Kozhikode city cyber,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city cyber,11.2588,75.7804,Dowry Deaths(304(B) IPC),2020,0
+Kozhikode city cyber,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city cyber,11.2588,75.7804,Dowry Deaths(304(B) IPC),2022,0
+Kozhikode city cyber,11.2588,75.7804,Dowry Deaths(304(B) IPC),2023,0
+Kozhikode city cyber,11.2588,75.7804,Cruelty by husband or relatives,2019,0
+Kozhikode city cyber,11.2588,75.7804,Cruelty by husband or relatives,2020,0
+Kozhikode city cyber,11.2588,75.7804,Cruelty by husband or relatives,2021,0
+Kozhikode city cyber,11.2588,75.7804,Cruelty by husband or relatives,2022,0
+Kozhikode city cyber,11.2588,75.7804,Cruelty by husband or relatives,2023,0
+Kozhikode city cyber,11.2588,75.7804,Hurt,2019,0
+Kozhikode city cyber,11.2588,75.7804,Hurt,2020,0
+Kozhikode city cyber,11.2588,75.7804,Hurt,2021,0
+Kozhikode city cyber,11.2588,75.7804,Hurt,2022,0
+Kozhikode city cyber,11.2588,75.7804,Hurt,2023,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction - of women & girls,2020,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction - of women & girls,2022,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction - of women & girls,2023,0
+Kozhikode city cyber,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode city cyber,11.2588,75.7804,Sexual harassment,2020,0
+Kozhikode city cyber,11.2588,75.7804,Sexual harassment,2021,0
+Kozhikode city cyber,11.2588,75.7804,Sexual harassment,2022,0
+Kozhikode city cyber,11.2588,75.7804,Sexual harassment,2023,0
+Kozhikode city cyber,11.2588,75.7804,Attempt to commit murder,2019,0
+Kozhikode city cyber,11.2588,75.7804,Attempt to commit murder,2020,0
+Kozhikode city cyber,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city cyber,11.2588,75.7804,Attempt to commit murder,2022,0
+Kozhikode city cyber,11.2588,75.7804,Attempt to commit murder,2023,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction,2019,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction,2020,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction,2021,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction,2022,0
+Kozhikode city cyber,11.2588,75.7804,Kidnapping & abduction,2023,0
+Kozhikode city cyber,11.2588,75.7804,Molestation,2019,0
+Kozhikode city cyber,11.2588,75.7804,Molestation,2020,0
+Kozhikode city cyber,11.2588,75.7804,Molestation,2021,0
+Kozhikode city cyber,11.2588,75.7804,Molestation,2022,0
+Kozhikode city cyber,11.2588,75.7804,Molestation,2023,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2014,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2015,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2016,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2020,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2022,0
+Kozhikode city kasaba,11.2588,75.7804,Rape,2014,2
+Kozhikode city kasaba,11.2588,75.7804,Rape,2015,2
+Kozhikode city kasaba,11.2588,75.7804,Rape,2016,1
+Kozhikode city kasaba,11.2588,75.7804,Rape,2017,4
+Kozhikode city kasaba,11.2588,75.7804,Rape,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Rape,2019,2
+Kozhikode city kasaba,11.2588,75.7804,Rape,2020,5
+Kozhikode city kasaba,11.2588,75.7804,Rape,2021,2
+Kozhikode city kasaba,11.2588,75.7804,Rape,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2014,66
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2015,43
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2016,38
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2017,34
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2018,36
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2019,42
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2020,34
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2021,12
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2014,7
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2015,5
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2016,8
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2017,6
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2018,4
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2019,12
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2020,3
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2021,1
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2014,1
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2015,1
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2017,2
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2019,5
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2020,4
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2021,2
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2014,2
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2015,1
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2018,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2019,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2020,3
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2014,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2015,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,3
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2020,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2014,6
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2015,5
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2016,6
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2017,7
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2018,7
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2019,8
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2020,13
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2021,1
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2014,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2015,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2017,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Murder,2019,3
+Kozhikode city kasaba,11.2588,75.7804,Murder,2020,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2021,1
+Kozhikode city kasaba,11.2588,75.7804,Murder,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2014,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2015,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2018,3
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2019,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2020,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2022,0
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2014,10
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2015,21
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2016,4
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2017,4
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2018,9
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2019,29
+Kozhikode city kasaba,11.2588,75.7804,Molestation,2021,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2014,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2015,4
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,3
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2014,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2015,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2016,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city kasaba,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2014,1
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2015,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2019,3
+Kozhikode city kasaba,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2014,22
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2015,17
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2016,15
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2017,15
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2018,12
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2019,12
+Kozhikode city kasaba,11.2588,75.7804,Cruelty by husband or relatives,2021,4
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2014,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2015,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2018,1
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2019,3
+Kozhikode city kasaba,11.2588,75.7804,Kidnapping & abduction,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2014,52
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2015,72
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2016,27
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2017,44
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2018,50
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2019,59
+Kozhikode city kasaba,11.2588,75.7804,Hurt,2021,15
+Kozhikode city kasaba,11.2588,75.7804,Murder,2014,1
+Kozhikode city kasaba,11.2588,75.7804,Murder,2015,1
+Kozhikode city kasaba,11.2588,75.7804,Murder,2016,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2017,1
+Kozhikode city kasaba,11.2588,75.7804,Murder,2018,2
+Kozhikode city kasaba,11.2588,75.7804,Murder,2019,0
+Kozhikode city kasaba,11.2588,75.7804,Murder,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2014,2
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2015,1
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2016,2
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2017,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2018,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode city kasaba,11.2588,75.7804,Sexual harassment,2021,0
+Kozhikode city kasaba,11.2588,75.7804,Rape,2014,2
+Kozhikode city kasaba,11.2588,75.7804,Rape,2015,8
+Kozhikode city kasaba,11.2588,75.7804,Rape,2016,8
+Kozhikode city kasaba,11.2588,75.7804,Rape,2017,8
+Kozhikode city kasaba,11.2588,75.7804,Rape,2018,7
+Kozhikode city kasaba,11.2588,75.7804,Rape,2019,14
+Kozhikode city kasaba,11.2588,75.7804,Rape,2021,2
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2014,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2015,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2016,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,3
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,2
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2020,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2022,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction - of women & girls,2023,0
+Kozhikode city town,11.2588,75.7804,Murder,2014,3
+Kozhikode city town,11.2588,75.7804,Murder,2015,1
+Kozhikode city town,11.2588,75.7804,Murder,2016,0
+Kozhikode city town,11.2588,75.7804,Murder,2017,1
+Kozhikode city town,11.2588,75.7804,Murder,2018,2
+Kozhikode city town,11.2588,75.7804,Murder,2019,1
+Kozhikode city town,11.2588,75.7804,Murder,2020,0
+Kozhikode city town,11.2588,75.7804,Murder,2021,0
+Kozhikode city town,11.2588,75.7804,Murder,2022,2
+Kozhikode city town,11.2588,75.7804,Murder,2023,0
+Kozhikode city town,11.2588,75.7804,Hurt,2014,36
+Kozhikode city town,11.2588,75.7804,Hurt,2015,29
+Kozhikode city town,11.2588,75.7804,Hurt,2016,24
+Kozhikode city town,11.2588,75.7804,Hurt,2017,20
+Kozhikode city town,11.2588,75.7804,Hurt,2018,27
+Kozhikode city town,11.2588,75.7804,Hurt,2019,36
+Kozhikode city town,11.2588,75.7804,Hurt,2020,19
+Kozhikode city town,11.2588,75.7804,Hurt,2021,23
+Kozhikode city town,11.2588,75.7804,Hurt,2022,28
+Kozhikode city town,11.2588,75.7804,Hurt,2023,48
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2014,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2015,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2016,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2017,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2018,3
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2019,2
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2020,1
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2021,5
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2022,0
+Kozhikode city town,11.2588,75.7804,Kidnapping & abduction,2023,1
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2014,2
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2015,1
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2016,0
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2017,2
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2018,1
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2019,0
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2020,1
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2021,0
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2022,1
+Kozhikode city town,11.2588,75.7804,Cruelty by husband or relatives,2023,2
+Kozhikode city town,11.2588,75.7804,Rape,2014,4
+Kozhikode city town,11.2588,75.7804,Rape,2015,0
+Kozhikode city town,11.2588,75.7804,Rape,2016,2
+Kozhikode city town,11.2588,75.7804,Rape,2017,3
+Kozhikode city town,11.2588,75.7804,Rape,2018,1
+Kozhikode city town,11.2588,75.7804,Rape,2019,1
+Kozhikode city town,11.2588,75.7804,Rape,2020,3
+Kozhikode city town,11.2588,75.7804,Rape,2021,8
+Kozhikode city town,11.2588,75.7804,Rape,2022,3
+Kozhikode city town,11.2588,75.7804,Rape,2023,3
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2014,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2015,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2016,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2017,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2018,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2020,5
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2021,1
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2022,7
+Kozhikode city town,11.2588,75.7804,Sexual harassment,2023,7
+Kozhikode city town,11.2588,75.7804,Molestation,2014,8
+Kozhikode city town,11.2588,75.7804,Molestation,2015,0
+Kozhikode city town,11.2588,75.7804,Molestation,2016,8
+Kozhikode city town,11.2588,75.7804,Molestation,2017,9
+Kozhikode city town,11.2588,75.7804,Molestation,2018,14
+Kozhikode city town,11.2588,75.7804,Molestation,2019,11
+Kozhikode city town,11.2588,75.7804,Molestation,2020,7
+Kozhikode city town,11.2588,75.7804,Molestation,2021,2
+Kozhikode city town,11.2588,75.7804,Molestation,2022,0
+Kozhikode city town,11.2588,75.7804,Molestation,2023,6
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2014,2
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2015,9
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2016,4
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2017,0
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2018,1
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2019,3
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2020,0
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2022,0
+Kozhikode city town,11.2588,75.7804,Attempt to commit murder,2023,2
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2014,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2015,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2016,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2020,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2022,0
+Kozhikode city town,11.2588,75.7804,Dowry Deaths(304(B) IPC),2023,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2014,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2015,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2016,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2017,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2018,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2019,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2020,0
+Kozhikode city traffic,11.2588,75.7804,Rape,2021,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2014,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2015,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2016,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2020,0
+Kozhikode city traffic,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2014,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2015,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2016,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2017,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2018,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2019,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2020,0
+Kozhikode city traffic,11.2588,75.7804,Hurt,2021,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2014,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2015,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2016,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2017,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2018,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2019,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2020,0
+Kozhikode city traffic,11.2588,75.7804,Cruelty by husband or relatives,2021,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2014,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2015,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2016,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2017,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2018,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2019,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2020,0
+Kozhikode city traffic,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2014,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2015,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2016,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2020,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2014,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2015,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2016,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2017,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2018,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2020,0
+Kozhikode city traffic,11.2588,75.7804,Sexual harassment,2021,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2014,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2015,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2016,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2017,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2018,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2019,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2020,0
+Kozhikode city traffic,11.2588,75.7804,Murder,2021,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2014,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2015,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2016,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2017,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2018,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2019,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2020,0
+Kozhikode city traffic,11.2588,75.7804,Kidnapping & abduction,2021,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2014,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2015,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2016,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2017,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2018,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2019,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2020,0
+Kozhikode city traffic,11.2588,75.7804,Molestation,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Rape,2021,1
+Kozhikode city vanitha,11.2588,75.7804,Rape,2022,3
+Kozhikode city vanitha,11.2588,75.7804,Rape,2023,2
+Kozhikode city vanitha,11.2588,75.7804,Rape,2024,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2022,0
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2023,3
+Kozhikode city vanitha,11.2588,75.7804,Sexual harassment,2024,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2021,3
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2022,4
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2023,2
+Kozhikode city vanitha,11.2588,75.7804,Molestation,2024,1
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2015,1
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2022,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2023,0
+Kozhikode city vanitha,11.2588,75.7804,Attempt to commit murder,2024,1
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2014,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2015,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2016,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2020,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2021,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2022,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2023,0
+Kozhikode city vanitha,11.2588,75.7804,Dowry Deaths(304(B) IPC),2024,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2022,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2023,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction - of women & girls,2024,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2022,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2023,0
+Kozhikode city vanitha,11.2588,75.7804,Murder,2024,0
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2014,1
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2015,3
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2016,4
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2017,7
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2018,1
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2019,6
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2020,3
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2021,2
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2022,1
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2023,3
+Kozhikode city vanitha,11.2588,75.7804,Hurt,2024,2
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2016,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2021,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2022,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2023,0
+Kozhikode city vanitha,11.2588,75.7804,Kidnapping & abduction,2024,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2014,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2015,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2016,1
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2017,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2018,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2019,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2020,0
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2021,8
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2022,6
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2023,2
+Kozhikode city vanitha,11.2588,75.7804,Cruelty by husband or relatives,2024,0
+Kozhikode rainway passport,11.2588,75.7804,Cruelty by husband or relatives,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Cruelty by husband or relatives,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Cruelty by husband or relatives,2019,0
+Kozhikode rainway passport,11.2588,75.7804,Dowry Deaths(304(B) IPC),2017,0
+Kozhikode rainway passport,11.2588,75.7804,Dowry Deaths(304(B) IPC),2018,0
+Kozhikode rainway passport,11.2588,75.7804,Dowry Deaths(304(B) IPC),2019,0
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction,2019,0
+Kozhikode rainway passport,11.2588,75.7804,Attempt to commit murder,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Attempt to commit murder,2018,1
+Kozhikode rainway passport,11.2588,75.7804,Attempt to commit murder,2019,0
+Kozhikode rainway passport,11.2588,75.7804,Sexual harassment,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Sexual harassment,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Sexual harassment,2019,0
+Kozhikode rainway passport,11.2588,75.7804,Hurt,2017,3
+Kozhikode rainway passport,11.2588,75.7804,Hurt,2018,3
+Kozhikode rainway passport,11.2588,75.7804,Hurt,2019,3
+Kozhikode rainway passport,11.2588,75.7804,Rape,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Rape,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Rape,2019,1
+Kozhikode rainway passport,11.2588,75.7804,Murder,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Murder,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Murder,2019,0
+Kozhikode rainway passport,11.2588,75.7804,Molestation,2017,5
+Kozhikode rainway passport,11.2588,75.7804,Molestation,2018,4
+Kozhikode rainway passport,11.2588,75.7804,Molestation,2019,1
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction - of women & girls,2017,0
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction - of women & girls,2018,0
+Kozhikode rainway passport,11.2588,75.7804,Kidnapping & abduction - of women & girls,2019,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2014,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2015,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2016,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2017,1
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2018,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2019,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2020,0
+Ferok,11.1833,75.8333,Dowry Deaths(304(B) IPC),2021,0
+Ferok,11.1833,75.8333,Rape,2014,3
+Ferok,11.1833,75.8333,Rape,2015,3
+Ferok,11.1833,75.8333,Rape,2016,6
+Ferok,11.1833,75.8333,Rape,2017,1
+Ferok,11.1833,75.8333,Rape,2018,2
+Ferok,11.1833,75.8333,Rape,2019,11
+Ferok,11.1833,75.8333,Rape,2020,2
+Ferok,11.1833,75.8333,Rape,2021,6
+Ferok,11.1833,75.8333,Hurt,2014,38
+Ferok,11.1833,75.8333,Hurt,2015,60
+Ferok,11.1833,75.8333,Hurt,2016,49
+Ferok,11.1833,75.8333,Hurt,2017,40
+Ferok,11.1833,75.8333,Hurt,2018,36
+Ferok,11.1833,75.8333,Hurt,2019,47
+Ferok,11.1833,75.8333,Hurt,2020,23
+Ferok,11.1833,75.8333,Hurt,2021,16
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2014,34
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2015,12
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2016,9
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2017,14
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2018,11
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2019,18
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2020,13
+Ferok,11.1833,75.8333,Cruelty by husband or relatives,2021,4
+Ferok,11.1833,75.8333,Sexual harassment,2014,8
+Ferok,11.1833,75.8333,Sexual harassment,2015,1
+Ferok,11.1833,75.8333,Sexual harassment,2016,6
+Ferok,11.1833,75.8333,Sexual harassment,2017,5
+Ferok,11.1833,75.8333,Sexual harassment,2018,15
+Ferok,11.1833,75.8333,Sexual harassment,2019,8
+Ferok,11.1833,75.8333,Sexual harassment,2020,1
+Ferok,11.1833,75.8333,Sexual harassment,2021,0
+Ferok,11.1833,75.8333,Attempt to commit murder,2014,0
+Ferok,11.1833,75.8333,Attempt to commit murder,2015,2
+Ferok,11.1833,75.8333,Attempt to commit murder,2016,0
+Ferok,11.1833,75.8333,Attempt to commit murder,2017,1
+Ferok,11.1833,75.8333,Attempt to commit murder,2018,1
+Ferok,11.1833,75.8333,Attempt to commit murder,2019,1
+Ferok,11.1833,75.8333,Attempt to commit murder,2020,1
+Ferok,11.1833,75.8333,Attempt to commit murder,2021,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2014,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2015,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2016,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2017,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2018,2
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2019,1
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2020,0
+Ferok,11.1833,75.8333,Kidnapping & abduction - of women & girls,2021,0
+Ferok,11.1833,75.8333,Molestation,2014,10
+Ferok,11.1833,75.8333,Molestation,2015,13
+Ferok,11.1833,75.8333,Molestation,2016,3
+Ferok,11.1833,75.8333,Molestation,2017,9
+Ferok,11.1833,75.8333,Molestation,2018,10
+Ferok,11.1833,75.8333,Molestation,2019,14
+Ferok,11.1833,75.8333,Molestation,2020,13
+Ferok,11.1833,75.8333,Molestation,2021,5
+Ferok,11.1833,75.8333,Murder,2014,0
+Ferok,11.1833,75.8333,Murder,2015,0
+Ferok,11.1833,75.8333,Murder,2016,2
+Ferok,11.1833,75.8333,Murder,2017,1
+Ferok,11.1833,75.8333,Murder,2018,0
+Ferok,11.1833,75.8333,Murder,2019,0
+Ferok,11.1833,75.8333,Murder,2020,1
+Ferok,11.1833,75.8333,Murder,2021,0
+Ferok,11.1833,75.8333,Kidnapping & abduction,2014,0
+Ferok,11.1833,75.8333,Kidnapping & abduction,2015,1
+Ferok,11.1833,75.8333,Kidnapping & abduction,2016,4
+Ferok,11.1833,75.8333,Kidnapping & abduction,2017,0
+Ferok,11.1833,75.8333,Kidnapping & abduction,2018,2
+Ferok,11.1833,75.8333,Kidnapping & abduction,2019,4
+Ferok,11.1833,75.8333,Kidnapping & abduction,2020,0
+Ferok,11.1833,75.8333,Kidnapping & abduction,2021,0
+Chemmangad,11.2,75.8,Hurt,2014,6
+Chemmangad,11.2,75.8,Hurt,2015,8
+Chemmangad,11.2,75.8,Hurt,2016,5
+Chemmangad,11.2,75.8,Hurt,2017,4
+Chemmangad,11.2,75.8,Hurt,2018,4
+Chemmangad,11.2,75.8,Hurt,2019,3
+Chemmangad,11.2,75.8,Hurt,2020,3
+Chemmangad,11.2,75.8,Hurt,2021,4
+Chemmangad,11.2,75.8,Hurt,2022,8
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2014,3
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2015,3
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2016,1
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2017,0
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2018,0
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2019,0
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2020,5
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2021,1
+Chemmangad,11.2,75.8,Cruelty by husband or relatives,2022,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2014,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2015,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2016,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2017,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2018,1
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2019,1
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2020,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2021,0
+Chemmangad,11.2,75.8,Kidnapping & abduction - of women & girls,2022,0
+Chemmangad,11.2,75.8,Sexual harassment,2014,0
+Chemmangad,11.2,75.8,Sexual harassment,2015,0
+Chemmangad,11.2,75.8,Sexual harassment,2016,0
+Chemmangad,11.2,75.8,Sexual harassment,2017,0
+Chemmangad,11.2,75.8,Sexual harassment,2018,0
+Chemmangad,11.2,75.8,Sexual harassment,2019,0
+Chemmangad,11.2,75.8,Sexual harassment,2020,0
+Chemmangad,11.2,75.8,Sexual harassment,2021,0
+Chemmangad,11.2,75.8,Sexual harassment,2022,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2014,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2015,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2016,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2017,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2018,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2019,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2020,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2021,0
+Chemmangad,11.2,75.8,Attempt to commit murder,2022,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2014,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2015,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2016,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2017,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2018,1
+Chemmangad,11.2,75.8,Kidnapping & abduction,2019,1
+Chemmangad,11.2,75.8,Kidnapping & abduction,2020,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2021,0
+Chemmangad,11.2,75.8,Kidnapping & abduction,2022,0
+Chemmangad,11.2,75.8,Molestation,2014,0
+Chemmangad,11.2,75.8,Molestation,2015,2
+Chemmangad,11.2,75.8,Molestation,2016,0
+Chemmangad,11.2,75.8,Molestation,2017,1
+Chemmangad,11.2,75.8,Molestation,2018,2
+Chemmangad,11.2,75.8,Molestation,2019,0
+Chemmangad,11.2,75.8,Molestation,2020,2
+Chemmangad,11.2,75.8,Molestation,2021,1
+Chemmangad,11.2,75.8,Molestation,2022,1
+Chemmangad,11.2,75.8,Murder,2014,0
+Chemmangad,11.2,75.8,Murder,2015,0
+Chemmangad,11.2,75.8,Murder,2016,0
+Chemmangad,11.2,75.8,Murder,2017,0
+Chemmangad,11.2,75.8,Murder,2018,1
+Chemmangad,11.2,75.8,Murder,2019,0
+Chemmangad,11.2,75.8,Murder,2020,0
+Chemmangad,11.2,75.8,Murder,2021,0
+Chemmangad,11.2,75.8,Murder,2022,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2014,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2015,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2016,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2017,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2018,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2019,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2020,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2021,0
+Chemmangad,11.2,75.8,Dowry Deaths(304(B) IPC),2022,0
+Chemmangad,11.2,75.8,Rape,2014,1
+Chemmangad,11.2,75.8,Rape,2015,0
+Chemmangad,11.2,75.8,Rape,2016,0
+Chemmangad,11.2,75.8,Rape,2017,1
+Chemmangad,11.2,75.8,Rape,2018,1
+Chemmangad,11.2,75.8,Rape,2019,0
+Chemmangad,11.2,75.8,Rape,2020,2
+Chemmangad,11.2,75.8,Rape,2021,0
+Chemmangad,11.2,75.8,Rape,2022,0
+Chevayur,11.2333,75.8,Hurt,2014,32
+Chevayur,11.2333,75.8,Hurt,2015,60
+Chevayur,11.2333,75.8,Hurt,2016,56
+Chevayur,11.2333,75.8,Hurt,2017,33
+Chevayur,11.2333,75.8,Hurt,2018,43
+Chevayur,11.2333,75.8,Hurt,2019,45
+Chevayur,11.2333,75.8,Hurt,2020,25
+Chevayur,11.2333,75.8,Hurt,2021,51
+Chevayur,11.2333,75.8,Hurt,2022,129
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2014,13
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2015,17
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2016,19
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2017,23
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2018,6
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2019,18
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2020,22
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2021,53
+Chevayur,11.2333,75.8,Cruelty by husband or relatives,2022,23
+Chevayur,11.2333,75.8,Attempt to commit murder,2014,2
+Chevayur,11.2333,75.8,Attempt to commit murder,2015,4
+Chevayur,11.2333,75.8,Attempt to commit murder,2016,8
+Chevayur,11.2333,75.8,Attempt to commit murder,2017,1
+Chevayur,11.2333,75.8,Attempt to commit murder,2018,4
+Chevayur,11.2333,75.8,Attempt to commit murder,2019,2
+Chevayur,11.2333,75.8,Attempt to commit murder,2020,0
+Chevayur,11.2333,75.8,Attempt to commit murder,2021,2
+Chevayur,11.2333,75.8,Attempt to commit murder,2022,0
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2014,0
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2015,0
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2016,0
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2017,7
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2018,4
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2019,3
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2020,0
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2021,3
+Chevayur,11.2333,75.8,Kidnapping & abduction - of women & girls,2022,0
+Chevayur,11.2333,75.8,Sexual harassment,2014,0
+Chevayur,11.2333,75.8,Sexual harassment,2015,0
+Chevayur,11.2333,75.8,Sexual harassment,2016,0
+Chevayur,11.2333,75.8,Sexual harassment,2017,6
+Chevayur,11.2333,75.8,Sexual harassment,2018,7
+Chevayur,11.2333,75.8,Sexual harassment,2019,6
+Chevayur,11.2333,75.8,Sexual harassment,2020,3
+Chevayur,11.2333,75.8,Sexual harassment,2021,10
+Chevayur,11.2333,75.8,Sexual harassment,2022,1
+Chevayur,11.2333,75.8,Murder,2014,0
+Chevayur,11.2333,75.8,Murder,2015,2
+Chevayur,11.2333,75.8,Murder,2016,1
+Chevayur,11.2333,75.8,Murder,2017,1
+Chevayur,11.2333,75.8,Murder,2018,0
+Chevayur,11.2333,75.8,Murder,2019,1
+Chevayur,11.2333,75.8,Murder,2020,1
+Chevayur,11.2333,75.8,Murder,2021,0
+Chevayur,11.2333,75.8,Murder,2022,2
+Chevayur,11.2333,75.8,Kidnapping & abduction,2014,0
+Chevayur,11.2333,75.8,Kidnapping & abduction,2015,1
+Chevayur,11.2333,75.8,Kidnapping & abduction,2016,0
+Chevayur,11.2333,75.8,Kidnapping & abduction,2017,7
+Chevayur,11.2333,75.8,Kidnapping & abduction,2018,4
+Chevayur,11.2333,75.8,Kidnapping & abduction,2019,3
+Chevayur,11.2333,75.8,Kidnapping & abduction,2020,0
+Chevayur,11.2333,75.8,Kidnapping & abduction,2021,0
+Chevayur,11.2333,75.8,Kidnapping & abduction,2022,1
+Chevayur,11.2333,75.8,Molestation,2014,10
+Chevayur,11.2333,75.8,Molestation,2015,13
+Chevayur,11.2333,75.8,Molestation,2016,10
+Chevayur,11.2333,75.8,Molestation,2017,15
+Chevayur,11.2333,75.8,Molestation,2018,37
+Chevayur,11.2333,75.8,Molestation,2019,6
+Chevayur,11.2333,75.8,Molestation,2020,13
+Chevayur,11.2333,75.8,Molestation,2021,27
+Chevayur,11.2333,75.8,Molestation,2022,11
+Chevayur,11.2333,75.8,Rape,2014,3
+Chevayur,11.2333,75.8,Rape,2015,7
+Chevayur,11.2333,75.8,Rape,2016,5
+Chevayur,11.2333,75.8,Rape,2017,8
+Chevayur,11.2333,75.8,Rape,2018,9
+Chevayur,11.2333,75.8,Rape,2019,14
+Chevayur,11.2333,75.8,Rape,2020,7
+Chevayur,11.2333,75.8,Rape,2021,10
+Chevayur,11.2333,75.8,Rape,2022,3
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2014,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2015,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2016,1
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2017,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2018,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2019,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2020,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2021,0
+Chevayur,11.2333,75.8,Dowry Deaths(304(B) IPC),2022,0
+Nadakkave,11.25,75.7667,Sexual harassment,2014,0
+Nadakkave,11.25,75.7667,Sexual harassment,2015,8
+Nadakkave,11.25,75.7667,Sexual harassment,2016,0
+Nadakkave,11.25,75.7667,Sexual harassment,2017,1
+Nadakkave,11.25,75.7667,Sexual harassment,2018,3
+Nadakkave,11.25,75.7667,Sexual harassment,2019,4
+Nadakkave,11.25,75.7667,Sexual harassment,2020,2
+Nadakkave,11.25,75.7667,Sexual harassment,2021,6
+Nadakkave,11.25,75.7667,Sexual harassment,2022,1
+Nadakkave,11.25,75.7667,Attempt to commit murder,2014,0
+Nadakkave,11.25,75.7667,Attempt to commit murder,2015,1
+Nadakkave,11.25,75.7667,Attempt to commit murder,2016,3
+Nadakkave,11.25,75.7667,Attempt to commit murder,2017,1
+Nadakkave,11.25,75.7667,Attempt to commit murder,2018,0
+Nadakkave,11.25,75.7667,Attempt to commit murder,2019,0
+Nadakkave,11.25,75.7667,Attempt to commit murder,2020,0
+Nadakkave,11.25,75.7667,Attempt to commit murder,2021,0
+Nadakkave,11.25,75.7667,Attempt to commit murder,2022,1
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2014,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2015,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2016,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2017,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2018,1
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2019,3
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2020,2
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2021,2
+Nadakkave,11.25,75.7667,Kidnapping & abduction - of women & girls,2022,2
+Nadakkave,11.25,75.7667,Molestation,2014,15
+Nadakkave,11.25,75.7667,Molestation,2015,0
+Nadakkave,11.25,75.7667,Molestation,2016,13
+Nadakkave,11.25,75.7667,Molestation,2017,12
+Nadakkave,11.25,75.7667,Molestation,2018,14
+Nadakkave,11.25,75.7667,Molestation,2019,17
+Nadakkave,11.25,75.7667,Molestation,2020,8
+Nadakkave,11.25,75.7667,Molestation,2021,19
+Nadakkave,11.25,75.7667,Molestation,2022,22
+Nadakkave,11.25,75.7667,Murder,2014,0
+Nadakkave,11.25,75.7667,Murder,2015,0
+Nadakkave,11.25,75.7667,Murder,2016,0
+Nadakkave,11.25,75.7667,Murder,2017,0
+Nadakkave,11.25,75.7667,Murder,2018,0
+Nadakkave,11.25,75.7667,Murder,2019,1
+Nadakkave,11.25,75.7667,Murder,2020,0
+Nadakkave,11.25,75.7667,Murder,2021,0
+Nadakkave,11.25,75.7667,Murder,2022,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2014,1
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2015,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2016,1
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2017,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2018,2
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2019,3
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2020,5
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2021,0
+Nadakkave,11.25,75.7667,Kidnapping & abduction,2022,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2014,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2015,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2016,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2017,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2018,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2019,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2020,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2021,0
+Nadakkave,11.25,75.7667,Dowry Deaths(304(B) IPC),2022,0
+Nadakkave,11.25,75.7667,Rape,2014,4
+Nadakkave,11.25,75.7667,Rape,2015,4
+Nadakkave,11.25,75.7667,Rape,2016,3
+Nadakkave,11.25,75.7667,Rape,2017,4
+Nadakkave,11.25,75.7667,Rape,2018,5
+Nadakkave,11.25,75.7667,Rape,2019,2
+Nadakkave,11.25,75.7667,Rape,2020,2
+Nadakkave,11.25,75.7667,Rape,2021,8
+Nadakkave,11.25,75.7667,Rape,2022,6
+Nadakkave,11.25,75.7667,Hurt,2014,42
+Nadakkave,11.25,75.7667,Hurt,2015,48
+Nadakkave,11.25,75.7667,Hurt,2016,67
+Nadakkave,11.25,75.7667,Hurt,2017,65
+Nadakkave,11.25,75.7667,Hurt,2018,55
+Nadakkave,11.25,75.7667,Hurt,2019,59
+Nadakkave,11.25,75.7667,Hurt,2020,31
+Nadakkave,11.25,75.7667,Hurt,2021,42
+Nadakkave,11.25,75.7667,Hurt,2022,38
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2014,4
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2015,7
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2016,9
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2017,3
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2018,2
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2019,3
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2020,7
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2021,14
+Nadakkave,11.25,75.7667,Cruelty by husband or relatives,2022,11
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2014,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2015,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2016,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2017,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2018,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2019,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2020,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2021,0
+Elathur,11.1833,75.7667,Dowry Deaths(304(B) IPC),2022,0
+Elathur,11.1833,75.7667,Rape,2014,6
+Elathur,11.1833,75.7667,Rape,2015,0
+Elathur,11.1833,75.7667,Rape,2016,0
+Elathur,11.1833,75.7667,Rape,2017,1
+Elathur,11.1833,75.7667,Rape,2018,0
+Elathur,11.1833,75.7667,Rape,2019,5
+Elathur,11.1833,75.7667,Rape,2020,6
+Elathur,11.1833,75.7667,Rape,2021,10
+Elathur,11.1833,75.7667,Rape,2022,5
+Elathur,11.1833,75.7667,Hurt,2014,49
+Elathur,11.1833,75.7667,Hurt,2015,35
+Elathur,11.1833,75.7667,Hurt,2016,42
+Elathur,11.1833,75.7667,Hurt,2017,28
+Elathur,11.1833,75.7667,Hurt,2018,30
+Elathur,11.1833,75.7667,Hurt,2019,34
+Elathur,11.1833,75.7667,Hurt,2020,27
+Elathur,11.1833,75.7667,Hurt,2021,40
+Elathur,11.1833,75.7667,Hurt,2022,30
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2014,9
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2015,15
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2016,17
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2017,11
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2018,14
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2019,17
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2020,16
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2021,19
+Elathur,11.1833,75.7667,Cruelty by husband or relatives,2022,17
+Elathur,11.1833,75.7667,Sexual harassment,2014,0
+Elathur,11.1833,75.7667,Sexual harassment,2015,0
+Elathur,11.1833,75.7667,Sexual harassment,2016,0
+Elathur,11.1833,75.7667,Sexual harassment,2017,3
+Elathur,11.1833,75.7667,Sexual harassment,2018,0
+Elathur,11.1833,75.7667,Sexual harassment,2019,5
+Elathur,11.1833,75.7667,Sexual harassment,2020,0
+Elathur,11.1833,75.7667,Sexual harassment,2021,3
+Elathur,11.1833,75.7667,Sexual harassment,2022,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2014,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2015,2
+Elathur,11.1833,75.7667,Attempt to commit murder,2016,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2017,3
+Elathur,11.1833,75.7667,Attempt to commit murder,2018,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2019,3
+Elathur,11.1833,75.7667,Attempt to commit murder,2020,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2021,0
+Elathur,11.1833,75.7667,Attempt to commit murder,2022,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2014,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2015,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2016,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2017,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2018,2
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2019,1
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2020,1
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2021,0
+Elathur,11.1833,75.7667,Kidnapping & abduction - of women & girls,2022,3
+Elathur,11.1833,75.7667,Molestation,2014,6
+Elathur,11.1833,75.7667,Molestation,2015,0
+Elathur,11.1833,75.7667,Molestation,2016,8
+Elathur,11.1833,75.7667,Molestation,2017,12
+Elathur,11.1833,75.7667,Molestation,2018,6
+Elathur,11.1833,75.7667,Molestation,2019,11
+Elathur,11.1833,75.7667,Molestation,2020,11
+Elathur,11.1833,75.7667,Molestation,2021,11
+Elathur,11.1833,75.7667,Molestation,2022,14
+Elathur,11.1833,75.7667,Murder,2014,0
+Elathur,11.1833,75.7667,Murder,2015,1
+Elathur,11.1833,75.7667,Murder,2016,0
+Elathur,11.1833,75.7667,Murder,2017,0
+Elathur,11.1833,75.7667,Murder,2018,0
+Elathur,11.1833,75.7667,Murder,2019,0
+Elathur,11.1833,75.7667,Murder,2020,1
+Elathur,11.1833,75.7667,Murder,2021,0
+Elathur,11.1833,75.7667,Murder,2022,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2014,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2015,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2016,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2017,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2018,3
+Elathur,11.1833,75.7667,Kidnapping & abduction,2019,1
+Elathur,11.1833,75.7667,Kidnapping & abduction,2020,1
+Elathur,11.1833,75.7667,Kidnapping & abduction,2021,0
+Elathur,11.1833,75.7667,Kidnapping & abduction,2022,0
+Nallalam,11.2,75.7333,Hurt,2014,44
+Nallalam,11.2,75.7333,Hurt,2015,52
+Nallalam,11.2,75.7333,Hurt,2016,49
+Nallalam,11.2,75.7333,Hurt,2017,72
+Nallalam,11.2,75.7333,Hurt,2018,49
+Nallalam,11.2,75.7333,Hurt,2019,35
+Nallalam,11.2,75.7333,Hurt,2020,23
+Nallalam,11.2,75.7333,Hurt,2021,6
+Nallalam,11.2,75.7333,Hurt,2022,13
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2014,35
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2015,44
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2016,24
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2017,16
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2018,22
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2019,17
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2020,16
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2021,2
+Nallalam,11.2,75.7333,Cruelty by husband or relatives,2022,9
+Nallalam,11.2,75.7333,Attempt to commit murder,2014,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2015,1
+Nallalam,11.2,75.7333,Attempt to commit murder,2016,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2017,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2018,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2019,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2020,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2021,0
+Nallalam,11.2,75.7333,Attempt to commit murder,2022,0
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2014,0
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2015,3
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2016,4
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2017,0
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2018,1
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2019,1
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2020,0
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2021,1
+Nallalam,11.2,75.7333,Kidnapping & abduction - of women & girls,2022,4
+Nallalam,11.2,75.7333,Sexual harassment,2014,0
+Nallalam,11.2,75.7333,Sexual harassment,2015,0
+Nallalam,11.2,75.7333,Sexual harassment,2016,1
+Nallalam,11.2,75.7333,Sexual harassment,2017,0
+Nallalam,11.2,75.7333,Sexual harassment,2018,0
+Nallalam,11.2,75.7333,Sexual harassment,2019,0
+Nallalam,11.2,75.7333,Sexual harassment,2020,0
+Nallalam,11.2,75.7333,Sexual harassment,2021,0
+Nallalam,11.2,75.7333,Sexual harassment,2022,0
+Nallalam,11.2,75.7333,Murder,2014,2
+Nallalam,11.2,75.7333,Murder,2015,1
+Nallalam,11.2,75.7333,Murder,2016,2
+Nallalam,11.2,75.7333,Murder,2017,0
+Nallalam,11.2,75.7333,Murder,2018,1
+Nallalam,11.2,75.7333,Murder,2019,0
+Nallalam,11.2,75.7333,Murder,2020,1
+Nallalam,11.2,75.7333,Murder,2021,0
+Nallalam,11.2,75.7333,Murder,2022,1
+Nallalam,11.2,75.7333,Kidnapping & abduction,2014,0
+Nallalam,11.2,75.7333,Kidnapping & abduction,2015,0
+Nallalam,11.2,75.7333,Kidnapping & abduction,2016,0
+Nallalam,11.2,75.7333,Kidnapping & abduction,2017,0
+Nallalam,11.2,75.7333,Kidnapping & abduction,2018,1
+Nallalam,11.2,75.7333,Kidnapping & abduction,2019,1
+Nallalam,11.2,75.7333,Kidnapping & abduction,2020,0
+Nallalam,11.2,75.7333,Kidnapping & abduction,2021,1
+Nallalam,11.2,75.7333,Kidnapping & abduction,2022,0
+Nallalam,11.2,75.7333,Molestation,2014,5
+Nallalam,11.2,75.7333,Molestation,2015,18
+Nallalam,11.2,75.7333,Molestation,2016,9
+Nallalam,11.2,75.7333,Molestation,2017,5
+Nallalam,11.2,75.7333,Molestation,2018,5
+Nallalam,11.2,75.7333,Molestation,2019,5
+Nallalam,11.2,75.7333,Molestation,2020,6
+Nallalam,11.2,75.7333,Molestation,2021,4
+Nallalam,11.2,75.7333,Molestation,2022,4
+Nallalam,11.2,75.7333,Rape,2014,3
+Nallalam,11.2,75.7333,Rape,2015,3
+Nallalam,11.2,75.7333,Rape,2016,4
+Nallalam,11.2,75.7333,Rape,2017,6
+Nallalam,11.2,75.7333,Rape,2018,6
+Nallalam,11.2,75.7333,Rape,2019,11
+Nallalam,11.2,75.7333,Rape,2020,6
+Nallalam,11.2,75.7333,Rape,2021,0
+Nallalam,11.2,75.7333,Rape,2022,1
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2014,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2015,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2016,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2017,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2018,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2019,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2020,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2021,0
+Nallalam,11.2,75.7333,Dowry Deaths(304(B) IPC),2022,0
+Marad,11.2333,75.7333,Hurt,2014,25
+Marad,11.2333,75.7333,Hurt,2015,10
+Marad,11.2333,75.7333,Hurt,2016,8
+Marad,11.2333,75.7333,Hurt,2017,18
+Marad,11.2333,75.7333,Hurt,2018,14
+Marad,11.2333,75.7333,Hurt,2019,11
+Marad,11.2333,75.7333,Hurt,2020,8
+Marad,11.2333,75.7333,Hurt,2021,6
+Marad,11.2333,75.7333,Hurt,2022,0
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2014,4
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2015,5
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2016,4
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2017,0
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2018,0
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2019,9
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2020,3
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2021,6
+Marad,11.2333,75.7333,Cruelty by husband or relatives,2022,11
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2014,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2015,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2016,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2017,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2018,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2019,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2020,1
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2021,0
+Marad,11.2333,75.7333,Kidnapping & abduction - of women & girls,2022,0
+Marad,11.2333,75.7333,Sexual harassment,2014,0
+Marad,11.2333,75.7333,Sexual harassment,2015,0
+Marad,11.2333,75.7333,Sexual harassment,2016,1
+Marad,11.2333,75.7333,Sexual harassment,2017,6
+Marad,11.2333,75.7333,Sexual harassment,2018,6
+Marad,11.2333,75.7333,Sexual harassment,2019,1
+Marad,11.2333,75.7333,Sexual harassment,2020,0
+Marad,11.2333,75.7333,Sexual harassment,2021,1
+Marad,11.2333,75.7333,Sexual harassment,2022,0
+Marad,11.2333,75.7333,Attempt to commit murder,2014,0
+Marad,11.2333,75.7333,Attempt to commit murder,2015,1
+Marad,11.2333,75.7333,Attempt to commit murder,2016,0
+Marad,11.2333,75.7333,Attempt to commit murder,2017,0
+Marad,11.2333,75.7333,Attempt to commit murder,2018,0
+Marad,11.2333,75.7333,Attempt to commit murder,2019,0
+Marad,11.2333,75.7333,Attempt to commit murder,2020,1
+Marad,11.2333,75.7333,Attempt to commit murder,2021,0
+Marad,11.2333,75.7333,Attempt to commit murder,2022,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2014,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2015,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2016,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2017,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2018,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2019,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2020,1
+Marad,11.2333,75.7333,Kidnapping & abduction,2021,0
+Marad,11.2333,75.7333,Kidnapping & abduction,2022,0
+Marad,11.2333,75.7333,Molestation,2014,0
+Marad,11.2333,75.7333,Molestation,2015,2
+Marad,11.2333,75.7333,Molestation,2016,2
+Marad,11.2333,75.7333,Molestation,2017,0
+Marad,11.2333,75.7333,Molestation,2018,0
+Marad,11.2333,75.7333,Molestation,2019,0
+Marad,11.2333,75.7333,Molestation,2020,1
+Marad,11.2333,75.7333,Molestation,2021,4
+Marad,11.2333,75.7333,Molestation,2022,1
+Marad,11.2333,75.7333,Murder,2014,0
+Marad,11.2333,75.7333,Murder,2015,0
+Marad,11.2333,75.7333,Murder,2016,0
+Marad,11.2333,75.7333,Murder,2017,0
+Marad,11.2333,75.7333,Murder,2018,0
+Marad,11.2333,75.7333,Murder,2019,0
+Marad,11.2333,75.7333,Murder,2020,0
+Marad,11.2333,75.7333,Murder,2021,0
+Marad,11.2333,75.7333,Murder,2022,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2014,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2015,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2016,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2017,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2018,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2019,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2020,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2021,0
+Marad,11.2333,75.7333,Dowry Deaths(304(B) IPC),2022,0
+Marad,11.2333,75.7333,Rape,2014,0
+Marad,11.2333,75.7333,Rape,2015,0
+Marad,11.2333,75.7333,Rape,2016,0
+Marad,11.2333,75.7333,Rape,2017,0
+Marad,11.2333,75.7333,Rape,2018,2
+Marad,11.2333,75.7333,Rape,2019,2
+Marad,11.2333,75.7333,Rape,2020,3
+Marad,11.2333,75.7333,Rape,2021,1
+Marad,11.2333,75.7333,Rape,2022,2
+Vellayil,11.2167,75.75,Hurt,2014,21
+Vellayil,11.2167,75.75,Hurt,2015,24
+Vellayil,11.2167,75.75,Hurt,2016,12
+Vellayil,11.2167,75.75,Hurt,2017,29
+Vellayil,11.2167,75.75,Hurt,2018,27
+Vellayil,11.2167,75.75,Hurt,2019,32
+Vellayil,11.2167,75.75,Hurt,2020,51
+Vellayil,11.2167,75.75,Hurt,2021,7
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2014,5
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2015,12
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2016,10
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2017,5
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2018,0
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2019,8
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2020,17
+Vellayil,11.2167,75.75,Cruelty by husband or relatives,2021,4
+Vellayil,11.2167,75.75,Attempt to commit murder,2014,1
+Vellayil,11.2167,75.75,Attempt to commit murder,2015,5
+Vellayil,11.2167,75.75,Attempt to commit murder,2016,1
+Vellayil,11.2167,75.75,Attempt to commit murder,2017,1
+Vellayil,11.2167,75.75,Attempt to commit murder,2018,0
+Vellayil,11.2167,75.75,Attempt to commit murder,2019,0
+Vellayil,11.2167,75.75,Attempt to commit murder,2020,1
+Vellayil,11.2167,75.75,Attempt to commit murder,2021,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2014,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2015,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2016,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2017,2
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2018,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2019,1
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2020,0
+Vellayil,11.2167,75.75,Kidnapping & abduction - of women & girls,2021,0
+Vellayil,11.2167,75.75,Sexual harassment,2014,0
+Vellayil,11.2167,75.75,Sexual harassment,2015,0
+Vellayil,11.2167,75.75,Sexual harassment,2016,0
+Vellayil,11.2167,75.75,Sexual harassment,2017,0
+Vellayil,11.2167,75.75,Sexual harassment,2018,0
+Vellayil,11.2167,75.75,Sexual harassment,2019,0
+Vellayil,11.2167,75.75,Sexual harassment,2020,2
+Vellayil,11.2167,75.75,Sexual harassment,2021,2
+Vellayil,11.2167,75.75,Murder,2014,0
+Vellayil,11.2167,75.75,Murder,2015,1
+Vellayil,11.2167,75.75,Murder,2016,0
+Vellayil,11.2167,75.75,Murder,2017,0
+Vellayil,11.2167,75.75,Murder,2018,0
+Vellayil,11.2167,75.75,Murder,2019,0
+Vellayil,11.2167,75.75,Murder,2020,0
+Vellayil,11.2167,75.75,Murder,2021,0
+Vellayil,11.2167,75.75,Kidnapping & abduction,2014,0
+Vellayil,11.2167,75.75,Kidnapping & abduction,2015,0
+Vellayil,11.2167,75.75,Kidnapping & abduction,2016,0
+Vellayil,11.2167,75.75,Kidnapping & abduction,2017,3
+Vellayil,11.2167,75.75,Kidnapping & abduction,2018,0
+Vellayil,11.2167,75.75,Kidnapping & abduction,2019,1
+Vellayil,11.2167,75.75,Kidnapping & abduction,2020,2
+Vellayil,11.2167,75.75,Kidnapping & abduction,2021,0
+Vellayil,11.2167,75.75,Molestation,2014,3
+Vellayil,11.2167,75.75,Molestation,2015,6
+Vellayil,11.2167,75.75,Molestation,2016,10
+Vellayil,11.2167,75.75,Molestation,2017,5
+Vellayil,11.2167,75.75,Molestation,2018,4
+Vellayil,11.2167,75.75,Molestation,2019,10
+Vellayil,11.2167,75.75,Molestation,2020,11
+Vellayil,11.2167,75.75,Molestation,2021,0
+Vellayil,11.2167,75.75,Rape,2014,2
+Vellayil,11.2167,75.75,Rape,2015,2
+Vellayil,11.2167,75.75,Rape,2016,1
+Vellayil,11.2167,75.75,Rape,2017,4
+Vellayil,11.2167,75.75,Rape,2018,2
+Vellayil,11.2167,75.75,Rape,2019,3
+Vellayil,11.2167,75.75,Rape,2020,2
+Vellayil,11.2167,75.75,Rape,2021,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2014,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2015,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2016,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2017,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2018,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2019,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2020,0
+Vellayil,11.2167,75.75,Dowry Deaths(304(B) IPC),2021,0
+Kakkur,11.35,75.9,Sexual harassment,2014,1
+Kakkur,11.35,75.9,Sexual harassment,2015,1
+Kakkur,11.35,75.9,Sexual harassment,2016,0
+Kakkur,11.35,75.9,Sexual harassment,2017,2
+Kakkur,11.35,75.9,Sexual harassment,2018,0
+Kakkur,11.35,75.9,Sexual harassment,2019,3
+Kakkur,11.35,75.9,Sexual harassment,2020,1
+Kakkur,11.35,75.9,Sexual harassment,2021,0
+Kakkur,11.35,75.9,Sexual harassment,2022,1
+Kakkur,11.35,75.9,Sexual harassment,2023,0
+Kakkur,11.35,75.9,Sexual harassment,2024,0
+Kakkur,11.35,75.9,Sexual harassment,2025,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2014,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2015,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2016,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2017,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2018,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2019,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2020,1
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2021,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2022,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2023,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2024,0
+Kakkur,11.35,75.9,Kidnapping & abduction - of women & girls,2025,0
+Kakkur,11.35,75.9,Molestation,2014,7
+Kakkur,11.35,75.9,Molestation,2015,11
+Kakkur,11.35,75.9,Molestation,2016,6
+Kakkur,11.35,75.9,Molestation,2017,10
+Kakkur,11.35,75.9,Molestation,2018,10
+Kakkur,11.35,75.9,Molestation,2019,6
+Kakkur,11.35,75.9,Molestation,2020,11
+Kakkur,11.35,75.9,Molestation,2021,2
+Kakkur,11.35,75.9,Molestation,2022,6
+Kakkur,11.35,75.9,Molestation,2023,10
+Kakkur,11.35,75.9,Molestation,2024,13
+Kakkur,11.35,75.9,Molestation,2025,4
+Kakkur,11.35,75.9,Kidnapping & abduction,2014,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2015,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2016,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2017,1
+Kakkur,11.35,75.9,Kidnapping & abduction,2018,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2019,4
+Kakkur,11.35,75.9,Kidnapping & abduction,2020,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2021,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2022,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2023,1
+Kakkur,11.35,75.9,Kidnapping & abduction,2024,0
+Kakkur,11.35,75.9,Kidnapping & abduction,2025,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2014,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2015,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2016,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2017,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2018,1
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2019,1
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2020,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2021,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2022,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2023,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2024,0
+Kakkur,11.35,75.9,Dowry Deaths(304(B) IPC),2025,0
+Kakkur,11.35,75.9,Rape,2014,2
+Kakkur,11.35,75.9,Rape,2015,3
+Kakkur,11.35,75.9,Rape,2016,2
+Kakkur,11.35,75.9,Rape,2017,9
+Kakkur,11.35,75.9,Rape,2018,3
+Kakkur,11.35,75.9,Rape,2019,3
+Kakkur,11.35,75.9,Rape,2020,1
+Kakkur,11.35,75.9,Rape,2021,2
+Kakkur,11.35,75.9,Rape,2022,9
+Kakkur,11.35,75.9,Rape,2023,3
+Kakkur,11.35,75.9,Rape,2024,4
+Kakkur,11.35,75.9,Rape,2025,4
+Kakkur,11.35,75.9,Hurt,2014,14
+Kakkur,11.35,75.9,Hurt,2015,10
+Kakkur,11.35,75.9,Hurt,2016,20
+Kakkur,11.35,75.9,Hurt,2017,17
+Kakkur,11.35,75.9,Hurt,2018,17
+Kakkur,11.35,75.9,Hurt,2019,28
+Kakkur,11.35,75.9,Hurt,2020,12
+Kakkur,11.35,75.9,Hurt,2021,7
+Kakkur,11.35,75.9,Hurt,2022,121
+Kakkur,11.35,75.9,Hurt,2023,90
+Kakkur,11.35,75.9,Hurt,2024,125
+Kakkur,11.35,75.9,Hurt,2025,48
+Kakkur,11.35,75.9,Attempt to commit murder,2014,0
+Kakkur,11.35,75.9,Attempt to commit murder,2015,2
+Kakkur,11.35,75.9,Attempt to commit murder,2016,2
+Kakkur,11.35,75.9,Attempt to commit murder,2017,1
+Kakkur,11.35,75.9,Attempt to commit murder,2018,1
+Kakkur,11.35,75.9,Attempt to commit murder,2019,1
+Kakkur,11.35,75.9,Attempt to commit murder,2020,0
+Kakkur,11.35,75.9,Attempt to commit murder,2021,0
+Kakkur,11.35,75.9,Attempt to commit murder,2022,1
+Kakkur,11.35,75.9,Attempt to commit murder,2023,2
+Kakkur,11.35,75.9,Attempt to commit murder,2024,3
+Kakkur,11.35,75.9,Attempt to commit murder,2025,3
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2014,10
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2015,12
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2016,8
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2017,8
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2018,8
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2019,9
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2020,9
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2021,4
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2022,23
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2023,19
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2024,20
+Kakkur,11.35,75.9,Cruelty by husband or relatives,2025,21
+Kakkur,11.35,75.9,Murder,2014,0
+Kakkur,11.35,75.9,Murder,2015,0
+Kakkur,11.35,75.9,Murder,2016,0
+Kakkur,11.35,75.9,Murder,2017,0
+Kakkur,11.35,75.9,Murder,2018,0
+Kakkur,11.35,75.9,Murder,2019,1
+Kakkur,11.35,75.9,Murder,2020,1
+Kakkur,11.35,75.9,Murder,2021,1
+Kakkur,11.35,75.9,Murder,2022,0
+Kakkur,11.35,75.9,Murder,2023,0
+Kakkur,11.35,75.9,Murder,2024,2
+Kakkur,11.35,75.9,Murder,2025,1
+Mavoor,11.2667,75.9167,Murder,2014,0
+Mavoor,11.2667,75.9167,Murder,2015,0
+Mavoor,11.2667,75.9167,Murder,2016,0
+Mavoor,11.2667,75.9167,Murder,2017,0
+Mavoor,11.2667,75.9167,Murder,2018,0
+Mavoor,11.2667,75.9167,Murder,2019,0
+Mavoor,11.2667,75.9167,Murder,2020,0
+Mavoor,11.2667,75.9167,Murder,2021,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2014,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2015,1
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2016,1
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2017,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2018,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2019,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2020,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction,2021,0
+Mavoor,11.2667,75.9167,Molestation,2014,7
+Mavoor,11.2667,75.9167,Molestation,2015,1
+Mavoor,11.2667,75.9167,Molestation,2016,3
+Mavoor,11.2667,75.9167,Molestation,2017,4
+Mavoor,11.2667,75.9167,Molestation,2018,4
+Mavoor,11.2667,75.9167,Molestation,2019,0
+Mavoor,11.2667,75.9167,Molestation,2020,4
+Mavoor,11.2667,75.9167,Molestation,2021,0
+Mavoor,11.2667,75.9167,Rape,2014,0
+Mavoor,11.2667,75.9167,Rape,2015,1
+Mavoor,11.2667,75.9167,Rape,2016,2
+Mavoor,11.2667,75.9167,Rape,2017,2
+Mavoor,11.2667,75.9167,Rape,2018,1
+Mavoor,11.2667,75.9167,Rape,2019,4
+Mavoor,11.2667,75.9167,Rape,2020,1
+Mavoor,11.2667,75.9167,Rape,2021,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2014,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2015,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2016,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2017,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2018,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2019,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2020,0
+Mavoor,11.2667,75.9167,Dowry Deaths(304(B) IPC),2021,0
+Mavoor,11.2667,75.9167,Hurt,2014,34
+Mavoor,11.2667,75.9167,Hurt,2015,20
+Mavoor,11.2667,75.9167,Hurt,2016,30
+Mavoor,11.2667,75.9167,Hurt,2017,23
+Mavoor,11.2667,75.9167,Hurt,2018,32
+Mavoor,11.2667,75.9167,Hurt,2019,28
+Mavoor,11.2667,75.9167,Hurt,2020,21
+Mavoor,11.2667,75.9167,Hurt,2021,3
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2014,6
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2015,3
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2016,1
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2017,4
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2018,3
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2019,5
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2020,4
+Mavoor,11.2667,75.9167,Cruelty by husband or relatives,2021,4
+Mavoor,11.2667,75.9167,Attempt to commit murder,2014,1
+Mavoor,11.2667,75.9167,Attempt to commit murder,2015,1
+Mavoor,11.2667,75.9167,Attempt to commit murder,2016,0
+Mavoor,11.2667,75.9167,Attempt to commit murder,2017,0
+Mavoor,11.2667,75.9167,Attempt to commit murder,2018,0
+Mavoor,11.2667,75.9167,Attempt to commit murder,2019,0
+Mavoor,11.2667,75.9167,Attempt to commit murder,2020,1
+Mavoor,11.2667,75.9167,Attempt to commit murder,2021,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2014,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2015,1
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2016,1
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2017,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2018,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2019,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2020,0
+Mavoor,11.2667,75.9167,Kidnapping & abduction - of women & girls,2021,0
+Mavoor,11.2667,75.9167,Sexual harassment,2014,0
+Mavoor,11.2667,75.9167,Sexual harassment,2015,1
+Mavoor,11.2667,75.9167,Sexual harassment,2016,1
+Mavoor,11.2667,75.9167,Sexual harassment,2017,7
+Mavoor,11.2667,75.9167,Sexual harassment,2018,3
+Mavoor,11.2667,75.9167,Sexual harassment,2019,5

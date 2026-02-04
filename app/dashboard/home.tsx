@@ -1,5 +1,6 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -261,6 +262,22 @@ export default function DashboardHome() {
       console.log("SOS Response:", response.status, response.data);
 
       if (response.status === 200) {
+        // Play SOS notification sound
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            require('../../assets/voice/morse-sos.mp3'),
+            { shouldPlay: true, volume: 1.0 }
+          );
+          // Unload sound after playing to free resources
+          sound.setOnPlaybackStatusUpdate((status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              sound.unloadAsync();
+            }
+          });
+        } catch (soundError) {
+          console.warn('Failed to play SOS sound:', soundError);
+        }
+
         Alert.alert("🚨 SOS SENT", "Guardians have been notified with your location!");
         
         // Store SOS trigger timestamp with full details (day, month, hour, minute, second)
@@ -354,6 +371,24 @@ export default function DashboardHome() {
 
         {/* Quick Safety Actions */}
         <Text style={styles.sectionTitle}>Quick Safety Actions</Text>
+
+        {/* Zone Safety Overview */}
+        <View style={styles.actionRow}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.actionTitle}>Zone Safety</Text>
+            <Text style={styles.actionDesc}>Check crime risk levels in your area</Text>
+            <TouchableOpacity 
+              style={styles.smallButton}
+              onPress={() => router.push('/dashboard/zone-activity')}
+            >
+              <Text style={styles.smallButtonText}>View Zones</Text>
+              <Ionicons name="location" size={14} color="#1A1B4B" style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
+          </View>
+          <LinearGradient colors={['#D1C4E9', '#9575CD']} style={styles.actionImageContainer}>
+             <Ionicons name="shield-checkmark" size={50} color="#4A148C" />
+          </LinearGradient>
+        </View>
 
         <View style={styles.actionRow}>
           <View style={{ flex: 1, paddingRight: 10 }}>

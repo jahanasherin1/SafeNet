@@ -11,7 +11,7 @@ const LOCATION_SYNC_QUEUE = 'LOCATION_SYNC_QUEUE';
 const TRACKING_STATE_KEY = 'TRACKING_STATE';
 const LAST_LOCATION_TIME = 'LAST_LOCATION_TIME';
 const TRACKING_ENABLED_KEY = 'TRACKING_ENABLED';
-const VERBOSE_LOGGING = true; // Set to true for debugging
+const VERBOSE_LOGGING = false; // Reduced logging for production
 
 let appStateSubscription: any = null;
 let lastLoggedTime = 0;
@@ -65,8 +65,8 @@ const saveLocationQueue = async (queue: SyncQueueItem[]): Promise<void> => {
 const addToQueue = async (item: SyncQueueItem): Promise<void> => {
   const queue = await getLocationQueue();
   queue.push(item);
-  // Keep only last 100 locations to prevent storage bloat
-  if (queue.length > 100) {
+  // Keep only last 20 locations to prevent storage bloat
+  if (queue.length > 20) {
     queue.shift();
   }
   await saveLocationQueue(queue);
@@ -101,9 +101,6 @@ export const processLocationQueue = async (): Promise<void> => {
         });
 
         processedItems.push(i);
-        if (VERBOSE_LOGGING) {
-          console.log(`✅ Synced queued location for ${item.email}`);
-        }
       } catch (error) {
         item.retries++;
       }
@@ -112,6 +109,10 @@ export const processLocationQueue = async (): Promise<void> => {
     // Remove processed items
     const updatedQueue = queue.filter((_, index) => !processedItems.includes(index));
     await saveLocationQueue(updatedQueue);
+    
+    if (VERBOSE_LOGGING && processedItems.length > 0) {
+      console.log(`✅ Synced ${processedItems.length} queued locations. Remaining in queue: ${updatedQueue.length}`);
+    }
   } catch (error) {
     if (VERBOSE_LOGGING) {
       console.error('Error processing location queue:', error);
@@ -285,12 +286,16 @@ const sendLocationToBackend = async (
     }
 
     // For real-time tracking, send all updates regardless of movement
-    // We'll track the distance moved for informational purposes only
-    if (lastLocationSent && VERBOSE_LOGGING) {
+    // Track distance moved for monitoring purposes (only log if moved significantly)
+    if (lastLocationSent) {
       const latDiff = Math.abs(location.latitude - lastLocationSent.latitude);
       const lonDiff = Math.abs(location.longitude - lastLocationSent.longitude);
       const distanceMoved = Math.sqrt(latDiff ** 2 + lonDiff ** 2) * 111000; // Convert to meters
-      console.log(`⏭️ Location unchanged (moved only ${distanceMoved.toFixed(0)}m)`);
+      
+      // Only log if moved more than 50 meters
+      if (VERBOSE_LOGGING && distanceMoved > 50) {
+        console.log(`📏 Moved ${distanceMoved.toFixed(0)}m since last update`);
+      }
     }
 
     let userEmail = email;
@@ -335,9 +340,6 @@ const sendLocationToBackend = async (
       second: '2-digit' 
     });
     console.log(`✅ [${timestamp}] Location sent to backend (accuracy: ${accuracy.toFixed(0)}m)`);
-    
-    // Process any queued items immediately after successful sync
-    setTimeout(() => processLocationQueue(), 1000);
 
     return response.data;
   } catch (error) {
@@ -575,8 +577,8 @@ export const startBackgroundLocationTracking = async () => {
       startForegroundPolling(15000); // 15 second intervals for battery saving
     }
 
-    // Process any queued locations after starting
-    setTimeout(() => processLocationQueue(), 5000);
+    // Process any queued locations after starting (delayed to avoid immediate flood)
+    setTimeout(() => processLocationQueue(), 30000); // Wait 30 seconds before processing queue
 
     console.log('✅ Background location tracking started (aggressive mode)');
     return true;
@@ -763,14 +765,16 @@ const startBackgroundWatcher = async () => {
             return; // Skip if sent too recently
           }
 
-          // Log background location
-          const timestamp = new Date().toLocaleTimeString('en-US', { 
-            hour12: true,
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit' 
-          });
-          console.log(`📍 [${timestamp}] Location (background): ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${coords.accuracy?.toFixed(0)}m)`);
+          // Log background location (only every 10 seconds to reduce spam)
+          if (VERBOSE_LOGGING || timeSinceLastSent > 10000) {
+            const timestamp = new Date().toLocaleTimeString('en-US', { 
+              hour12: true,
+              hour: '2-digit', 
+              minute: '2-digit', 
+              second: '2-digit' 
+            });
+            console.log(`📍 [${timestamp}] Location: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${coords.accuracy?.toFixed(0)}m)`);
+          }
 
           // Send to backend
           try {
@@ -858,19 +862,23 @@ const pollLocation = async (pollCount: number) => {
     const now = Date.now();
     const timeSinceLastSent = now - lastSentTime;
     
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-      hour12: true,
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    });
+    // Only log polling results in verbose mode or every 30 seconds
+    const shouldLog = VERBOSE_LOGGING || pollCount % 10 === 0;
     
-    console.log(`📍 [POLL #${pollCount}] [${timestamp}] Location:`, {
-      lat: position.coords.latitude.toFixed(7),
-      lng: position.coords.longitude.toFixed(7),
-      accuracy: position.coords.accuracy?.toFixed(0) + 'm',
-      timeSinceLastSent: timeSinceLastSent + 'ms'
-    });
+    if (shouldLog) {
+      const timestamp = new Date().toLocaleTimeString('en-US', { 
+        hour12: true,
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+      
+      console.log(`📍 [POLL #${pollCount}] [${timestamp}] Location:`, {
+        lat: position.coords.latitude.toFixed(7),
+        lng: position.coords.longitude.toFixed(7),
+        accuracy: position.coords.accuracy?.toFixed(0) + 'm',
+      });
+    }
 
     // Send if it's been more than 4 seconds OR first poll
     if (timeSinceLastSent > 4000 || pollCount === 1) {
@@ -882,9 +890,10 @@ const pollLocation = async (pollCount: number) => {
       });
       
       lastSentTime = now;
-      console.log(`✅ [POLL #${pollCount}] Location sent to backend`);
-    } else {
-      console.log(`⏭️ [POLL #${pollCount}] Skipped (sent ${timeSinceLastSent}ms ago)`);
+      
+      if (shouldLog) {
+        console.log(`✅ [POLL #${pollCount}] Location sent`);
+      }
     }
   } catch (error: any) {
     // GPS timeout is expected - fallback to cached location silently

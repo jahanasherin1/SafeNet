@@ -34,7 +34,13 @@ router.post('/trigger', async (req, res) => {
     // Customize email based on alert type
     let emailSubject, emailBody, alertTitle, alertIcon;
     
-    if (alertType === 'ACTIVITY_MONITOR') {
+    if (alertType === 'HIGH_RISK_AREA') {
+      // High risk area alert
+      alertIcon = reason.includes('CRITICAL') ? '🚨' : '⚠️';
+      alertTitle = 'High Risk Area Alert';
+      emailSubject = `${alertIcon} ALERT: ${displayName} entered a high-risk crime area`;
+      emailBody = `SAFETY ALERT\n\n${displayName} has entered a high-risk crime area based on recent crime statistics.\n\nAlert Details:\n${reason}\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nThis is an automatic alert based on crime data analysis. Please check in with them to ensure they're aware of the area's risk level.\n\nThey can view detailed crime statistics in their SafeNet app.`;
+    } else if (alertType === 'ACTIVITY_MONITOR') {
       // Activity monitoring alerts (fall, running, sudden stop)
       if (reason.includes('FALL')) {
         alertIcon = '🆘';
@@ -83,7 +89,7 @@ router.post('/trigger', async (req, res) => {
     await createAlert({
       userEmail: user.email,
       userName: displayName,
-      type: alertType === 'ACTIVITY_MONITOR' ? 'activity' : 'sos',
+      type: alertType === 'HIGH_RISK_AREA' ? 'location' : alertType === 'ACTIVITY_MONITOR' ? 'activity' : 'sos',
       title: `${alertIcon} ${alertTitle}`,
       message: `${displayName}: ${alertReason}`,
       location: { latitude, longitude },

@@ -1,0 +1,142 @@
+{
+  "Alappuzha": {
+    "latitude": 9.4981,
+    "longitude": 76.3388,
+    "bounds": {
+      "north": 9.6,
+      "south": 9.3,
+      "east": 76.5,
+      "west": 76.1
+    }
+  },
+  "Idukki": {
+    "latitude": 9.9189,
+    "longitude": 77.1025,
+    "bounds": {
+      "north": 10.3,
+      "south": 9.5,
+      "east": 77.5,
+      "west": 76.7
+    }
+  },
+  "Kannur": {
+    "latitude": 11.8745,
+    "longitude": 75.3704,
+    "bounds": {
+      "north": 12.5,
+      "south": 11.7,
+      "east": 75.9,
+      "west": 75.0
+    }
+  },
+  "Kasaragod": {
+    "latitude": 12.4996,
+    "longitude": 75.0090,
+    "bounds": {
+      "north": 12.9,
+      "south": 12.0,
+      "east": 75.5,
+      "west": 74.7
+    }
+  },
+  "Kochi": {
+    "latitude": 9.9312,
+    "longitude": 76.2673,
+    "bounds": {
+      "north": 10.1,
+      "south": 9.8,
+      "east": 76.5,
+      "west": 76.0
+    }
+  },
+  "Kollam": {
+    "latitude": 8.8932,
+    "longitude": 76.6141,
+    "bounds": {
+      "north": 9.2,
+      "south": 8.6,
+      "east": 76.9,
+      "west": 76.4
+    }
+  },
+  "Kottayam": {
+    "latitude": 9.5916,
+    "longitude": 76.5222,
+    "bounds": {
+      "north": 9.9,
+      "south": 9.3,
+      "east": 76.9,
+      "west": 76.3
+    }
+  },
+  "Kozhikode": {
+    "latitude": 11.2588,
+    "longitude": 75.7804,
+    "bounds": {
+      "north": 11.6,
+      "south": 11.0,
+      "east": 76.0,
+      "west": 75.5
+    }
+  },
+  "Malappuram": {
+    "latitude": 11.0510,
+    "longitude": 76.0711,
+    "bounds": {
+      "north": 11.4,
+      "south": 10.7,
+      "east": 76.3,
+      "west": 75.8
+    }
+  },
+  "Palakkad": {
+    "latitude": 10.7867,
+    "longitude": 76.6548,
+    "bounds": {
+      "north": 11.1,
+      "south": 10.3,
+      "east": 76.9,
+      "west": 76.3
+    }
+  },
+  "Pathanamthitta": {
+    "latitude": 9.2648,
+    "longitude": 76.7870,
+    "bounds": {
+      "north": 9.5,
+      "south": 9.0,
+      "east": 77.2,
+      "west": 76.5
+    }
+  },
+  "Thiruvananthapuram": {
+    "latitude": 8.5241,
+    "longitude": 76.9366,
+    "bounds": {
+      "north": 8.8,
+      "south": 8.2,
+      "east": 77.3,
+      "west": 76.6
+    }
+  },
+  "Thrissur": {
+    "latitude": 10.5276,
+    "longitude": 76.2144,
+    "bounds": {
+      "north": 10.8,
+      "south": 10.2,
+      "east": 76.6,
+      "west": 75.9
+    }
+  },
+  "Wayanad": {
+    "latitude": 11.6854,
+    "longitude": 76.1320,
+    "bounds": {
+      "north": 12.0,
+      "south": 11.3,
+      "east": 76.5,
+      "west": 75.8
+    }
+  }
+}

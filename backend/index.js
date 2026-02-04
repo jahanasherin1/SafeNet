@@ -8,8 +8,11 @@ import { Alert } from './models/schemas.js';
 // Import Routes
 import alertRoutes from './routes/alerts.js';
 import authRoutes from './routes/auth.js';
+import crimeChanceRoutes from './routes/crimeChance.js';
+import crimeZoneRoutes from './routes/crimeZone.js';
 import guardianRoutes from './routes/guardians.js';
 import journeyRoutes from './routes/journey.js'; // <--- ADDED THIS
+import proximityAlertsRoutes from './routes/proximityAlerts.js';
 import sosRoutes from './routes/sos.js';
 import userRoutes from './routes/users.js';
 import voiceProfileRoutes from './routes/voiceProfiles.js';
@@ -29,6 +32,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/journey', journeyRoutes); // <--- ADDED THIS (Fixes 404)
 app.use('/api/voiceProfiles', voiceProfileRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/crime-zone', crimeZoneRoutes);
+app.use('/api/crime-chance', crimeChanceRoutes);
+app.use('/api/proximity-alerts', proximityAlertsRoutes);
 
 app.get('/', (req, res) => {
   res.send('SafeNet API is running...');

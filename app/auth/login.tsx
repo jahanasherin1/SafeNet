@@ -23,6 +23,30 @@ export default function LoginScreen() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // Real-time validation functions
+  const validateEmail = (text: string) => {
+    setEmail(text);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!text) {
+      setErrors(prev => ({...prev, email: 'Email is required'}));
+    } else if (!emailRegex.test(text)) {
+      setErrors(prev => ({...prev, email: 'Please enter a valid email address'}));
+    } else {
+      setErrors(prev => ({...prev, email: ''}));
+    }
+  };
+
+  const validatePassword = (text: string) => {
+    setPassword(text);
+    if (!text) {
+      setErrors(prev => ({...prev, password: 'Password is required'}));
+    } else if (text.length < 6) {
+      setErrors(prev => ({...prev, password: 'Password must be at least 6 characters'}));
+    } else {
+      setErrors(prev => ({...prev, password: ''}));
+    }
+  };
+
   // --- HELPER FOR WEB & MOBILE ALERTS ---
   const showAlert = (title: string, message: string, onOk?: () => void) => {
     if (Platform.OS === 'web') {
@@ -104,20 +128,22 @@ export default function LoginScreen() {
         <View style={styles.form}>
           
           <View>
+            <Text style={styles.inputLabel}>Email Address</Text>
             <CustomInput 
               placeholder="Enter your email" 
               value={email}
-              onChangeText={(text) => { setEmail(text); if(errors.email) setErrors({...errors, email:''}); }}
+              onChangeText={validateEmail}
               keyboardType="email-address"
             />
             {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           </View>
           
           <View>
+            <Text style={styles.inputLabel}>Password</Text>
             <CustomInput 
               placeholder="Enter your password" 
               value={password}
-              onChangeText={(text) => { setPassword(text); if(errors.password) setErrors({...errors, password:''}); }}
+              onChangeText={validatePassword}
               isPassword={!showPassword} 
               iconName={showPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowPassword(!showPassword)}
@@ -159,6 +185,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', color: '#6A5ACD', marginBottom: 10, textAlign: 'center' },
   subtitle: { fontSize: 16, color: '#7A7A7A', textAlign: 'center' },
   form: { marginBottom: 20 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#2D2D2D', marginBottom: 8, marginLeft: 5 },
   errorText: { color: '#FF4B4B', fontSize: 12, marginLeft: 5, marginTop: -10, marginBottom: 10 },
   footer: { alignItems: 'center', marginTop: 10 },
   forgotPassword: { color: '#6A5ACD', fontSize: 14, marginBottom: 24 },

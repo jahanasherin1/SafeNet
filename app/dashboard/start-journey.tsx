@@ -59,6 +59,10 @@ export default function StartJourneyScreen() {
     }
 
     const currentDate = selectedDate || expectedTime;
+    
+    // Validate selected time in real-time
+    const selectedTime = currentDate.getTime();
+    const now = Date.now();
 
     if (Platform.OS === 'android') {
         setShowPicker(false); // Close first picker
@@ -75,12 +79,35 @@ export default function StartJourneyScreen() {
             finalDate.setHours(currentDate.getHours());
             finalDate.setMinutes(currentDate.getMinutes());
             
-            setExpectedTime(finalDate);
+            // Validate the final combined time
+            if (finalDate.getTime() < now - 2 * 60000) {
+              Alert.alert("Invalid Time", "Selected time is in the past. Please choose a future time.");
+              setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+            } else if (finalDate.getTime() < now + 5 * 60000) {
+              Alert.alert("Time Too Soon", "Please select a time at least 5 minutes from now.");
+              setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+            } else if (finalDate.getTime() > now + 24 * 60 * 60000) {
+              Alert.alert("Time Too Far", "Expected arrival cannot be more than 24 hours from now.");
+              setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+            } else {
+              setExpectedTime(finalDate);
+            }
             // Don't reopen, we are done
         }
     } else {
-        // iOS Logic (Simple)
-        setExpectedTime(currentDate);
+        // iOS Logic with validation
+        if (selectedTime < now - 2 * 60000) {
+          Alert.alert("Invalid Time", "Selected time is in the past. Please choose a future time.");
+          setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+        } else if (selectedTime < now + 5 * 60000) {
+          Alert.alert("Time Too Soon", "Please select a time at least 5 minutes from now.");
+          setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+        } else if (selectedTime > now + 24 * 60 * 60000) {
+          Alert.alert("Time Too Far", "Expected arrival cannot be more than 24 hours from now.");
+          setExpectedTime(new Date(now + 30 * 60000)); // Reset to 30 mins from now
+        } else {
+          setExpectedTime(currentDate);
+        }
         setShowPicker(false);
     }
   };
@@ -88,9 +115,23 @@ export default function StartJourneyScreen() {
   const handleStart = async () => {
     if (!dest) return Alert.alert("Error", "Please enter destination.");
     
-    // Validation: Ensure time isn't too far in the past (allow 5 min buffer)
-    if (expectedTime.getTime() < Date.now() - 5 * 60000) {
-      return Alert.alert("Invalid Time", "Expected arrival cannot be in the past.");
+    // Comprehensive time validation
+    const now = Date.now();
+    const selectedTime = expectedTime.getTime();
+    
+    // Check if time is in the past (with 2 minute buffer)
+    if (selectedTime < now - 2 * 60000) {
+      return Alert.alert("Invalid Time", "Expected arrival time cannot be in the past. Please select a future time.");
+    }
+    
+    // Check if time is too close (less than 5 minutes from now)
+    if (selectedTime < now + 5 * 60000) {
+      return Alert.alert("Time Too Soon", "Expected arrival time must be at least 5 minutes from now for proper monitoring.");
+    }
+    
+    // Check if time is too far in the future (more than 24 hours)
+    if (selectedTime > now + 24 * 60 * 60000) {
+      return Alert.alert("Time Too Far", "Expected arrival time cannot be more than 24 hours from now.");
     }
     
     setLoading(true);

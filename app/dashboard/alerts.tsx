@@ -10,7 +10,7 @@ interface AlertItem {
   _id: string;
   userEmail: string;
   userName: string;
-  type: 'sos' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated';
+  type: 'sos' | 'activity' | 'location' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated';
   title: string;
   message: string;
   location?: {
@@ -60,11 +60,38 @@ export default function UserAlertsScreen() {
     }
   };
 
+  // Filter out read alerts older than 24 hours
+  const filterOldReadAlerts = (alertsList: AlertItem[]) => {
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    return alertsList.filter(alert => {
+      if (alert.isRead) {
+        const alertDate = new Date(alert.createdAt).getTime();
+        return alertDate > oneDayAgo; // Keep only if less than 24 hours old
+      }
+      return true; // Keep all unread alerts
+    });
+  };
+
+  // Cleanup old read alerts from backend
+  const cleanupOldAlerts = async () => {
+    try {
+      if (userEmail) {
+        await api.delete(`/alerts/cleanup/${userEmail}`);
+        console.log('✅ Old alerts cleaned up');
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  };
+
   const fetchAlerts = async (email: string, type?: string) => {
     try {
       setLoading(true);
       console.log('===== FETCHING USER ALERTS =====');
       console.log('Email:', email);
+      
+      // Clean up old read alerts first (client-side filter)
+      cleanupOldAlerts();
       
       // Build query params
       let url = `/alerts/user/${email}?limit=100`;
@@ -75,9 +102,11 @@ export default function UserAlertsScreen() {
       console.log('Alerts response:', JSON.stringify(response.data, null, 2));
       
       if (response.data && response.data.alerts) {
-        setAlerts(response.data.alerts);
+        // Filter out alerts that are read and older than 24 hours
+        const filteredAlerts = filterOldReadAlerts(response.data.alerts);
+        setAlerts(filteredAlerts);
         setUnreadCount(response.data.pagination?.unread || 0);
-        console.log(`Loaded ${response.data.alerts.length} alerts`);
+        console.log(`Loaded ${filteredAlerts.length} alerts (filtered)`);
       } else {
         console.log('No alerts data in response');
         setAlerts([]);
@@ -134,24 +163,16 @@ export default function UserAlertsScreen() {
     }
   };
 
-  const openLocation = (latitude: number, longitude: number) => {
-    const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-    Alert.alert(
-      'Open Location',
-      'View location in Google Maps?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open', onPress: () => {
-          console.log('Open maps:', mapsUrl);
-        }}
-      ]
-    );
-  };
+
 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'sos':
         return { name: 'alert-circle', color: '#FF4B4B', IconComponent: Ionicons };
+      case 'activity':
+        return { name: 'fitness', color: '#FF9800', IconComponent: Ionicons };
+      case 'location':
+        return { name: 'warning', color: '#EA580C', IconComponent: Ionicons };
       case 'journey_started':
         return { name: 'walk', color: '#4CAF50', IconComponent: MaterialCommunityIcons };
       case 'journey_delayed':
@@ -173,6 +194,16 @@ export default function UserAlertsScreen() {
         return {
           title: '🚨 Emergency SOS',
           message: `You triggered an emergency SOS alert. Your guardians have been notified with your location.`
+        };
+      case 'activity':
+        return {
+          title: '🏃 Activity Alert',
+          message: item.message || `Unusual activity detected. Your guardians have been notified.`
+        };
+      case 'location':
+        return {
+          title: item.title || '⚠️ High Risk Area',
+          message: item.message || `You entered a high-risk crime area. Your guardians have been notified.`
         };
       case 'journey_started':
         return {
@@ -246,16 +277,6 @@ export default function UserAlertsScreen() {
           </View>
           
           <Text style={styles.alertMessage}>{userMessage.message}</Text>
-          
-          {item.location && (
-            <TouchableOpacity
-              style={styles.locationButton}
-              onPress={() => openLocation(item.location!.latitude, item.location!.longitude)}
-            >
-              <Ionicons name="location" size={16} color="#6A5ACD" />
-              <Text style={styles.locationText}>View Location</Text>
-            </TouchableOpacity>
-          )}
 
           <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
         </View>
@@ -308,17 +329,17 @@ export default function UserAlertsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.filterChip, filterType === 'location' && styles.filterChipActive]}
+            onPress={() => applyFilter('location')}
+          >
+            <Text style={[styles.filterText, filterType === 'location' && styles.filterTextActive]}>Location</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.filterChip, filterType === 'journey_started' && styles.filterChipActive]}
             onPress={() => applyFilter('journey_started')}
           >
             <Text style={[styles.filterText, filterType === 'journey_started' && styles.filterTextActive]}>Journey</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterChip, filterType === 'location_shared' && styles.filterChipActive]}
-            onPress={() => applyFilter('location_shared')}
-          >
-            <Text style={[styles.filterText, filterType === 'location_shared' && styles.filterTextActive]}>Location</Text>
           </TouchableOpacity>
         </View>
       </View>

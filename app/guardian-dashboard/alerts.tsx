@@ -10,7 +10,7 @@ interface AlertItem {
   _id: string;
   userEmail: string;
   userName: string;
-  type: 'sos' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated';
+  type: 'sos' | 'activity' | 'location' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated';
   title: string;
   message: string;
   location?: {
@@ -209,6 +209,10 @@ export default function GuardianAlertsScreen() {
     switch (type) {
       case 'sos':
         return { name: 'alert-circle', color: '#FF4B4B', IconComponent: Ionicons };
+      case 'activity':
+        return { name: 'fitness', color: '#FF9800', IconComponent: Ionicons };
+      case 'location':
+        return { name: 'warning', color: '#EA580C', IconComponent: Ionicons };
       case 'journey_started':
         return { name: 'walk', color: '#4CAF50', IconComponent: MaterialCommunityIcons };
       case 'journey_delayed':
@@ -389,17 +393,17 @@ export default function GuardianAlertsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.filterChip, filterType === 'location' && styles.filterChipActive]}
+            onPress={() => applyFilter('location')}
+          >
+            <Text style={[styles.filterText, filterType === 'location' && styles.filterTextActive]}>Location</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.filterChip, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterChipActive]}
             onPress={() => applyFilter('journey_started')}
           >
             <Text style={[styles.filterText, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterTextActive]}>Journey</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterChip, filterType === 'location_shared' && styles.filterChipActive]}
-            onPress={() => applyFilter('location_shared')}
-          >
-            <Text style={[styles.filterText, filterType === 'location_shared' && styles.filterTextActive]}>Location</Text>
           </TouchableOpacity>
         </View>
       </View>

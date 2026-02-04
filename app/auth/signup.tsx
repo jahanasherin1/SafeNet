@@ -30,6 +30,72 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Real-time validation functions
+  const validateName = (text: string) => {
+    setName(text);
+    if (!text) {
+      setErrors(prev => ({...prev, name: 'Name is required'}));
+    } else if (text.trim().length < 2) {
+      setErrors(prev => ({...prev, name: 'Name must be at least 2 characters'}));
+    } else {
+      setErrors(prev => ({...prev, name: ''}));
+    }
+  };
+
+  const validatePhone = (text: string) => {
+    const numericValue = text.replace(/[^0-9]/g, '');
+    if (numericValue.length <= 10) {
+      setPhone(numericValue);
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!numericValue) {
+        setErrors(prev => ({...prev, phone: 'Phone number is required'}));
+      } else if (!phoneRegex.test(numericValue)) {
+        setErrors(prev => ({...prev, phone: 'Phone number must be exactly 10 digits'}));
+      } else {
+        setErrors(prev => ({...prev, phone: ''}));
+      }
+    }
+  };
+
+  const validateEmail = (text: string) => {
+    setEmail(text);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!text) {
+      setErrors(prev => ({...prev, email: 'Email is required'}));
+    } else if (!emailRegex.test(text)) {
+      setErrors(prev => ({...prev, email: 'Please enter a valid email address'}));
+    } else {
+      setErrors(prev => ({...prev, email: ''}));
+    }
+  };
+
+  const validatePasswordField = (text: string) => {
+    setPassword(text);
+    if (!text) {
+      setErrors(prev => ({...prev, password: 'Password is required'}));
+    } else if (text.length < 6) {
+      setErrors(prev => ({...prev, password: 'Password must be at least 6 characters'}));
+    } else {
+      setErrors(prev => ({...prev, password: ''}));
+    }
+    // Also revalidate confirm password if it has a value
+    if (confirmPassword) {
+      validateConfirmPasswordField(confirmPassword, text);
+    }
+  };
+
+  const validateConfirmPasswordField = (text: string, pwd?: string) => {
+    setConfirmPassword(text);
+    const passwordToCompare = pwd || password;
+    if (!text) {
+      setErrors(prev => ({...prev, confirmPassword: 'Please confirm your password'}));
+    } else if (text !== passwordToCompare) {
+      setErrors(prev => ({...prev, confirmPassword: 'Passwords do not match'}));
+    } else {
+      setErrors(prev => ({...prev, confirmPassword: ''}));
+    }
+  };
+
   // --- HELPER FOR WEB & MOBILE ALERTS ---
   const showAlert = (title: string, message: string, onOk?: () => void) => {
     if (Platform.OS === 'web') {
@@ -127,14 +193,6 @@ export default function SignupScreen() {
     }
   };
 
-  const handlePhoneChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 10) {
-      setPhone(numericValue);
-      if (errors.phone) setErrors({...errors, phone: ''});
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -150,39 +208,43 @@ export default function SignupScreen() {
 
         <View style={styles.form}>
           <View>
+            <Text style={styles.inputLabel}>Full Name</Text>
             <CustomInput 
               placeholder="Enter Name" 
               value={name}
-              onChangeText={(text) => { setName(text); if(errors.name) setErrors({...errors, name:''}); }}
+              onChangeText={validateName}
             />
             {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
           </View>
           
           <View>
+            <Text style={styles.inputLabel}>Phone Number</Text>
             <CustomInput 
               placeholder="Enter Phone Number" 
               value={phone}
-              onChangeText={handlePhoneChange}
+              onChangeText={validatePhone}
               keyboardType="numeric"
             />
             {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
           </View>
           
           <View>
+            <Text style={styles.inputLabel}>Email Address</Text>
             <CustomInput 
               placeholder="Enter Email" 
               value={email}
-              onChangeText={(text) => { setEmail(text); if(errors.email) setErrors({...errors, email:''}); }}
+              onChangeText={validateEmail}
               keyboardType="email-address"
             />
             {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           </View>
           
           <View>
+            <Text style={styles.inputLabel}>Password</Text>
             <CustomInput 
               placeholder="Password" 
               value={password}
-              onChangeText={(text) => { setPassword(text); if(errors.password) setErrors({...errors, password:''}); }}
+              onChangeText={validatePasswordField}
               isPassword={!showPassword} 
               iconName={showPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowPassword(!showPassword)}
@@ -191,10 +253,11 @@ export default function SignupScreen() {
           </View>
           
           <View>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
             <CustomInput 
               placeholder="Confirm Password" 
               value={confirmPassword}
-              onChangeText={(text) => { setConfirmPassword(text); if(errors.confirmPassword) setErrors({...errors, confirmPassword:''}); }}
+              onChangeText={(text) => validateConfirmPasswordField(text)}
               isPassword={!showConfirmPassword}
               iconName={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -229,6 +292,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', color: '#6A5ACD', marginBottom: 10, textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#7A7A7A', textAlign: 'center', marginBottom: 30, paddingHorizontal: 20, lineHeight: 20 },
   form: { marginBottom: 20 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#2D2D2D', marginBottom: 8, marginLeft: 5 },
   errorText: { color: '#FF4B4B', fontSize: 12, marginLeft: 5, marginTop: -10, marginBottom: 10 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },
   footerText: { color: '#7A7A7A', fontSize: 14 },

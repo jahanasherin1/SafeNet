@@ -333,23 +333,6 @@ export default function GuardianHomeScreen() {
             <TouchableOpacity style={styles.mapContainer} onPress={() => router.push('/guardian-dashboard/location')}><Ionicons name="map" size={50} color="#DDD" /></TouchableOpacity>
         </View>
 
-        {/* Zone Alert Overview */}
-        <Text style={styles.sectionTitle}>Zone Alert Overview</Text>
-        <View style={styles.cardContainer}>
-            <View style={{flex: 1, paddingRight: 10}}>
-                <Text style={styles.locationTitle}>Safety Zone Monitoring</Text>
-                <Text style={styles.timeText}>Real-time zone activity tracking</Text>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push('/guardian-dashboard/zone-activity')}
-                >
-                  <Text style={styles.actionButtonText}>View Zone Activity</Text>
-                  <Ionicons name="location" size={14} color="#1A1B4B" style={{marginLeft: 5}} />
-                </TouchableOpacity>
-            </View>
-            <View style={[styles.mapContainer, { backgroundColor: '#E0DDCA' }]}><Ionicons name="shield-checkmark" size={50} color="#4CAF50" /></View>
-        </View>
-
         {/* Journey Monitoring Section */}
         <Text style={styles.sectionTitle}>Journey Monitoring</Text>
         <View style={styles.cardContainer}>
