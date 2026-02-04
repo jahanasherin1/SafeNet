@@ -32,7 +32,11 @@ export function parseProximityCrimeData() {
     const locationData = {};
     
     dataLines.forEach(line => {
-      const [city, lat, lng, crimeType, year, count] = line.split(',').map(s => s.trim());
+      // Parse CSV line handling quoted values
+      const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+      if (!values || values.length < 6) return;
+      
+      const [city, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
       
       if (!city || !lat || !lng || !crimeType || !year || !count) return;
       

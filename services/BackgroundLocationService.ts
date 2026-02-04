@@ -24,7 +24,7 @@ const LOG_THROTTLE_MS = 5000; // Only log location every 5 seconds
 const HEARTBEAT_INTERVAL = 30000; // Check tracking health every 30 seconds
 const FOREGROUND_POLLING_INTERVAL = 5000; // Poll every 5 seconds as fallback
 const BACKGROUND_WATCH_INTERVAL = 3000; // Watch position every 3 seconds in background
-const MIN_ACCURACY = 200; // Reject locations with accuracy worse than 200m (allows indoor/network-based GPS)
+const MIN_ACCURACY = 500; // Reject locations with accuracy worse than 500m (for safety, approximate location is better than none)
 const MIN_DISTANCE_TO_SEND = 0; // Send all updates in real-time (no movement threshold)
 
 interface LocationUpdate {

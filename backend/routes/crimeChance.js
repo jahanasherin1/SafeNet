@@ -23,6 +23,29 @@ function getCrimeData() {
   return crimeDataCache;
 }
 
+// Force reload cache (for development/testing)
+router.post('/reload-cache', async (req, res) => {
+  try {
+    console.log('Force reloading crime data cache...');
+    crimeDataCache = null;
+    cacheTimestamp = null;
+    const newData = getCrimeData();
+    res.status(200).json({
+      success: true,
+      message: 'Cache reloaded successfully',
+      locationCount: Object.keys(newData.locationData).length,
+      crimeTypeCount: Object.keys(newData.crimeTypeRanges).length
+    });
+  } catch (error) {
+    console.error('Error reloading cache:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error reloading cache',
+      error: error.message
+    });
+  }
+});
+
 // POST - Get crime chances at specific location
 router.post('/at-location', async (req, res) => {
   try {

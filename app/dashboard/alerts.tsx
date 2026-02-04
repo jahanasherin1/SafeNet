@@ -193,42 +193,42 @@ export default function UserAlertsScreen() {
       case 'sos':
         return {
           title: '🚨 Emergency SOS',
-          message: `You triggered an emergency SOS alert. Your guardians have been notified with your location.`
+          message: `You triggered an SOS alert. Your guardians were notified with your location.`
         };
       case 'activity':
         return {
           title: '🏃 Activity Alert',
-          message: item.message || `Unusual activity detected. Your guardians have been notified.`
+          message: item.message || `Your unusual activity was detected. Your guardians were notified for your safety.`
         };
       case 'location':
         return {
           title: item.title || '⚠️ High Risk Area',
-          message: item.message || `You entered a high-risk crime area. Your guardians have been notified.`
+          message: item.message || `You entered a high-risk crime area. Your guardians were notified of your location.`
         };
       case 'journey_started':
         return {
           title: '🚶 Journey Started',
-          message: `You started a journey. Your guardians are tracking your progress.`
+          message: `You started your journey. Your guardians are tracking your progress for safety.`
         };
       case 'journey_delayed':
         return {
           title: '⏰ Journey Delayed',
-          message: `Your journey is taking longer than expected. Your guardians have been notified.`
+          message: `Your journey is taking longer than expected. Your guardians were alerted.`
         };
       case 'journey_completed':
         return {
           title: '✅ Journey Completed',
-          message: `You safely completed your journey. Your guardians have been notified.`
+          message: `You completed your journey safely. Your guardians were notified.`
         };
       case 'location_shared':
         return {
           title: '📍 Location Shared',
-          message: `You shared your current location with your guardians.`
+          message: `You shared your location with your guardians.`
         };
       case 'fake_call_activated':
         return {
           title: '📞 Fake Call Activated',
-          message: `You activated a fake call for safety.`
+          message: `You activated a fake call for your safety.`
         };
       default:
         return {

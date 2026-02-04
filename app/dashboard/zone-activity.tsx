@@ -75,19 +75,6 @@ export default function ZoneActivityScreen() {
       const userEmail = user.email;
       const userName = user.name || 'User';
 
-      // Check if we already notified recently (within 30 minutes)
-      const lastNotifyKey = `lastHighRiskNotify_${locationName}`;
-      const lastNotifyTime = await AsyncStorage.getItem(lastNotifyKey);
-      
-      if (lastNotifyTime) {
-        const timeDiff = Date.now() - parseInt(lastNotifyTime);
-        const minutesDiff = timeDiff / (1000 * 60);
-        if (minutesDiff < 30) {
-          console.log('Already notified guardians recently, skipping...');
-          return;
-        }
-      }
-
       // Prepare alert message
       const riskEmoji = overallRisk.level === 'Critical' ? '🚨' : '⚠️';
       const alertMessage = `${riskEmoji} ${userName} has entered a ${overallRisk.level.toUpperCase()} RISK area: ${locationName}. Average crime chance: ${overallRisk.avgChance}%. Recent crimes: ${overallRisk.totalRecentCrimes}.`;
@@ -107,8 +94,6 @@ export default function ZoneActivityScreen() {
 
       if (alertResponse.status === 200) {
         console.log('✅ Guardians notified of high-risk area');
-        // Store notification time
-        await AsyncStorage.setItem(lastNotifyKey, Date.now().toString());
         
         // Show user confirmation
         Alert.alert(
@@ -133,9 +118,27 @@ export default function ZoneActivityScreen() {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
+      let location;
+      try {
+        location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 0
+        });
+      } catch (locationError) {
+        console.log('High accuracy location failed, trying last known location:', locationError);
+        // Try to get last known location
+        location = await Location.getLastKnownPositionAsync({
+          maxAge: 60000, // Accept location up to 1 minute old
+          requiredAccuracy: 500 // 500m accuracy is acceptable
+        });
+        
+        if (!location) {
+          throw new Error('Unable to get current location. Please ensure location services are enabled and try again.');
+        }
+      }
+
+      console.log('📍 Got location:', location.coords.latitude, location.coords.longitude);
 
       // Reverse geocode to get address
       const address = await Location.reverseGeocodeAsync({
@@ -153,12 +156,16 @@ export default function ZoneActivityScreen() {
         address: addressString,
       });
 
+      console.log('🔍 Fetching crime data for location...');
+
       // Fetch crime chances
       const response = await api.post('/crime-chance/at-location', {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         radius: 3 // 3km radius
       });
+
+      console.log('📊 Crime data response:', response.data.success);
 
       if (response.status === 200 && response.data.success) {
         setCrimeChanceData(response.data);
@@ -177,9 +184,9 @@ export default function ZoneActivityScreen() {
       } else {
         Alert.alert('No Data', response.data.message || 'No crime data available for your location.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching crime chances:', error);
-      Alert.alert('Error', 'Failed to load crime data for your location.');
+      Alert.alert('Error', error.message || 'Failed to load crime data for your location.');
     } finally {
       setLoading(false);
     }
@@ -317,7 +324,7 @@ export default function ZoneActivityScreen() {
                     <View 
                       style={[
                         styles.chanceMeterFill, 
-                        { width: `${crime.chance}%`, backgroundColor: crime.color }
+                        { width: `${Math.min(100, Math.max(0, crime.chance))}%`, backgroundColor: crime.color }
                       ]} 
                     />
                   </View>

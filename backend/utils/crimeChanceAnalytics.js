@@ -33,7 +33,11 @@ export function parseCrimeChanceData() {
     const crimeTypeRanges = {}; // Track min/max for each crime type
     
     dataLines.forEach(line => {
-      const [city, lat, lng, crimeType, year, count] = line.split(',').map(s => s.trim());
+      // Parse CSV line handling quoted values
+      const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+      if (!values || values.length < 6) return;
+      
+      const [city, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
       
       if (!city || !lat || !lng || !crimeType || !year || !count) return;
       
@@ -118,6 +122,9 @@ function calculateCrimeChance(crimeCount, crimeTypeRange) {
   } else if (crimeCount > 0) {
     score = 100;
   }
+  
+  // Cap score between 0 and 100
+  score = Math.max(0, Math.min(100, score));
   
   // Determine chance level
   let level, color, percentage;
