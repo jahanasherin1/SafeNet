@@ -8,10 +8,17 @@ const router = express.Router();
 // 9. Trigger SOS / Activity Alert
 router.post('/trigger', async (req, res) => {
   try {
+    console.log('🔔 SOS TRIGGER - Request received');
+    console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+    
     const { userEmail, userName, location, reason, alertType, timestamp } = req.body;
     const { latitude, longitude } = location || { latitude: 0, longitude: 0 };
 
+    console.log('📝 Parsed data - Email:', userEmail, 'Name:', userName, 'Type:', alertType);
+    console.log('📍 Location:', latitude, longitude);
+
     const user = await User.findOne({ email: userEmail });
+    console.log('🔍 User lookup result:', user ? `Found: ${user.name}` : 'NOT FOUND');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     user.sosActive = true;
@@ -26,6 +33,7 @@ router.post('/trigger', async (req, res) => {
     }
 
     await user.save();
+    console.log('✅ User SOS status updated');
 
     const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
     const alertReason = reason || "SOS Button Triggered";
@@ -73,20 +81,27 @@ router.post('/trigger', async (req, res) => {
 
     // Send email to all guardians
     let emailsSent = 0;
+    console.log(`📋 User has ${user.guardians.length} guardians`);
     for (const guardian of user.guardians) {
       if (guardian.email) {
         try {
+          console.log(`📨 Attempting to send email to ${guardian.name} (${guardian.email})`);
           await sendEmail(guardian.email, emailSubject, emailBody);
           emailsSent++;
-          console.log(`📧 Alert email sent to ${guardian.name} (${guardian.email})`);
+          console.log(`✅ Alert email sent successfully to ${guardian.name} (${guardian.email})`);
         } catch (emailError) {
-          console.error(`Failed to send email to ${guardian.email}:`, emailError.message);
+          console.error(`❌ Failed to send email to ${guardian.email}:`, emailError.message);
+          console.error(`📧 Email error details:`, emailError);
         }
+      } else {
+        console.warn(`⚠️ Guardian ${guardian.name} has no email address`);
       }
     }
+    console.log(`📊 Email summary: ${emailsSent}/${user.guardians.length} guardians notified`);
 
     // Create alert notification for guardian dashboard
-    await createAlert({
+    console.log('📝 Creating alert in database...');
+    const createdAlert = await createAlert({
       userEmail: user.email,
       userName: displayName,
       type: alertType === 'HIGH_RISK_AREA' ? 'location' : alertType === 'ACTIVITY_MONITOR' ? 'activity' : 'sos',
@@ -103,16 +118,29 @@ router.post('/trigger', async (req, res) => {
       }
     });
 
+    if (createdAlert) {
+      console.log(`✅ Alert created in database with ID: ${createdAlert._id}`);
+    } else {
+      console.warn('⚠️ Alert was not created in database');
+    }
+
     console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails sent)`);
     res.status(200).json({ 
       message: 'Alert sent successfully',
       emailsSent,
-      guardianCount: user.guardians.length
+      guardianCount: user.guardians.length,
+      alertCreated: !!createdAlert,
+      alertId: createdAlert?._id
     });
 
   } catch (error) {
-    console.error('SOS/Alert trigger error:', error);
-    res.status(500).json({ message: 'Failed to trigger alert' });
+    console.error('❌ SOS/Alert trigger error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Failed to trigger alert',
+      error: error.message,
+      details: error.stack
+    });
   }
 });
 
@@ -192,13 +220,14 @@ router.post('/cancel-false-alarm', async (req, res) => {
         cancelledAt: new Date().toLocaleString()
       }
     });
-    console.log('✅ Alert created for guardian dashboard');
+    console.log('✅ False alarm alert created for guardian dashboard');
 
     console.log(`✅ False alarm cancelled for ${displayName} (${emailsSent} notifications sent)`);
     res.status(200).json({ 
       message: 'False alarm cancelled successfully',
       emailsSent,
-      guardianCount: user.guardians.length
+      guardianCount: user.guardians.length,
+      alertCreated: true
     });
 
   } catch (error) {

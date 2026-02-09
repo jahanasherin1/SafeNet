@@ -16,6 +16,7 @@ import proximityAlertsRoutes from './routes/proximityAlerts.js';
 import sosRoutes from './routes/sos.js';
 import userRoutes from './routes/users.js';
 import voiceProfileRoutes from './routes/voiceProfiles.js';
+import weatherAlertsRoutes from './routes/weatherAlerts.js';
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+  if (req.method !== 'GET') {
+    console.log('📦 Body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
 
 // --- ROUTES MOUNTING ---
 app.use('/api/auth', authRoutes);
@@ -35,6 +45,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/crime-zone', crimeZoneRoutes);
 app.use('/api/crime-chance', crimeChanceRoutes);
 app.use('/api/proximity-alerts', proximityAlertsRoutes);
+app.use('/api/weather-alerts', weatherAlertsRoutes);
 
 app.get('/', (req, res) => {
   res.send('SafeNet API is running...');

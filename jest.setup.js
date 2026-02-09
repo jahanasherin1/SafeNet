@@ -43,10 +43,16 @@ jest.mock('expo-task-manager', () => ({
 }));
 
 // Mock Expo Sensors
+const mockAccelerometerListeners = [];
 jest.mock('expo-sensors', () => ({
   Accelerometer: {
-    addListener: jest.fn(),
+    addListener: jest.fn((callback) => {
+      mockAccelerometerListeners.push(callback);
+      return { remove: jest.fn() };
+    }),
     setUpdateInterval: jest.fn(),
+    // Helper to simulate sensor data for tests
+    _emit: (data) => mockAccelerometerListeners.forEach((cb) => cb(data)),
   },
   Pedometer: {
     requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),

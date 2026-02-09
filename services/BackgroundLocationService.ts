@@ -331,6 +331,28 @@ const sendLocationToBackend = async (
       accuracy: location.accuracy
     };
 
+    // Save current location to AsyncStorage for weather service
+    try {
+      await AsyncStorage.setItem('currentLocation', JSON.stringify({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: Date.now()
+      }));
+      
+      // Check weather at new location and send alerts if unsafe
+      try {
+        const { checkWeatherAtLocation } = await import('./BackgroundWeatherAlertService');
+        await checkWeatherAtLocation(location.latitude, location.longitude);
+      } catch (weatherError) {
+        // Log but don't fail location update if weather check fails
+        if (VERBOSE_LOGGING) {
+          console.warn('⚠️ Weather check failed:', weatherError);
+        }
+      }
+    } catch (storageError) {
+      console.warn('Warning: Could not save current location to AsyncStorage:', storageError);
+    }
+
     // Log successful send with timestamp
     const now = new Date();
     const timestamp = now.toLocaleTimeString('en-US', { 

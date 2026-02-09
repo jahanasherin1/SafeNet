@@ -165,13 +165,26 @@ export default function GuardianAlertsScreen() {
 
   const markAsRead = async (alertIds: string[]) => {
     try {
-      await api.put('/alerts/mark-read', { alertIds });
+      if (!alertIds || alertIds.length === 0) {
+        console.warn('⚠️ No alert IDs to mark as read');
+        return;
+      }
+
+      console.log(`📤 Marking ${alertIds.length} alerts as read...`);
+      console.log('   Alert IDs:', alertIds);
+      
+      const response = await api.put('/alerts/mark-read', { alertIds });
+      
+      console.log('✅ Mark-read response:', response.data);
+      
       setAlerts(prev => prev.map(alert => 
         alertIds.includes(alert._id) ? { ...alert, isRead: true } : alert
       ));
       setUnreadCount(prev => Math.max(0, prev - alertIds.length));
-    } catch (error) {
-      console.error('Error marking as read:', error);
+    } catch (error: any) {
+      console.error('❌ Error marking as read:', error.message);
+      console.error('   Response:', error.response?.data);
+      console.error('   Status:', error.response?.status);
     }
   };
 

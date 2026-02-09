@@ -90,7 +90,7 @@ export default function GlobalAlertModal() {
       }
 
       // Make API call to trigger alert to guardians
-      console.log('📤 Sending alert to backend with data:', {
+      const alertPayload = {
         userEmail: email,
         userName: name || 'User',
         location: location,
@@ -98,36 +98,63 @@ export default function GlobalAlertModal() {
         alertType: 'ACTIVITY_MONITOR',
         sendPushNotification: true,
         timestamp: new Date().toISOString()
-      });
+      };
 
-      const response = await api.post('/sos/trigger', {
-        userEmail: email,
-        userName: name || 'User',
-        location: location,
-        reason: reason,
-        alertType: 'ACTIVITY_MONITOR',
-        sendPushNotification: true,
-        timestamp: new Date().toISOString()
-      });
+      console.log('📤 Sending alert to backend with data:', alertPayload);
+      console.log('🔗 API Base URL:', api.defaults.baseURL);
+      console.log('📨 Posting to: /sos/trigger');
+      console.log('📦 Full request will use Authorization header if token exists');
 
-      console.log('✅ Alert sent to guardians:', response.data);
-      
-      Alert.alert('Alert Sent', 'Emergency alert has been sent to your guardians.');
-      
-      setTimeout(() => {
-        if (countdownInterval.current) {
-          clearInterval(countdownInterval.current);
-          countdownInterval.current = null;
+      let lastError: any = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (attempts < maxAttempts) {
+        try {
+          attempts++;
+          console.log(`📤 Alert send attempt ${attempts}/${maxAttempts}`);
+          
+          const response = await api.post('/sos/trigger', alertPayload);
+
+          console.log('✅ Alert sent successfully to backend');
+          console.log('📊 Response status:', response.status);
+          console.log('📨 Response data:', response.data);
+          
+          Alert.alert('Alert Sent', 'Emergency alert has been sent to your guardians.');
+          
+          setTimeout(() => {
+            if (countdownInterval.current) {
+              clearInterval(countdownInterval.current);
+              countdownInterval.current = null;
+            }
+            dismissAlert();
+            setSendingAlert(false);
+          }, 2000);
+          
+          return; // Success, exit function
+        } catch (error: any) {
+          lastError = error;
+          console.error(`❌ Error sending alert (attempt ${attempts}/${maxAttempts}):`, error.message);
+          console.error('Error code:', error.code);
+          console.error('Error response:', error.response?.data);
+          console.error('Error status:', error.response?.status);
+          
+          if (attempts < maxAttempts) {
+            console.log(`⏳ Retrying in 1 second...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-        dismissAlert();
-        setSendingAlert(false);
-      }, 2000);
-    } catch (error: any) {
-      console.error('❌ Error sending alert:', error.message);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+      }
+
+      // All attempts failed
+      console.error('❌ All alert send attempts failed');
+      console.error('Last error:', lastError?.message);
       setSendingAlert(false);
-      Alert.alert('Error', `Failed to send alert: ${error.message}`);
+      Alert.alert('Error', `Failed to send alert after ${maxAttempts} attempts: ${lastError?.message}`);
+    } catch (error: any) {
+      console.error('❌ Unexpected error in sendAlertToGuardians:', error);
+      setSendingAlert(false);
+      Alert.alert('Error', 'An unexpected error occurred while sending the alert');
     }
   };
 

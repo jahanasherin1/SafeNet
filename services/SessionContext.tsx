@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { isActivityMonitoringActive, setAlertCallback, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
 import { startBackgroundActivityMonitoring, stopBackgroundActivityMonitoring } from './BackgroundActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
+import { startWeatherMonitoring, stopWeatherMonitoring } from './BackgroundWeatherAlertService';
 import { checkBackgroundLocationStatus } from './DiagnosticsService';
 import { initializeLocalNotifications, setupNotificationListeners } from './LocalNotificationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
@@ -13,6 +14,18 @@ interface User {
   email: string;
   phone: string;
   profileImage?: string;
+}
+
+export interface StoredWeatherAlert {
+  id: string;
+  level: 'caution' | 'warning' | 'danger';
+  title: string;
+  message: string;
+  weatherCondition: string;
+  hazards: string[];
+  recommendations: string[];
+  timestamp: number;
+  isRead: boolean;
 }
 
 interface SessionContextType {
@@ -30,6 +43,13 @@ interface SessionContextType {
   isAlertVisible: boolean;
   setAlertVisible: (visible: boolean) => void;
   dismissAlert: () => void;
+  weatherAlertVisible: boolean;
+  setWeatherAlertVisible: (visible: boolean) => void;
+  enableWeatherAlerts: boolean;
+  setEnableWeatherAlerts: (enabled: boolean) => Promise<void>;
+  weatherAlerts: StoredWeatherAlert[];
+  addWeatherAlert: (alert: StoredWeatherAlert) => Promise<void>;
+  markWeatherAlertAsRead: (alertId: string) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -44,6 +64,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [sessionInitialized, setSessionInitialized] = useState(false);
   const [alertReason, setAlertReason] = useState<string | null>(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
+  const [weatherAlertVisible, setWeatherAlertVisible] = useState(false);
+  const [enableWeatherAlerts, setEnableWeatherAlertsState] = useState(false);
+  const [weatherAlerts, setWeatherAlerts] = useState<StoredWeatherAlert[]>([]);
 
   const isLoggedIn = !!user && !!token;
 
@@ -119,6 +142,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           } catch (notificationError) {
             console.warn('⚠️ Local notifications setup warning:', notificationError);
           }
+
+          // Start auto weather monitoring
+          console.log('🌤️  Starting auto weather monitoring...');
+          try {
+            await startWeatherMonitoring();
+            console.log('✅ Weather monitoring started - auto alerts every 30 minutes');
+          } catch (weatherError) {
+            console.warn('⚠️ Weather monitoring setup warning:', weatherError);
+          }
         }
         
         setSessionInitialized(true);
@@ -189,6 +221,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Process any queued locations
       setTimeout(() => processLocationQueue(), 5000);
+
+      // Start auto weather monitoring
+      console.log('🌤️  Starting auto weather monitoring...');
+      try {
+        await startWeatherMonitoring();
+        console.log('✅ Weather monitoring started');
+      } catch (weatherError) {
+        console.warn('⚠️ Weather monitoring setup warning:', weatherError);
+      }
     } catch (error) {
       console.error('Error saving session:', error);
       throw error;
@@ -205,6 +246,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await stopActivityMonitoring();
       await stopBackgroundActivityMonitoring();
       setIsActivityMonitoringActive(false);
+
+      // Stop weather monitoring
+      stopWeatherMonitoring();
       
       // Release wake lock
       await releaseWakeLock();
@@ -252,6 +296,72 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAlertReason(null);
   };
 
+  const setEnableWeatherAlerts = async (enabled: boolean) => {
+    try {
+      await AsyncStorage.setItem('enableWeatherAlerts', enabled.toString());
+      setEnableWeatherAlertsState(enabled);
+      console.log(`⛈️ Weather alerts ${enabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error saving weather alerts preference:', error);
+      throw error;
+    }
+  };
+
+  // Load weather alerts preference on startup
+  useEffect(() => {
+    const loadWeatherAlertsPreference = async () => {
+      try {
+        const enabled = await AsyncStorage.getItem('enableWeatherAlerts');
+        setEnableWeatherAlertsState(enabled === 'true');
+      } catch (error) {
+        console.warn('Error loading weather alerts preference:', error);
+      }
+    };
+
+    loadWeatherAlertsPreference();
+  }, []);
+
+  // Weather alerts management
+  const addWeatherAlert = async (alert: StoredWeatherAlert) => {
+    try {
+      const updatedAlerts = [alert, ...weatherAlerts].slice(0, 50); // Keep last 50 alerts
+      setWeatherAlerts(updatedAlerts);
+      await AsyncStorage.setItem('weatherAlerts', JSON.stringify(updatedAlerts));
+      console.log('☁️ Weather alert added and stored');
+    } catch (error) {
+      console.error('Error adding weather alert:', error);
+    }
+  };
+
+  const markWeatherAlertAsRead = async (alertId: string) => {
+    try {
+      const updatedAlerts = weatherAlerts.map(alert =>
+        alert.id === alertId ? { ...alert, isRead: true } : alert
+      );
+      setWeatherAlerts(updatedAlerts);
+      await AsyncStorage.setItem('weatherAlerts', JSON.stringify(updatedAlerts));
+      console.log('☁️ Weather alert marked as read');
+    } catch (error) {
+      console.error('Error marking weather alert as read:', error);
+    }
+  };
+
+  // Load weather alerts from storage
+  useEffect(() => {
+    const loadWeatherAlerts = async () => {
+      try {
+        const storedAlerts = await AsyncStorage.getItem('weatherAlerts');
+        if (storedAlerts) {
+          setWeatherAlerts(JSON.parse(storedAlerts));
+        }
+      } catch (error) {
+        console.error('Error loading weather alerts:', error);
+      }
+    };
+
+    loadWeatherAlerts();
+  }, []);
+
   // Register global alert callback
   useEffect(() => {
     console.log('📢 Registering global alert callback in SessionContext');
@@ -280,6 +390,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isAlertVisible,
         setAlertVisible,
         dismissAlert,
+        weatherAlertVisible,
+        setWeatherAlertVisible,
+        enableWeatherAlerts,
+        setEnableWeatherAlerts,
+        weatherAlerts,
+        addWeatherAlert,
+        markWeatherAlertAsRead,
       }}
     >
       {children}

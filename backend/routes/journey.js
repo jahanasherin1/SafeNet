@@ -25,7 +25,8 @@ router.post('/start', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     
     // Create alert notification for guardians
-    await createAlert({
+    console.log('📝 Creating journey_started alert...');
+    const createdAlert = await createAlert({
       userEmail: user.email,
       userName: user.name,
       type: 'journey_started',
@@ -38,9 +39,16 @@ router.post('/start', async (req, res) => {
         startTime: new Date()
       }
     });
+
+    if (createdAlert) {
+      console.log(`✅ Journey alert created with ID: ${createdAlert._id}`);
+    } else {
+      console.warn('⚠️ Journey alert was not created');
+    }
     
-    res.status(200).json({ success: true, journey: user.journey });
+    res.status(200).json({ success: true, journey: user.journey, alertCreated: !!createdAlert });
   } catch (error) {
+    console.error('❌ Error starting journey:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -58,7 +66,8 @@ router.post('/end', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     
     // Create alert notification for guardians
-    await createAlert({
+    console.log('📝 Creating journey_completed alert...');
+    const createdAlert = await createAlert({
       userEmail: user.email,
       userName: user.name,
       type: 'journey_completed',
@@ -69,9 +78,16 @@ router.post('/end', async (req, res) => {
         endTime: new Date()
       }
     });
+
+    if (createdAlert) {
+      console.log(`✅ Journey completed alert created with ID: ${createdAlert._id}`);
+    } else {
+      console.warn('⚠️ Journey completed alert was not created');
+    }
     
-    res.status(200).json({ success: true, message: "Journey ended" });
+    res.status(200).json({ success: true, message: "Journey ended", alertCreated: !!createdAlert });
   } catch (error) {
+    console.error('❌ Error ending journey:', error);
     res.status(500).json({ error: error.message });
   }
 });

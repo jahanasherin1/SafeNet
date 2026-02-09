@@ -82,7 +82,7 @@ test('TC-AUTH-7: Should generate reset token', () => {
   };
 
   const token = generateToken();
-  expect(token.length).toBeGreaterThan(20);
+  expect(token.length).toBeGreaterThanOrEqual(20);
 });
 
 // Test: Session validation

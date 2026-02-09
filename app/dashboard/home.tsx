@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 // Import the task name and functions
 import { isBackgroundTrackingActive, startBackgroundLocationTracking, stopBackgroundLocationTracking } from '../../services/BackgroundLocationService';
+import { startWeatherMonitoring, stopWeatherMonitoring } from '../../services/BackgroundWeatherAlertService';
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -81,6 +82,7 @@ export default function DashboardHome() {
       // --- STOP TRACKING ---
       try {
         await stopBackgroundLocationTracking();
+        await stopWeatherMonitoring();
         setIsTracking(false);
         setLastUpdated("Stopped");
         Alert.alert("Location Tracking", "Live tracking disabled.");
@@ -92,6 +94,9 @@ export default function DashboardHome() {
       try {
         const success = await startBackgroundLocationTracking();
         if (success) {
+          // Start weather monitoring alongside location tracking
+          await startWeatherMonitoring();
+          
           setIsTracking(true);
           
           // Update Timestamp immediately
@@ -100,7 +105,7 @@ export default function DashboardHome() {
           await AsyncStorage.setItem('lastLocationTime', iso);
           setLastUpdated(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
           
-          Alert.alert("Location Tracking", "Live tracking enabled.");
+          Alert.alert("Location Tracking", "Live tracking and weather alerting enabled.");
         } else {
           Alert.alert("Error", "Could not start location tracking. Check permissions.");
         }
@@ -113,8 +118,9 @@ export default function DashboardHome() {
 
   const handleLogout = async () => {
     try {
-      // Stop tracking on logout
+      // Stop tracking and weather monitoring on logout
       await stopBackgroundLocationTracking();
+      await stopWeatherMonitoring();
       
       // Clear all user-related AsyncStorage items
       await AsyncStorage.removeItem('user');

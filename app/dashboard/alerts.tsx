@@ -4,13 +4,14 @@ import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSession } from '../../services/SessionContext';
 import api from '../../services/api';
 
 interface AlertItem {
   _id: string;
   userEmail: string;
   userName: string;
-  type: 'sos' | 'activity' | 'location' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated';
+  type: 'sos' | 'activity' | 'location' | 'journey_started' | 'journey_delayed' | 'journey_completed' | 'location_shared' | 'fake_call_activated' | 'weather';
   title: string;
   message: string;
   location?: {
@@ -23,6 +24,7 @@ interface AlertItem {
 }
 
 export default function UserAlertsScreen() {
+  const { weatherAlerts, markWeatherAlertAsRead } = useSession();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -141,24 +143,35 @@ export default function UserAlertsScreen() {
 
   const markAsRead = async (alertIds: string[]) => {
     try {
+      console.log('📤 Marking alerts as read:', alertIds);
       await api.put('/alerts/mark-read', { alertIds });
+      
       setAlerts(prev => prev.map(alert => 
         alertIds.includes(alert._id) ? { ...alert, isRead: true } : alert
       ));
       setUnreadCount(prev => Math.max(0, prev - alertIds.length));
-    } catch (error) {
-      console.error('Error marking as read:', error);
+      console.log('✅ Alerts marked as read successfully');
+    } catch (error: any) {
+      console.error('❌ Error marking as read:', error);
+      console.error('   Response:', error.response?.data);
+      console.error('   Status:', error.response?.status);
     }
   };
 
   const markAllAsRead = async () => {
     try {
+      console.log('📤 Marking all alerts as read...');
       await api.put(`/alerts/mark-all-read/${userEmail}`);
+      
       setAlerts(prev => prev.map(alert => ({ ...alert, isRead: true })));
       setUnreadCount(0);
+      
       Alert.alert('Success', 'All alerts marked as read');
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.log('✅ All alerts marked as read');
+    } catch (error: any) {
+      console.error('❌ Error marking all as read:', error);
+      console.error('   Response:', error.response?.data);
+      console.error('   Status:', error.response?.status);
       Alert.alert('Error', 'Failed to mark all as read');
     }
   };
@@ -183,6 +196,8 @@ export default function UserAlertsScreen() {
         return { name: 'location-on', color: '#2196F3', IconComponent: MaterialIcons };
       case 'fake_call_activated':
         return { name: 'phone', color: '#9C27B0', IconComponent: Ionicons };
+      case 'weather':
+        return { name: 'cloud', color: '#6A5ACD', IconComponent: Ionicons };
       default:
         return { name: 'notifications', color: '#757575', IconComponent: Ionicons };
     }
@@ -229,6 +244,11 @@ export default function UserAlertsScreen() {
         return {
           title: '📞 Fake Call Activated',
           message: `You activated a fake call for your safety.`
+        };
+      case 'weather':
+        return {
+          title: item.title || '☁️ Weather Alert',
+          message: item.message || `Hazardous weather conditions detected in your area.`
         };
       default:
         return {
@@ -341,6 +361,13 @@ export default function UserAlertsScreen() {
           >
             <Text style={[styles.filterText, filterType === 'journey_started' && styles.filterTextActive]}>Journey</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, filterType === 'weather' && styles.filterChipActive]}
+            onPress={() => applyFilter('weather')}
+          >
+            <Text style={[styles.filterText, filterType === 'weather' && styles.filterTextActive]}>Weather</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -349,12 +376,14 @@ export default function UserAlertsScreen() {
           <Ionicons name="notifications-off-outline" size={64} color="#C0C0C0" />
           <Text style={styles.emptyTitle}>No Activity Yet</Text>
           <Text style={styles.emptyText}>
-            Your safety activities will appear here. This includes SOS triggers, journey updates, location sharing, and fake calls.
+            Your safety activities will appear here. This includes SOS triggers, journey updates, location sharing, fake calls, and weather alerts.
           </Text>
         </View>
       ) : (
         <FlatList
-          data={alerts}
+          data={alerts
+            .filter(a => filterType === 'all' || a.type === filterType)
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())}
           renderItem={renderAlert}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}

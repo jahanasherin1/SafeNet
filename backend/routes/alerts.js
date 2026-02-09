@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { Alert } from '../models/schemas.js';
 
 const router = express.Router();
@@ -6,14 +7,32 @@ const router = express.Router();
 // Create a new alert (called internally when events happen)
 export async function createAlert(alertData) {
   try {
-    console.log('Creating alert with data:', alertData);
+    if (!alertData || !alertData.userEmail || !alertData.type) {
+      console.error('❌ Invalid alert data:', alertData);
+      return null;
+    }
+
+    console.log('📝 Creating alert:', {
+      userEmail: alertData.userEmail,
+      type: alertData.type,
+      title: alertData.title
+    });
+
     const alert = new Alert(alertData);
-    await alert.save();
-    console.log('Alert created successfully:', { id: alert._id, type: alert.type, userEmail: alert.userEmail });
-    return alert;
+    const savedAlert = await alert.save();
+    
+    console.log('✅ Alert saved successfully:', {
+      id: savedAlert._id,
+      type: savedAlert.type,
+      userEmail: savedAlert.userEmail,
+      createdAt: savedAlert.createdAt
+    });
+    
+    return savedAlert;
   } catch (error) {
-    console.error('Error creating alert:', error);
-    console.error('Alert data that failed:', alertData);
+    console.error('❌ Error creating alert:', error.message);
+    console.error('   Alert data:', alertData);
+    console.error('   Error details:', error);
     return null;
   }
 }
@@ -64,19 +83,51 @@ router.put('/mark-read', async (req, res) => {
   try {
     const { alertIds } = req.body;
 
+    console.log('📥 Mark-read request received');
+    console.log('   alertIds:', alertIds);
+
     if (!alertIds || !Array.isArray(alertIds)) {
-      return res.status(400).json({ message: 'alertIds array is required' });
+      console.warn('⚠️ Invalid alertIds format');
+      return res.status(400).json({ message: 'alertIds array is required', success: false });
     }
 
-    await Alert.updateMany(
-      { _id: { $in: alertIds } },
+    if (alertIds.length === 0) {
+      console.log('ℹ️ No alerts to mark as read');
+      return res.status(200).json({ message: 'No alerts to mark as read', matched: 0, success: true });
+    }
+
+    // Convert string IDs to MongoDB ObjectIds
+    let objectIds = [];
+    for (const id of alertIds) {
+      try {
+        objectIds.push(new mongoose.Types.ObjectId(id));
+      } catch (e) {
+        console.warn(`⚠️ Invalid ObjectId: ${id}`);
+      }
+    }
+
+    if (objectIds.length === 0) {
+      console.error('❌ No valid ObjectIds in the array');
+      return res.status(400).json({ message: 'No valid alert IDs provided', success: false });
+    }
+
+    console.log(`🔍 Updating ${objectIds.length} alerts...`);
+    const result = await Alert.updateMany(
+      { _id: { $in: objectIds } },
       { $set: { isRead: true, readAt: new Date() } }
     );
 
-    res.status(200).json({ message: 'Alerts marked as read' });
+    console.log(`✅ Update complete - Matched: ${result.matchedCount}, Modified: ${result.modifiedCount}`);
+    res.status(200).json({ 
+      message: 'Alerts marked as read', 
+      matched: result.matchedCount, 
+      modified: result.modifiedCount,
+      success: true
+    });
   } catch (error) {
-    console.error('Error marking alerts as read:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error marking alerts as read:', error.message);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message, success: false });
   }
 });
 
@@ -85,15 +136,18 @@ router.put('/mark-all-read/:userEmail', async (req, res) => {
   try {
     const { userEmail } = req.params;
 
-    await Alert.updateMany(
+    console.log(`📥 Mark-all-read request for user: ${userEmail}`);
+
+    const result = await Alert.updateMany(
       { userEmail, isRead: false },
       { $set: { isRead: true, readAt: new Date() } }
     );
 
-    res.status(200).json({ message: 'All alerts marked as read' });
+    console.log(`✅ Marked ${result.modifiedCount} alerts as read for ${userEmail}`);
+    res.status(200).json({ message: 'All alerts marked as read', modified: result.modifiedCount, success: true });
   } catch (error) {
-    console.error('Error marking all alerts as read:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error marking all alerts as read:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message, success: false });
   }
 });
 

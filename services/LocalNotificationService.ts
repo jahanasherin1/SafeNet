@@ -141,6 +141,56 @@ export const sendActivityAlertNotification = async (
 };
 
 /**
+ * Send weather alert notification (only for non-safe conditions)
+ */
+export const sendWeatherAlertNotification = async (
+  safetyLevel: 'caution' | 'warning' | 'danger',
+  weatherCondition: string,
+  primaryHazard: string
+): Promise<void> => {
+  try {
+    // Skip notifications for safe conditions
+    if (safetyLevel === 'safe') {
+      return;
+    }
+
+    const iconMap = {
+      caution: '🟡',
+      warning: '🔶',
+      danger: '🚫',
+    };
+
+    const severityMap = {
+      caution: 'medium' as const,
+      warning: 'high' as const,
+      danger: 'high' as const,
+    };
+
+    const channelId = safetyLevel === 'danger' ? 'emergency' : 'activity';
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `${iconMap[safetyLevel]} Weather Alert - ${safetyLevel.toUpperCase()}`,
+        body: `${weatherCondition}: ${primaryHazard}`,
+        sound: 'default',
+        badge: 1,
+        data: {
+          alertType: 'WEATHER_ALERT',
+          safetyLevel: safetyLevel,
+          severity: severityMap[safetyLevel],
+          timestamp: new Date().toISOString(),
+        },
+      },
+      trigger: null, // Show immediately
+    });
+
+    console.log(`☁️ Weather alert notification sent: ${safetyLevel}`);
+  } catch (error) {
+    console.error('Error sending weather alert notification:', error);
+  }
+};
+
+/**
  * Setup notification listeners for when user taps notification
  */
 export function setupNotificationListeners() {

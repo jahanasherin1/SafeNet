@@ -10,8 +10,8 @@ const ActivityMonitoringNative = Platform.OS === 'android'
 
 // --- CONFIGURATION ---
 const PRE_ALERT_TIMER = 15;
-const RUNNING_ALERT_DELAY = 30;
-const SUDDEN_STOP_COOLDOWN = 30;
+const RUNNING_ALERT_DELAY = 15;
+const SUDDEN_STOP_COOLDOWN = 15;
 const ACCEL_UPDATE_INTERVAL = 100;
 
 // Fall Detection Thresholds
