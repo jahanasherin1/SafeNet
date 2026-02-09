@@ -9,7 +9,7 @@ import { useSession } from '../services/SessionContext';
 export default function GlobalAlertModal() {
   const { alertReason, isAlertVisible, dismissAlert } = useSession();
   
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(15);
   const [sendingAlert, setSendingAlert] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
 
@@ -36,12 +36,12 @@ export default function GlobalAlertModal() {
 
   const handleAlertTriggered = (reason: string) => {
     console.log('🎬 handleAlertTriggered called with reason:', reason);
-    setCountdown(30);
+    setCountdown(15);
     setSendingAlert(false);
     setIsCancelled(false);
     isCancelledRef.current = false;
 
-    console.log('⏲️ Setting up 30-second countdown interval');
+    console.log('⏲️ Setting up 15-second countdown interval');
     countdownInterval.current = setInterval(() => {
       setCountdown((prev) => {
         console.log('⏳ Countdown tick:', prev - 1);
@@ -65,7 +65,7 @@ export default function GlobalAlertModal() {
   const sendAlertToGuardians = async (reason: string) => {
     try {
       setSendingAlert(true);
-      console.log('🚨 Auto-sending alert to guardians after 30 seconds:', reason);
+      console.log('🚨 Auto-sending alert to guardians after 15 seconds:', reason);
       
       // Get user data
       const userData = await AsyncStorage.getItem('user');
@@ -166,7 +166,7 @@ export default function GlobalAlertModal() {
     isCancelledRef.current = true;
     setIsCancelled(true);
     dismissAlert();
-    setCountdown(30);
+    setCountdown(15);
   };
 
   return (
@@ -181,7 +181,7 @@ export default function GlobalAlertModal() {
           <Text style={styles.modalReason}>Pattern Detected: {alertReason}</Text>
           
           <Text style={styles.modalDesc}>
-            An alert will be sent to your guardians unless you cancel within 30 seconds.
+            An alert will be sent to your guardians unless you cancel within 15 seconds.
           </Text>
 
           <View style={styles.countdownContainer}>
