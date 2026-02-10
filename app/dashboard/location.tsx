@@ -8,15 +8,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MapComponent from '../../components/MapComponent';
 import WeatherAlertModal from '../../components/WeatherAlertModal';
 import api from '../../services/api';
+import { getNearbyRealSafePlaces } from '../../services/openstreetmap';
 import { useSession } from '../../services/SessionContext';
 
 interface SafePlace {
   id: string;
-  type: 'police' | 'hospital';
+  type: 'police' | 'hospital' | 'fire';
   name: string;
   address: string;
   phoneNumber?: string;
   icon: string;
+  distance?: number; // Distance in km
+  rating?: number; // Google rating if available
+  isOpen?: boolean; // Whether currently open
   coords: { latitude: number; longitude: number };
 }
 
@@ -32,7 +36,8 @@ export default function UserLocationScreen() {
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
   const [safePlaces, setSafePlaces] = useState<SafePlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'police' | 'hospital'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'police' | 'hospital' | 'fire'>('all');
+  const [dataSource, setDataSource] = useState<string>(''); // Track data source
 
   useFocusEffect(
     React.useCallback(() => {
@@ -168,58 +173,33 @@ export default function UserLocationScreen() {
   const fetchNearbySafePlaces = async (latitude: number, longitude: number) => {
     setLoadingPlaces(true);
     try {
-      console.log('🔍 Fetching nearby safe places from Google Maps API...');
-      console.log(`📍 Location: ${latitude}, ${longitude}`);
-      
-      const response = await api.post('/user/nearby-facilities', {
-        latitude,
-        longitude,
-        radius: 5000, // 5km radius
-      });
+      setDataSource('OpenStreetMap (Live Data)');
 
-      console.log('📡 API Response:', response.data);
+      // Use the new OpenStreetMap service for real places
+      const realPlaces = await getNearbyRealSafePlaces(latitude, longitude, 10); // 10km radius
 
-      if (response.data && response.data.facilities) {
-        const facilities = response.data.facilities;
-        console.log(`🗺️ Google Maps API returned ${facilities.length} facilities`);
-        
-        if (facilities.length > 0) {
-          const formattedPlaces: SafePlace[] = facilities.map((facility: any, index: number) => {
-            console.log(`[${index + 1}] ${facility.type.toUpperCase()}: ${facility.name}`);
-            console.log(`    Address: ${facility.address}`);
-            console.log(`    Phone: ${facility.phoneNumber || 'N/A'}`);
-            console.log(`    Coords: ${facility.latitude}, ${facility.longitude}`);
-            
-            return {
-              id: facility.id,
-              type: facility.type,
-              name: facility.name,
-              address: facility.address,
-              phoneNumber: facility.phoneNumber,
-              icon: facility.type === 'police' ? 'car-sport' : 'medkit',
-              coords: {
-                latitude: facility.latitude,
-                longitude: facility.longitude,
-              },
-            };
-          });
-
-          setSafePlaces(formattedPlaces);
-          console.log(`✅ Successfully loaded ${formattedPlaces.length} safe places from Google Maps`);
-        } else {
-          setSafePlaces([]);
-          console.log('⚠️ No facilities found in the 5km radius');
-        }
+      if (realPlaces.length > 0) {
+        setSafePlaces(realPlaces);
       } else {
         setSafePlaces([]);
-        console.log('⚠️ Invalid response format from API');
+        Alert.alert(
+          'No Safe Places Found', 
+          'No emergency facilities were found in your area using OpenStreetMap data. This could be due to:\n\n• Limited data coverage in your area\n• Remote location\n• Connectivity issues\n\nTry expanding your search radius or check your internet connection.',
+          [{ text: 'OK' }]
+        );
       }
     } catch (error: any) {
       console.error('❌ Error fetching nearby safe places:', error);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response?.data);
       setSafePlaces([]);
-      Alert.alert('Error', `Could not fetch nearby safe places.\n\nError: ${error.message}`);
+      setDataSource('Error');
+      Alert.alert(
+        'Error Fetching Places', 
+        `Could not fetch real nearby safe places from OpenStreetMap.\n\nError: ${error.message}\n\nPlease check your internet connection and try again.`,
+        [
+          { text: 'Retry', onPress: () => fetchNearbySafePlaces(latitude, longitude) },
+          { text: 'Cancel' }
+        ]
+      );
     } finally {
       setLoadingPlaces(false);
     }
@@ -261,7 +241,6 @@ export default function UserLocationScreen() {
 
   const renderPlaceItem = ({ item }: { item: SafePlace }) => {
     const areaName = extractAreaName(item.address);
-    console.log(`📍 Area extracted: "${areaName}" from address: "${item.address}"`);
     return (
       <View style={styles.placeCard} key={item.id}>
         <View style={styles.placeIconBox}>
@@ -269,6 +248,20 @@ export default function UserLocationScreen() {
         </View>
         <View style={styles.placeInfo}>
           <Text style={styles.placeName}>{item.name}</Text>
+          {/* Show Distance and Rating */}
+          <View style={styles.placeMetaInfo}>
+            {item.distance && (
+              <Text style={styles.placeDistance}>📏 {item.distance.toFixed(2)}km</Text>
+            )}
+            {item.rating && (
+              <Text style={styles.placeRating}>⭐ {item.rating.toFixed(1)}</Text>
+            )}
+            {item.isOpen !== undefined && (
+              <Text style={[styles.placeStatus, { color: item.isOpen ? '#2E8B57' : '#DC143C' }]}>
+                {item.isOpen ? '🟢 Open' : '🔴 Closed'}
+              </Text>
+            )}
+          </View>
           {areaName && (
             <Text style={styles.placeArea}>📍 {areaName}</Text>
           )}
@@ -409,19 +402,32 @@ export default function UserLocationScreen() {
             <Ionicons name="medkit" size={18} color={filterType === 'hospital' ? '#FFF' : '#1A1B4B'} />
             <Text style={[styles.chipText, filterType === 'hospital' && styles.chipTextActive]}>Hospital</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.chip, filterType === 'fire' && styles.chipActive]}
+            onPress={() => setFilterType('fire')}
+          >
+            <Ionicons name="flame" size={18} color={filterType === 'fire' ? '#FFF' : '#1A1B4B'} />
+            <Text style={[styles.chipText, filterType === 'fire' && styles.chipTextActive]}>Fire</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* --- LIST SECTION --- */}
         <View style={styles.listSection}>
           <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>📍 Nearby Safe Places (from Google Maps)</Text>
+            <Text style={styles.sectionHeader}>
+              📍 Nearby Safe Places 
+              {dataSource && <Text style={styles.sourceText}> ({dataSource})</Text>}
+            </Text>
             {loadingPlaces && <ActivityIndicator size="small" color="#6A5ACD" />}
+            {!loadingPlaces && safePlaces.length > 0 && (
+              <Text style={styles.realDataBadge}>✅ Real Places</Text>
+            )}
           </View>
           
           {loadingPlaces ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#6A5ACD" />
-              <Text style={styles.loadingText}>🔍 Searching Google Maps for nearby hospitals & police stations...</Text>
+              <Text style={styles.loadingText}>🔍 Searching OpenStreetMap for real nearby emergency facilities...</Text>
             </View>
           ) : filteredPlaces.length > 0 ? (
             <>
@@ -457,73 +463,125 @@ const styles = StyleSheet.create({
   backButton: { padding: 5 },
   headerButtons: { flexDirection: 'row', gap: 12 },
   headerButton: { padding: 8 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
-  headerSubtitle: { fontSize: 12, color: '#6A5ACD', marginTop: 4, fontWeight: '600' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1A1B4B' },
+  headerSubtitle: { fontSize: 14, color: '#6A5ACD', marginTop: 2 },
+  scrollContent: { flexGrow: 1, paddingBottom: 100 },
   
-  scrollContent: { flexGrow: 1 },
-
-  // Map
-  mapContainer: { height: 350, width: '100%', position: 'relative', marginBottom: 20 },
-  mapLoadingContainer: { width: '100%', height: 350, backgroundColor: '#F3F0FA', justifyContent: 'center', alignItems: 'center', borderRadius: 15 },
-  mapTypeToggle: { 
-    position: 'absolute', 
-    top: 20, 
-    right: 20, 
-    backgroundColor: '#6A5ACD', 
-    paddingHorizontal: 12, 
-    paddingVertical: 8, 
-    borderRadius: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  mapContainer: { height: 300, margin: 20, borderRadius: 16, overflow: 'hidden', position: 'relative' },
+  mapLoadingContainer: { flex: 1, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center' },
+  mapTypeToggle: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(26, 27, 75, 0.8)',
+    padding: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
   mapTypeText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
-  
-  // Chips
-  chipsContainer: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 15 },
-  chip: { 
-    flexDirection: 'row', backgroundColor: '#E8E6F0', paddingHorizontal: 15, paddingVertical: 10, 
-    borderRadius: 20, marginRight: 10, alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.1
+
+  chipsContainer: { paddingHorizontal: 20, marginBottom: 15 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    gap: 6,
   },
-  chipActive: { backgroundColor: '#6A5ACD' },
-  chipText: { marginLeft: 8, fontWeight: '600', color: '#1A1B4B' },
+  chipActive: { backgroundColor: '#6A5ACD', borderColor: '#6A5ACD' },
+  chipText: { fontSize: 14, color: '#1A1B4B', fontWeight: '600' },
   chipTextActive: { color: '#FFF' },
 
-  // List
-  listSection: { paddingHorizontal: 20, marginTop: 10 },
-  sectionHeaderContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
-  sectionHeader: { fontSize: 16, fontWeight: '600', color: '#1A1B4B' },
-  
-  loadingContainer: { alignItems: 'center', paddingVertical: 40 },
-  loadingText: { marginTop: 10, fontSize: 14, color: '#666' },
-  
-  foundCountText: { fontSize: 13, fontWeight: '600', color: '#2E7D32', marginBottom: 15, paddingHorizontal: 5 },
-  
-  emptyContainer: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { marginTop: 10, fontSize: 16, fontWeight: '600', color: '#999' },
-  emptySubtext: { marginTop: 5, fontSize: 13, color: '#BBB' },
-  
-  placeCard: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, backgroundColor: '#F9F9F9', padding: 12, borderRadius: 12 },
-  placeIconBox: { 
-    width: 50, height: 50, backgroundColor: '#F3F0FA', borderRadius: 12, 
-    justifyContent: 'center', alignItems: 'center' 
+  listSection: { paddingHorizontal: 20 },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
-  placeInfo: { flex: 1, marginLeft: 15 },
-  placeName: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B' },
-  placeArea: { fontSize: 14, fontWeight: '700', color: '#6A5ACD', marginTop: 4, marginBottom: 2 },
-  placeAddress: { fontSize: 13, color: '#999', marginVertical: 2 },
-  placePhone: { fontSize: 13, color: '#2E7D32', marginTop: 4, fontWeight: '600' },
-  
-  directionsBtn: { backgroundColor: '#6A5ACD', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  directionsText: { fontSize: 12, fontWeight: 'bold', color: '#FFF' },
+  sectionHeader: { fontSize: 18, fontWeight: '700', color: '#1A1B4B' },
+  sourceText: { fontSize: 14, fontWeight: '500', color: '#6A5ACD' },
+  realDataBadge: { fontSize: 12, fontWeight: '700', color: '#2E8B57', backgroundColor: '#E8F5E8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  foundCountText: { fontSize: 14, color: '#2E8B57', marginBottom: 15, fontWeight: '600' },
 
-  // Heat Zones
-  heatZoneContainer: { paddingHorizontal: 20, marginTop: 10 },
-  heatZoneTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A1B4B', marginBottom: 10 },
-  heatZoneButton: { backgroundColor: '#E8E6F0', padding: 15, borderRadius: 12, alignItems: 'center' },
-  heatZoneText: { fontSize: 14, fontWeight: '600', color: '#1A1B4B' }
+  loadingContainer: { alignItems: 'center', padding: 40 },
+  loadingText: { marginTop: 10, color: '#666', fontWeight: '600' },
+
+  placeCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'flex-start',
+  },
+  placeIconBox: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  placeInfo: { flex: 1 },
+  placeName: { fontSize: 16, fontWeight: '700', color: '#1A1B4B', marginBottom: 4 },
+  placeMetaInfo: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap',
+    gap: 12, 
+    marginBottom: 6 
+  },
+  placeDistance: { fontSize: 12, color: '#666', fontWeight: '500' },
+  placeRating: { fontSize: 12, color: '#FF9500', fontWeight: '600' },
+  placeStatus: { fontSize: 12, fontWeight: '600' },
+  placeArea: { fontSize: 13, color: '#6A5ACD', fontWeight: '600', marginBottom: 4 },
+  placeAddress: { fontSize: 14, color: '#666', lineHeight: 18, marginBottom: 6 },
+  placePhone: { fontSize: 14, color: '#2E8B57', fontWeight: '600' },
+  directionsBtn: {
+    backgroundColor: '#E8E4FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  directionsText: { fontSize: 12, color: '#1A1B4B', fontWeight: '600' },
+
+  emptyContainer: { alignItems: 'center', padding: 40 },
+  emptyText: { fontSize: 16, color: '#999', fontWeight: '600', marginTop: 10 },
+  emptySubtext: { fontSize: 14, color: '#CCC', marginTop: 4 },
+
+  heatZoneContainer: {
+    margin: 20,
+    padding: 16,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  heatZoneTitle: { fontSize: 16, fontWeight: '700', color: '#1A1B4B', marginBottom: 10 },
+  heatZoneButton: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  heatZoneText: { color: '#666', fontWeight: '600' },
 });

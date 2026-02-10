@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Accelerometer, Pedometer } from 'expo-sensors';
 import { NativeModules, Platform, Vibration } from 'react-native';
+import { getOptimizedSettings } from './BatteryOptimizationService';
 import { sendFallDetectedNotification, sendSuddenStopNotification } from './LocalNotificationService';
 
 // Import native activity monitoring module for background fall detection
@@ -245,7 +246,7 @@ const triggerAlert = async (reason: string) => {
   console.log('✅ Alert notification sent - waiting for user action');
 };
 
-export const startActivityMonitoring = async () => {
+export const startActivityMonitoring = async (): Promise<boolean> => {
   if (monitoringActive) {
     console.log('ℹ️  Activity monitoring already active');
     return true;
@@ -255,7 +256,6 @@ export const startActivityMonitoring = async () => {
     // Request permissions
     const { status } = await Pedometer.requestPermissionsAsync();
     if (status !== 'granted') {
-      console.log('⚠️ Pedometer permission denied');
       return false;
     }
 
@@ -265,17 +265,11 @@ export const startActivityMonitoring = async () => {
     // Start native Android foreground service for background fall detection
     if (ActivityMonitoringNative) {
       try {
-        console.log('📱 Using NATIVE Android foreground service - works even when app is closed');
         await ActivityMonitoringNative.startActivityMonitoring();
-        console.log('✅ Native activity monitoring service started');
+        console.log('✅ Native activity monitoring started');
       } catch (error) {
-        console.warn('⚠️ Failed to start native service:', error);
-        console.log('⚠️ Falling back to Expo Accelerometer (foreground only)');
+        console.warn('⚠️ Native service failed, using Expo fallback');
       }
-    } else {
-      console.log('⚠️ Native activity monitoring module not available');
-      console.log('⚠️  Falling back to Expo Accelerometer');
-      console.log('     ℹ️  Note: This only works when app is open or minimized');
     }
 
     // Reset state
@@ -290,8 +284,12 @@ export const startActivityMonitoring = async () => {
     potentialFallTime = null;
     potentialFallImpact = 0;
 
+    // Apply battery optimization to activity monitoring
+    const settings = await getOptimizedSettings();
+    const accelInterval = settings.activityMonitoringInterval === 1000 ? 100 : 500; // Convert from ms to sensor update frequency
+
     // 1. ACCELEROMETER
-    Accelerometer.setUpdateInterval(ACCEL_UPDATE_INTERVAL);
+    Accelerometer.setUpdateInterval(accelInterval);
     accelSubscription = Accelerometer.addListener((data: any) => {
       analyzeMotion(data);
     });
@@ -313,6 +311,12 @@ export const startActivityMonitoring = async () => {
     activityCheckInterval = setInterval(() => {
       checkActivityTimeout();
     }, 2000);
+
+    if (settings.activityMonitoringInterval === 5000) {
+      console.log('🔋 Activity monitoring optimized for battery saving (5s interval)');
+    } else {
+      console.log('⚡ Activity monitoring in normal mode (1s interval)');
+    }
 
     updateActivity('Monitoring Activity...');
     await AsyncStorage.setItem('activityMonitoringEnabled', 'true');

@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Te
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import { getNearbyRealSafePlaces } from '../../services/openstreetmap';
 
 interface NearbyPlace {
   id: string;
@@ -139,28 +140,43 @@ export default function ContactAuthoritiesScreen() {
   const fetchNearbyPlaces = async (latitude: number, longitude: number) => {
     setLoadingPlaces(true);
     try {
-      console.log('🔍 Fetching nearby places from backend...');
+      console.log('🔍 Fetching nearby emergency services using OpenStreetMap...');
       
-      // Call backend endpoint instead of Google Places API directly
-      const response = await api.post('/user/nearby-facilities', {
-        latitude,
-        longitude,
-        radius: 5000 // 5km
-      });
+      // Use OpenStreetMap service for real places
+      const realPlaces = await getNearbyRealSafePlaces(latitude, longitude, 10); // 10km radius
 
-      console.log('📍 Backend response:', JSON.stringify(response.data, null, 2));
-
-      if (response.data && response.data.facilities) {
-        setNearbyPlaces(response.data.facilities);
-        console.log(`🏥 Found ${response.data.facilities.length} nearby emergency services`);
+      if (realPlaces.length > 0) {
+        // Convert to the expected format
+        const formattedPlaces = realPlaces.map(place => ({
+          id: place.id,
+          name: place.name,
+          latitude: place.coords.latitude,
+          longitude: place.coords.longitude,
+          type: place.type,
+          address: place.address,
+          phoneNumber: place.phoneNumber,
+          distance: place.distance
+        }));
+        
+        setNearbyPlaces(formattedPlaces);
+        console.log(`✅ Found ${formattedPlaces.length} real nearby emergency services from OpenStreetMap`);
       } else {
-        console.log('⚠️ No facilities found in response');
+        console.log('⚠️ No facilities found in the 10km radius');
         setNearbyPlaces([]);
+        Alert.alert(
+          'No Emergency Services Found', 
+          'No emergency facilities were found in this area using OpenStreetMap data. You can still use the general emergency numbers below.',
+          [{ text: 'OK' }]
+        );
       }
     } catch (error: any) {
       console.error('❌ Error fetching nearby places:', error.message);
-      console.error('❌ Error response:', error.response?.data);
       setNearbyPlaces([]);
+      Alert.alert(
+        'Error Fetching Places', 
+        `Could not fetch nearby emergency services from OpenStreetMap.\n\nError: ${error.message}\n\nYou can still use the general emergency numbers.`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoadingPlaces(false);
     }

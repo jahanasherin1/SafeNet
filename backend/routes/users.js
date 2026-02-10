@@ -5,8 +5,22 @@ import { User } from '../models/schemas.js';
 
 const router = express.Router();
 
-// Google Places API Key
-const GOOGLE_PLACES_API_KEY = 'AIzaSyDGpAdiZUGAza7OMuWwTBXLfznzB0shrnY';
+// OpenStreetMap (OSM) Overpass API endpoint for fetching nearby facilities
+const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
+
+// Nominatim API for reverse geocoding (get address from coordinates)
+const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org';
+
+// ========================================
+// Health Check Endpoint
+// ========================================
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date(),
+    message: 'Backend is running'
+  });
+});
 
 // Update User Location
 router.post('/update-location', async (req, res) => {
@@ -100,7 +114,135 @@ router.get('/location/:email', async (req, res) => {
   }
 });
 
-// Get Nearby Emergency Facilities (Police, Hospitals, Fire Stations)
+// ========================================
+// 🗺️ OSM OVERPASS API HELPER FUNCTIONS
+// ========================================
+
+/**
+ * Fetch facilities from OpenStreetMap using Overpass API
+ * @param {number} latitude - Center latitude
+ * @param {number} longitude - Center longitude
+ * @param {number} radiusKm - Search radius in kilometers
+ * @param {string} amenityType - OSM amenity type (police, hospital, fire_station, etc.)
+ * @param {string} facilityType - Internal facility type label
+ * @returns {Promise<Array>} - Array of facilities
+ */
+async function fetchOSMFacilities(latitude, longitude, radiusKm, amenityType, facilityType) {
+  try {
+    // Simplified Overpass QL query for better performance
+    // Using a bounding box instead of haversine to avoid timeouts
+    const bbox = {
+      south: latitude - (radiusKm / 111),
+      west: longitude - (radiusKm / 111.32),
+      north: latitude + (radiusKm / 111),
+      east: longitude + (radiusKm / 111.32)
+    };
+
+    const query = `[bbox:${bbox.south},${bbox.west},${bbox.north},${bbox.east}];(node["amenity"="${amenityType}"];way["amenity"="${amenityType}"];);out center;`;
+
+    console.log(`🔍 Querying OSM for ${facilityType}...`);
+
+    // Use AbortController for proper timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    const response = await fetch(OVERPASS_API_URL, {
+      method: 'POST',
+      body: `data=${encodeURIComponent(query)}`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error(`❌ Overpass API HTTP ${response.status}: ${response.statusText}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const facilities = [];
+
+    if (data.elements && data.elements.length > 0) {
+      console.log(`✅ Found ${data.elements.length} ${facilityType} from OSM`);
+
+      for (const element of data.elements) {
+        let lat, lng;
+
+        // Get coordinates from node or way
+        if (element.lat && element.lon) {
+          lat = element.lat;
+          lng = element.lon;
+        } else if (element.center) {
+          lat = element.center.lat;
+          lng = element.center.lon;
+        } else {
+          continue; // Skip elements without coordinates
+        }
+
+        // Calculate distance from user location
+        const distance = calculateOSMDistance(latitude, longitude, lat, lng);
+
+        facilities.push({
+          id: `osm_${element.id}`,
+          name: element.tags?.name || `${facilityType} #${element.id}`,
+          latitude: lat,
+          longitude: lng,
+          type: facilityType,
+          address: element.tags?.['addr:full'] || 
+                   `${element.tags?.['addr:street'] || ''} ${element.tags?.['addr:housenumber'] || ''}`.trim() ||
+                   'Address not available',
+          phoneNumber: element.tags?.phone || element.tags?.['contact:phone'] || undefined,
+          website: element.tags?.website || element.tags?.['contact:website'] || undefined,
+          operatingHours: element.tags?.opening_hours || undefined,
+          distance: distance
+        });
+      }
+
+      // Sort by distance and return top 5
+      facilities.sort((a, b) => a.distance - b.distance);
+      return facilities.slice(0, 5);
+    } else {
+      console.log(`⚠️ No ${facilityType} found from OSM in the specified area`);
+      return [];
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`⏱️ Timeout fetching ${facilityType} from Overpass API (15s exceeded)`);
+    } else {
+      console.error(`❌ Error fetching ${facilityType} from OSM:`, error.message);
+    }
+    return [];
+  }
+}
+
+/**
+ * Calculate distance between two coordinates (Haversine formula)
+ * @param {number} lat1 - Latitude 1
+ * @param {number} lon1 - Longitude 1
+ * @param {number} lat2 - Latitude 2
+ * @param {number} lon2 - Longitude 2
+ * @returns {number} - Distance in kilometers
+ */
+function calculateOSMDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// ========================================
+// Get Nearby Emergency Facilities (OSM - OpenStreetMap)
+// ========================================
 router.post('/nearby-facilities', async (req, res) => {
   try {
     const { latitude, longitude, radius = 5000 } = req.body;
@@ -109,198 +251,93 @@ router.post('/nearby-facilities', async (req, res) => {
       return res.status(400).json({ message: 'Missing latitude or longitude' });
     }
 
-    console.log(`🔍 Searching for facilities near ${latitude}, ${longitude}`);
+    const radiusKm = radius / 1000; // Convert meters to kilometers
+    console.log(`\n🔍 Fetching OSM facilities near ${latitude}, ${longitude} (radius: ${radiusKm}km)`);
 
     const facilities = [];
 
-    // Fetch Police Stations
-    try {
-      const policeUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=police&key=${GOOGLE_PLACES_API_KEY}`;
-      console.log('🚔 Calling Police API...');
-      const policeResponse = await fetch(policeUrl);
-      const policeData = await policeResponse.json();
-      
-      console.log(`🚔 Police API status: ${policeData.status}`);
-      if (policeData.error_message) {
-        console.log(`❌ Police API error: ${policeData.error_message}`);
-      }
-      
-      if (policeData.results && policeData.results.length > 0) {
-        console.log(`✅ Found ${policeData.results.length} police stations`);
-        for (const place of policeData.results.slice(0, 3)) {
-          // Fetch details for phone number
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,international_phone_number&key=${GOOGLE_PLACES_API_KEY}`;
-          const detailsResponse = await fetch(detailsUrl);
-          const detailsData = await detailsResponse.json();
-          
-          facilities.push({
-            id: place.place_id,
-            name: place.name,
-            latitude: place.geometry.location.lat,
-            longitude: place.geometry.location.lng,
-            type: 'police',
-            address: place.vicinity,
-            phoneNumber: detailsData.result?.formatted_phone_number || detailsData.result?.international_phone_number,
-          });
-        }
-      } else {
-        console.log('⚠️ No police stations found');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching police stations:', error.message);
-    }
+    // Fetch from OpenStreetMap in parallel
+    const [policeStations, hospitals, fireStations] = await Promise.all([
+      fetchOSMFacilities(latitude, longitude, radiusKm, 'police', 'police'),
+      fetchOSMFacilities(latitude, longitude, radiusKm, 'hospital', 'hospital'),
+      fetchOSMFacilities(latitude, longitude, radiusKm, 'fire_station', 'fire')
+    ]);
 
-    // Fetch Hospitals
-    try {
-      const hospitalUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=hospital&key=${GOOGLE_PLACES_API_KEY}`;
-      console.log('🏥 Calling Hospital API...');
-      const hospitalResponse = await fetch(hospitalUrl);
-      const hospitalData = await hospitalResponse.json();
-      
-      console.log(`🏥 Hospital API status: ${hospitalData.status}`);
-      if (hospitalData.error_message) {
-        console.log(`❌ Hospital API error: ${hospitalData.error_message}`);
-      }
-      
-      if (hospitalData.results && hospitalData.results.length > 0) {
-        console.log(`✅ Found ${hospitalData.results.length} hospitals`);
-        for (const place of hospitalData.results.slice(0, 3)) {
-          // Fetch details for phone number
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,international_phone_number&key=${GOOGLE_PLACES_API_KEY}`;
-          const detailsResponse = await fetch(detailsUrl);
-          const detailsData = await detailsResponse.json();
-          
-          facilities.push({
-            id: place.place_id,
-            name: place.name,
-            latitude: place.geometry.location.lat,
-            longitude: place.geometry.location.lng,
-            type: 'hospital',
-            address: place.vicinity,
-            phoneNumber: detailsData.result?.formatted_phone_number || detailsData.result?.international_phone_number,
-          });
-        }
-      } else {
-        console.log('⚠️ No hospitals found');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching hospitals:', error.message);
-    }
+    facilities.push(...policeStations, ...hospitals, ...fireStations);
 
-    // Fetch Fire Stations
-    try {
-      const fireUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=fire_station&key=${GOOGLE_PLACES_API_KEY}`;
-      console.log('🚒 Calling Fire Station API...');
-      const fireResponse = await fetch(fireUrl);
-      const fireData = await fireResponse.json();
-      
-      console.log(`🚒 Fire Station API status: ${fireData.status}`);
-      if (fireData.error_message) {
-        console.log(`❌ Fire Station API error: ${fireData.error_message}`);
-      }
-      
-      if (fireData.results && fireData.results.length > 0) {
-        console.log(`✅ Found ${fireData.results.length} fire stations`);
-        for (const place of fireData.results.slice(0, 2)) {
-          // Fetch details for phone number
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,international_phone_number&key=${GOOGLE_PLACES_API_KEY}`;
-          const detailsResponse = await fetch(detailsUrl);
-          const detailsData = await detailsResponse.json();
-          
-          facilities.push({
-            id: place.place_id,
-            name: place.name,
-            latitude: place.geometry.location.lat,
-            longitude: place.geometry.location.lng,
-            type: 'fire',
-            address: place.vicinity,
-            phoneNumber: detailsData.result?.formatted_phone_number || detailsData.result?.international_phone_number,
-          });
-        }
-      } else {
-        console.log('⚠️ No fire stations found');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching fire stations:', error.message);
-    }
+    // Sort all facilities by distance and filter out invalid entries
+    facilities.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    
+    // Filter to ensure all facilities have required fields
+    const validFacilities = facilities.filter(f => f && f.id && f.name && f.type && f.latitude && f.longitude);
 
-    // If Google Places API failed or returned no results, use mock data for demonstration
-    if (facilities.length === 0) {
-      console.log('⚠️ Google Places API returned no results, using mock nearby facilities');
+    console.log(`✅ Total facilities found: ${facilities.length}`);
+    console.log(`   🚔 Police: ${policeStations.length}`);
+    console.log(`   🏥 Hospitals: ${hospitals.length}`);
+    console.log(`   🚒 Fire Stations: ${fireStations.length}`);
+
+    // If OSM returns no valid results, provide fallback facilities based on user location
+    if (validFacilities.length === 0) {
+      console.log('⚠️ No OSM facilities found. Using fallback data...');
       
-      // Generate mock facilities based on user's location (offset by ~1-2km)
-      const mockFacilities = [
+      const fallbackFacilities = [
         {
-          id: 'mock_police_1',
-          name: 'City Police Station',
-          latitude: latitude + 0.01,
+          id: 'fallback_police_1',
+          name: 'Local Police Station',
+          latitude: latitude + 0.005,
           longitude: longitude + 0.005,
           type: 'police',
-          address: 'Near Main Road, Local Area',
-          phoneNumber: '0483-2731234'
+          address: 'Nearby Police Station',
+          phoneNumber: '100',
+          distance: 0.5
         },
         {
-          id: 'mock_police_2',
-          name: 'District Police Headquarters',
-          latitude: latitude - 0.008,
-          longitude: longitude + 0.012,
-          type: 'police',
-          address: 'District Center',
-          phoneNumber: '100'
-        },
-        {
-          id: 'mock_hospital_1',
-          name: 'Government General Hospital',
-          latitude: latitude + 0.015,
-          longitude: longitude - 0.008,
+          id: 'fallback_hospital_1',
+          name: 'Nearby Hospital',
+          latitude: latitude - 0.004,
+          longitude: longitude + 0.006,
           type: 'hospital',
-          address: 'Hospital Road',
-          phoneNumber: '0483-2235566'
+          address: 'Medical Facility',
+          phoneNumber: '108',
+          distance: 0.6
         },
         {
-          id: 'mock_hospital_2',
-          name: 'City Medical Center',
-          latitude: latitude - 0.012,
-          longitude: longitude - 0.015,
+          id: 'fallback_hospital_2',
+          name: 'Emergency Medical Center',
+          latitude: latitude + 0.008,
+          longitude: longitude - 0.003,
           type: 'hospital',
-          address: 'Medical College Area',
-          phoneNumber: '108'
+          address: 'Emergency Center',
+          phoneNumber: '102',
+          distance: 0.85
         },
         {
-          id: 'mock_hospital_3',
-          name: 'Emergency Care Hospital',
-          latitude: latitude + 0.005,
-          longitude: longitude + 0.018,
-          type: 'hospital',
-          address: 'Town Center',
-          phoneNumber: '0483-2778899'
-        },
-        {
-          id: 'mock_fire_1',
+          id: 'fallback_fire_1',
           name: 'Fire & Rescue Station',
           latitude: latitude - 0.006,
-          longitude: longitude + 0.008,
+          longitude: longitude + 0.007,
           type: 'fire',
-          address: 'Station Road',
-          phoneNumber: '101'
+          address: 'Rescue Station',
+          phoneNumber: '101',
+          distance: 0.75
         }
       ];
       
-      facilities.push(...mockFacilities);
-      console.log(`✅ Added ${mockFacilities.length} mock facilities`);
+      validFacilities.push(...fallbackFacilities);
+      console.log(`✅ Added ${fallbackFacilities.length} fallback facilities`);
     }
 
-    console.log(`✅ Returning ${facilities.length} total facilities`);
-
     res.status(200).json({
-      message: 'Nearby facilities retrieved',
-      count: facilities.length,
-      facilities
+      message: validFacilities.length > 0 ? 'Nearby facilities retrieved' : 'Using fallback facilities',
+      count: validFacilities.length,
+      source: (policeStations.length + hospitals.length + fireStations.length) > 0 ? 'OpenStreetMap (OSM)' : 'Fallback Data',
+      facilities: validFacilities,
+      warning: validFacilities.length === 0 ? 'No facilities found from OpenStreetMap. Showing fallback locations.' : undefined
     });
 
   } catch (error) {
-    console.error('Nearby Facilities Error:', error);
-    res.status(500).json({ message: 'Failed to get nearby facilities' });
+    console.error('❌ Nearby Facilities Error:', error);
+    res.status(500).json({ message: 'Failed to get nearby facilities', error: error.message });
   }
 });
 

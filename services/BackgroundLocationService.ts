@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { AppState, NativeModules, Platform } from 'react-native';
 import api from './api';
-import { applyLocationOptimization, getBatteryOptimizationStatus } from './BatteryOptimizationService';
+import { applyLocationOptimization, getBatteryOptimizationStatus, getOptimizedSettings } from './BatteryOptimizationService';
 import { acquireWakeLock, releaseWakeLock } from './WakeLockService';
 
 export const LOCATION_TASK_NAME = 'SAFENET_BACKGROUND_LOCATION';
@@ -494,8 +494,8 @@ export const startBackgroundLocationTracking = async () => {
 
     // Android-specific settings for aggressive real-time tracking
     if (Platform.OS === 'android') {
-      locationOptions.timeInterval = batteryStatus.isBatterySavingActive ? 10000 : 1000;
-      locationOptions.fastestInterval = batteryStatus.isBatterySavingActive ? 5000 : 1000;
+      locationOptions.timeInterval = optimizedSettings.timeInterval;
+      locationOptions.fastestInterval = batteryStatus.isBatterySavingActive ? optimizedSettings.timeInterval / 2 : 1000;
       locationOptions.deferredUpdatesInterval = 0;
       locationOptions.pausesUpdatesAutomatically = false;
     }
@@ -585,19 +585,14 @@ export const startBackgroundLocationTracking = async () => {
     await AsyncStorage.setItem(TRACKING_STATE_KEY, 'active');
     await AsyncStorage.setItem(TRACKING_ENABLED_KEY, 'true');
 
-    // Setup heartbeat to monitor tracking health (no app state listener to avoid stopping)
-    setupTrackingHeartbeat();
+    // Setup heartbeat to monitor tracking health (respects battery mode)
+    await setupTrackingHeartbeat();
 
     // ALWAYS start background watcher for continuous tracking (works when app is minimized/locked)
     await startBackgroundWatcher();
     
-    // Start foreground polling as fallback (for when background task doesn't fire)
-    if (!batteryStatus.isBatterySavingActive) {
-      startForegroundPolling(3000); // 3 second intervals for real-time
-    } else {
-      console.log('🔋 Battery saving mode: Using optimized intervals');
-      startForegroundPolling(15000); // 15 second intervals for battery saving
-    }
+    // Start foreground polling as fallback (respects battery mode - disabled in battery saving mode)
+    await startForegroundPolling();
 
     // Process any queued locations after starting (delayed to avoid immediate flood)
     setTimeout(() => processLocationQueue(), 30000); // Wait 30 seconds before processing queue
@@ -713,9 +708,16 @@ const handleAppStateChange = async (state: string) => {
 };
 
 // Setup heartbeat to monitor tracking health
-const setupTrackingHeartbeat = () => {
+const setupTrackingHeartbeat = async () => {
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
+  }
+
+  // Check if heartbeat is enabled in battery optimization settings
+  const settings = await getOptimizedSettings();
+  if (!settings.enableHeartbeat) {
+    console.log('🔋 Heartbeat disabled in battery saving mode');
+    return;
   }
 
   heartbeatInterval = setInterval(async () => {
@@ -841,9 +843,16 @@ const stopBackgroundWatcher = () => {
 };
 
 // Foreground polling as fallback when background task isn't firing
-const startForegroundPolling = (intervalMs?: number) => {
+const startForegroundPolling = async (intervalMs?: number) => {
   if (foregroundPollingInterval) {
     clearInterval(foregroundPollingInterval);
+  }
+
+  // Check if foreground polling is enabled in battery optimization settings
+  const settings = await getOptimizedSettings();
+  if (!settings.enableForegroundPolling) {
+    console.log('🔋 Foreground polling disabled in battery saving mode');
+    return;
   }
 
   const interval = intervalMs || FOREGROUND_POLLING_INTERVAL;

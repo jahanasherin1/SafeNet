@@ -4,6 +4,7 @@ import * as TaskManager from 'expo-task-manager';
 import { AppState, NativeModules, Platform } from 'react-native';
 import { startActivityMonitoring } from './ActivityMonitoringService'; // Import this to keep sensor listeners alive
 import api from './api';
+import { getOptimizedSettings } from './BatteryOptimizationService';
 
 export const LOCATION_TASK_NAME = 'SAFENET_BACKGROUND_LOCATION';
 const LOCATION_SYNC_QUEUE = 'LOCATION_SYNC_QUEUE';
@@ -300,9 +301,9 @@ export const startBackgroundLocationTracking = async () => {
     await AsyncStorage.setItem(TRACKING_ENABLED_KEY, 'true');
 
     setupAppStateListener();
-    setupTrackingHeartbeat();
+    await setupTrackingHeartbeat();
     await startBackgroundWatcher();
-    startForegroundPolling();
+    await startForegroundPolling();
 
     return true;
   } catch (error) {
@@ -373,8 +374,15 @@ const handleAppStateChange = async (state: string) => {
   }
 };
 
-const setupTrackingHeartbeat = () => {
+const setupTrackingHeartbeat = async () => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
+
+  // Check if heartbeat is enabled in battery optimization settings
+  const settings = await getOptimizedSettings();
+  if (!settings.enableHeartbeat) {
+    console.log('🔋 Heartbeat disabled in battery saving mode');
+    return;
+  }
 
   heartbeatInterval = setInterval(async () => {
     try {
@@ -456,8 +464,15 @@ const stopBackgroundWatcher = () => {
   }
 };
 
-const startForegroundPolling = () => {
+const startForegroundPolling = async () => {
   if (foregroundPollingInterval) clearInterval(foregroundPollingInterval);
+  
+  // Check if foreground polling is enabled in battery optimization settings
+  const settings = await getOptimizedSettings();
+  if (!settings.enableForegroundPolling) {
+    console.log('🔋 Foreground polling disabled in battery saving mode');
+    return;
+  }
   
   let pollCount = 0;
   pollLocation(++pollCount);

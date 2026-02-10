@@ -110,16 +110,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           // Restart activity monitoring if it was enabled
           if (activityMonEnabled) {
-            console.log('🔄 (Re)starting activity monitoring...');
             const activityMonStarted = await startActivityMonitoring();
             setIsActivityMonitoringActive(activityMonStarted);
             
             // Also start background activity monitoring for when app is minimized
-            console.log('🔄 Starting background activity monitoring...');
             const bgMonStarted = await startBackgroundActivityMonitoring();
-            console.log(`${bgMonStarted ? '✅' : '❌'} Background activity monitoring ${bgMonStarted ? 'active' : 'failed'}`);
-            console.log('📊 NOTE: Foreground logs show impact detection while app is open');
-            console.log('📊 In background, detection continues silently - notifications appear if fall detected');
+            if (bgMonStarted) {
+              console.log('✅ Background monitoring active');
+            }
           }
           
           // Acquire partial wake lock to keep tracking active
@@ -135,21 +133,19 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
 
           // Initialize local notifications for alerts
-          console.log('📱 Initializing local notifications...');
           try {
             await initializeLocalNotifications();
-            console.log('✅ Local notifications initialized');
+            console.log('✅ Notifications ready');
           } catch (notificationError) {
-            console.warn('⚠️ Local notifications setup warning:', notificationError);
+            // Silently fail
           }
 
           // Start auto weather monitoring
-          console.log('🌤️  Starting auto weather monitoring...');
           try {
             await startWeatherMonitoring();
-            console.log('✅ Weather monitoring started - auto alerts every 30 minutes');
+            console.log('🌤️  Weather monitoring active');
           } catch (weatherError) {
-            console.warn('⚠️ Weather monitoring setup warning:', weatherError);
+            // Silently fail
           }
         }
         

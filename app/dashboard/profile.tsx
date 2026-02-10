@@ -191,12 +191,6 @@ export default function ProfileScreen() {
         <View style={styles.preferencesSection}>
           <Text style={styles.sectionTitle}>App Preferences</Text>
 
-          {/* Notifications */}
-          <TouchableOpacity style={styles.prefItem}>
-            <Text style={styles.prefText}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={20} color="#7A7A7A" />
-          </TouchableOpacity>
-
           {/* Battery Mode */}
           <View style={styles.prefItem}>
             <View style={{ flex: 1 }}>
