@@ -41,13 +41,17 @@ export async function createAlert(alertData) {
 router.get('/user/:userEmail', async (req, res) => {
   try {
     const { userEmail } = req.params;
-    const { limit = 50, page = 1, type, isRead, fromDate, toDate } = req.query;
+    const { limit = 50, page = 1, type, excludeType, isRead, fromDate, toDate } = req.query;
 
     console.log('Fetching alerts for user:', userEmail);
 
     // Build filter query
     const filter = { userEmail };
-    if (type) filter.type = type;
+    if (type) {
+      filter.type = type;
+    } else if (excludeType) {
+      filter.type = { $ne: excludeType };
+    }
     if (isRead !== undefined) filter.isRead = isRead === 'true';
     if (fromDate) filter.createdAt = { ...filter.createdAt, $gte: new Date(fromDate) };
     if (toDate) filter.createdAt = { ...filter.createdAt, $lte: new Date(toDate) };

@@ -84,6 +84,29 @@ function formatAddress(properties: any, displayName: string): string {
   return parts.slice(0, 3).join(', '); // First 3 parts usually contain the most relevant info
 }
 
+// Extract phone number from properties with multiple fallback keys
+function extractPhoneNumber(properties: any): string | undefined {
+  if (!properties) return undefined;
+  
+  // Try multiple possible phone number keys from OpenStreetMap
+  return properties.phone ||
+         properties['contact:phone'] ||
+         properties['phone'] ||
+         properties['mobile'] ||
+         properties['contact:mobile'] ||
+         undefined;
+}
+
+// Get default emergency number based on facility type (India defaults)
+function getDefaultEmergencyNumber(type: 'police' | 'hospital' | 'fire'): string {
+  const defaults: Record<string, string> = {
+    police: '100',      // India Police Emergency
+    hospital: '108',    // India Ambulance/Medical Emergency
+    fire: '101'         // India Fire Emergency
+  };
+  return defaults[type] || '112'; // 112 Universal Emergency
+}
+
 // Search using Photon API (Photon is a search API based on OpenStreetMap)
 async function searchPhoton(lat: number, lon: number, query: string, radiusKm: number = 10): Promise<SafePlace[]> {
   try {
@@ -141,12 +164,14 @@ async function searchPhoton(lat: number, lon: number, query: string, radiusKm: n
         if (!facilityType) continue;
 
         const address = formatAddress(feature.properties, feature.properties.name);
+        const phoneNumber = extractPhoneNumber(feature.properties) || getDefaultEmergencyNumber(facilityType);
 
         places.push({
           id: `photon_${feature.properties.osm_id}`,
           type: facilityType,
           name: feature.properties.name || `${facilityType} facility`,
           address: address,
+          phoneNumber: phoneNumber,
           icon: icon,
           distance: distance,
           coords: {
@@ -221,13 +246,14 @@ async function searchNominatim(lat: number, lon: number, query: string, radiusKm
         if (!facilityType) continue;
 
         const name = place.properties?.name || place.display_name.split(',')[0] || `${facilityType} facility`;
+        const phoneNumber = extractPhoneNumber(place.properties) || extractPhoneNumber(place.extratags) || getDefaultEmergencyNumber(facilityType);
         
         places.push({
           id: `nominatim_${place.osm_id}`,
           type: facilityType,
           name: name,
           address: place.display_name,
-          phoneNumber: place.properties?.phone,
+          phoneNumber: phoneNumber,
           icon: icon,
           distance: distance,
           coords: {

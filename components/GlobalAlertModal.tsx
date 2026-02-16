@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
+import { sendActivityAlertNotification } from '../services/LocalNotificationService';
 import { useSession } from '../services/SessionContext';
 
 export default function GlobalAlertModal() {
@@ -105,6 +106,26 @@ export default function GlobalAlertModal() {
       console.log('📨 Posting to: /sos/trigger');
       console.log('📦 Full request will use Authorization header if token exists');
 
+      // Send immediate local device notification
+      try {
+        const notificationTitle = reason.includes('FALL') 
+          ? '🚨 FALL DETECTED' 
+          : reason.includes('RUNNING') 
+          ? '🏃 Prolonged Running Detected' 
+          : '⚠️ Safety Alert';
+        
+        const notificationBody = `${reason}. Alert sent to your guardians.`;
+        
+        await sendActivityAlertNotification(
+          notificationTitle,
+          notificationBody,
+          'high'
+        );
+        console.log('🔔 Local notification sent to device');
+      } catch (notifyError) {
+        console.warn('⚠️ Could not send local notification:', notifyError);
+      }
+
       let lastError: any = null;
       let attempts = 0;
       const maxAttempts = 3;
@@ -119,6 +140,11 @@ export default function GlobalAlertModal() {
           console.log('✅ Alert sent successfully to backend');
           console.log('📊 Response status:', response.status);
           console.log('📨 Response data:', response.data);
+          
+          // Store lastSosTime in AsyncStorage so the cancel button appears immediately
+          const sosTime = new Date().toISOString();
+          await AsyncStorage.setItem('lastSosTime', sosTime);
+          console.log('💾 Stored lastSosTime in AsyncStorage:', sosTime);
           
           Alert.alert('Alert Sent', 'Emergency alert has been sent to your guardians.');
           

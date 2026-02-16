@@ -80,40 +80,50 @@ export default function WeatherAlertModal({
           isRead: false,
         };
         await addWeatherAlert(storedAlert);
-      }
 
-      // Send notification only for non-safe conditions
-      if (weatherAlert.level !== 'safe') {
-        const primaryHazard = weatherAlert.hazards.length > 0 
-          ? weatherAlert.hazards[0] 
-          : 'Hazardous weather conditions';
-        
-        // Send local device notification
-        await sendWeatherAlertNotification(
-          weatherAlert.level as 'caution' | 'warning' | 'danger',
-          weatherData.weatherCondition,
-          primaryHazard
-        );
+        // Check if we should send notifications and backend alert (prevent duplicates)
+        const shouldSendAlert = !storedAlert.weatherCondition || 
+          !weatherAlerts.some(a => {
+            const timeDiff = Date.now() - a.timestamp;
+            return timeDiff < 5 * 60 * 1000 && // Within 5 minutes
+                   a.level === storedAlert.level &&
+                   a.weatherCondition === storedAlert.weatherCondition;
+          });
 
-        // Send alert to backend
-        try {
-          const user = await AsyncStorage.getItem('user');
-          if (user) {
-            const userData = JSON.parse(user);
-            console.log('📤 Sending weather alert to backend...');
-            const response = await api.post('/weather-alerts/send', {
-              userEmail: userData.email,
-              userName: userData.name,
-              safetyLevel: weatherAlert.level,
-              weatherCondition: weatherData.weatherCondition,
-              primaryHazard: primaryHazard,
-              hazards: weatherAlert.hazards,
-              recommendations: weatherAlert.recommendations,
-            });
-            console.log('✅ Weather alert sent to backend');
+        if (!shouldSendAlert) {
+          console.log('⏳ Similar weather alert already sent recently, skipping notifications');
+        } else {
+          const primaryHazard = weatherAlert.hazards.length > 0 
+            ? weatherAlert.hazards[0] 
+            : 'Hazardous weather conditions';
+          
+          // Send local device notification
+          await sendWeatherAlertNotification(
+            weatherAlert.level as 'caution' | 'warning' | 'danger',
+            weatherData.weatherCondition,
+            primaryHazard
+          );
+
+          // Send alert to backend
+          try {
+            const user = await AsyncStorage.getItem('user');
+            if (user) {
+              const userData = JSON.parse(user);
+              console.log('📤 Sending weather alert to backend...');
+              const response = await api.post('/weather-alerts/send', {
+                userEmail: userData.email,
+                userName: userData.name,
+                safetyLevel: weatherAlert.level,
+                weatherCondition: weatherData.weatherCondition,
+                primaryHazard: primaryHazard,
+                hazards: weatherAlert.hazards,
+                recommendations: weatherAlert.recommendations,
+              });
+              console.log('✅ Weather alert sent to backend');
+            }
+          } catch (alertError: any) {
+            console.error('❌ Error sending weather alert to backend:', alertError.message);
           }
-        } catch (alertError: any) {
-          console.error('❌ Error sending weather alert to backend:', alertError.message);
         }
       }
     } catch (err) {

@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import { sendActivityAlertNotification } from '../../services/LocalNotificationService';
 
 interface CrimeChance {
   crimeType: string;
@@ -78,6 +79,24 @@ export default function ZoneActivityScreen() {
       // Prepare alert message
       const riskEmoji = overallRisk.level === 'Critical' ? '🚨' : '⚠️';
       const alertMessage = `${riskEmoji} ${userName} has entered a ${overallRisk.level.toUpperCase()} RISK area: ${locationName}. Average crime chance: ${overallRisk.avgChance}%. Recent crimes: ${overallRisk.totalRecentCrimes}.`;
+
+      // Send immediate local device notification
+      try {
+        const notificationTitle = overallRisk.level === 'Critical' 
+          ? '🚨 CRITICAL RISK AREA DETECTED'
+          : overallRisk.level === 'High'
+          ? '⚠️ HIGH RISK AREA DETECTED'
+          : '🟡 RISK AREA DETECTED';
+        
+        await sendActivityAlertNotification(
+          notificationTitle,
+          `${locationName}: ${Math.round(overallRisk.avgChance)}% crime chance. Guardians notified.`,
+          'high'
+        );
+        console.log('🔔 High-risk area local notification sent');
+      } catch (notifyError) {
+        console.warn('⚠️ Could not send local notification:', notifyError);
+      }
 
       // Send alert to guardians
       const alertResponse = await api.post('/sos/trigger', {

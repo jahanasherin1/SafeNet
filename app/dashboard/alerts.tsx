@@ -138,7 +138,12 @@ export default function UserAlertsScreen() {
 
   const applyFilter = (type: string) => {
     setFilterType(type);
-    fetchAlerts(userEmail, type);
+    // For journey filter, fetch all alerts and filter client-side for all journey sub-types
+    if (type === 'journey') {
+      fetchAlerts(userEmail);
+    } else {
+      fetchAlerts(userEmail, type);
+    }
   };
 
   const markAsRead = async (alertIds: string[]) => {
@@ -356,10 +361,10 @@ export default function UserAlertsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterType === 'journey_started' && styles.filterChipActive]}
-            onPress={() => applyFilter('journey_started')}
+            style={[styles.filterChip, filterType === 'journey' && styles.filterChipActive]}
+            onPress={() => applyFilter('journey')}
           >
-            <Text style={[styles.filterText, filterType === 'journey_started' && styles.filterTextActive]}>Journey</Text>
+            <Text style={[styles.filterText, filterType === 'journey' && styles.filterTextActive]}>Journey</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -382,7 +387,13 @@ export default function UserAlertsScreen() {
       ) : (
         <FlatList
           data={alerts
-            .filter(a => filterType === 'all' || a.type === filterType)
+            .filter(a => {
+              if (filterType === 'all') return true;
+              if (filterType === 'journey') {
+                return a.type === 'journey_started' || a.type === 'journey_delayed' || a.type === 'journey_completed';
+              }
+              return a.type === filterType;
+            })
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())}
           renderItem={renderAlert}
           keyExtractor={(item) => item._id}

@@ -102,8 +102,8 @@ export default function GuardianAlertsScreen() {
       // Clean up old read alerts first (client-side filter)
       cleanupOldAlerts();
       
-      // Build query params
-      let url = `/alerts/user/${email}?limit=100`;
+      // Build query params - always exclude weather alerts for guardian view
+      let url = `/alerts/user/${email}?limit=100&excludeType=weather`;
       if (type && type !== 'all') url += `&type=${type}`;
       
       console.log('API URL:', url);
@@ -111,8 +111,9 @@ export default function GuardianAlertsScreen() {
       console.log('Alerts response:', JSON.stringify(response.data, null, 2));
       
       if (response.data && response.data.alerts) {
-        // Filter out alerts that are read and older than 24 hours
-        const filteredAlerts = filterOldReadAlerts(response.data.alerts);
+        // Filter out weather alerts (guardian should not see them) and read alerts older than 24 hours
+        const filteredAlerts = filterOldReadAlerts(response.data.alerts)
+          .filter(alert => alert.type !== 'weather');
         setAlerts(filteredAlerts);
         setUnreadCount(response.data.pagination?.unread || 0);
         console.log(`Loaded ${filteredAlerts.length} alerts (filtered)`);
@@ -146,13 +147,18 @@ export default function GuardianAlertsScreen() {
 
   const applyFilter = (type: string) => {
     setFilterType(type);
-    fetchAlerts(selectedUser, type === 'journey_started' ? 'all' : type);
+    // For journey filter, fetch all alerts and filter client-side for all journey sub-types
+    if (type === 'journey') {
+      fetchAlerts(selectedUser);
+    } else {
+      fetchAlerts(selectedUser, type);
+    }
   };
 
   // Filter alerts based on selected filter
   const getFilteredAlerts = () => {
     if (filterType === 'all') return alerts;
-    if (filterType === 'journey_started') {
+    if (filterType === 'journey') {
       // Show all journey-related alerts
       return alerts.filter(alert => 
         alert.type === 'journey_started' || 
@@ -413,10 +419,10 @@ export default function GuardianAlertsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterChipActive]}
-            onPress={() => applyFilter('journey_started')}
+            style={[styles.filterChip, filterType === 'journey' && styles.filterChipActive]}
+            onPress={() => applyFilter('journey')}
           >
-            <Text style={[styles.filterText, (filterType === 'journey_started' || filterType === 'journey_delayed' || filterType === 'journey_completed') && styles.filterTextActive]}>Journey</Text>
+            <Text style={[styles.filterText, filterType === 'journey' && styles.filterTextActive]}>Journey</Text>
           </TouchableOpacity>
         </View>
       </View>

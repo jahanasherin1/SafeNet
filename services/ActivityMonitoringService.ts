@@ -42,6 +42,8 @@ let accelHistory: { magnitude: number; timestamp: number }[] = [];
 let varianceHistory: { variance: number; timestamp: number }[] = [];
 let isRunning = false;
 let runningStartTime: number | null = null;
+let lastProlongedRunningAlert = 0;
+let lastFallAlert = 0;
 let baselineStepCount = 0;
 let isFirstStepUpdate = true;
 let lastSuddenStopAlert = 0;
@@ -101,13 +103,22 @@ const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
     if (timeSinceImpact > 500 && timeSinceImpact < FALL_DETECTION_WINDOW) {
       if (currentVariance < FALL_STILLNESS_THRESHOLD) {
-        console.log(
-          `🔴 FALL CONFIRMED: Impact ${potentialFallImpact.toFixed(2)}G followed by stillness (var: ${currentVariance.toFixed(3)})`
-        );
+        // Add cooldown: prevent fall alerts more than once every 30 seconds
+        const timeSinceLastFallAlert = (now - lastFallAlert) / 1000;
+        
+        if (timeSinceLastFallAlert > 30) {
+          console.log(
+            `🔴 FALL CONFIRMED: Impact ${potentialFallImpact.toFixed(2)}G followed by stillness (var: ${currentVariance.toFixed(3)})`
+          );
+          triggerAlert('FALL DETECTED');
+          lastFallAlert = now;
+        } else {
+          console.log(`⏳ Fall cooldown active (${(30 - timeSinceLastFallAlert).toFixed(0)}s remaining)`);
+        }
+        
         potentialFallTime = null;
         potentialFallImpact = 0;
-        triggerAlert('FALL DETECTED');
-        return;
+        // Continue with activity monitoring (don't return)
       }
     } else if (timeSinceImpact >= FALL_DETECTION_WINDOW) {
       console.log(`✅ Impact was activity, not fall (variance: ${currentVariance.toFixed(2)})`);
@@ -133,11 +144,14 @@ const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
     if (isRunning) {
       updateActivity('Running 🏃‍♂️');
 
-      // Check for prolonged running alert
+      // Check for prolonged running alert (only once per running session)
       const runningDuration = (now - (runningStartTime || now)) / 1000;
-      if (runningDuration >= RUNNING_ALERT_DELAY) {
-        console.log(`⚠️ Prolonged running: ${runningDuration.toFixed(0)}s`);
+      const timeSinceLastProlongedAlert = (now - lastProlongedRunningAlert) / 1000;
+      
+      if (runningDuration >= RUNNING_ALERT_DELAY && timeSinceLastProlongedAlert > RUNNING_ALERT_DELAY) {
+        console.log(`⚠️ PROLONGED RUNNING: ${runningDuration.toFixed(0)}s detected`);
         triggerAlert('PROLONGED RUNNING DETECTED');
+        lastProlongedRunningAlert = now;
       }
     } else {
       updateActivity('Fast Movement 🚶‍♂️💨');
@@ -147,26 +161,17 @@ const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
     updateActivity('Walking 🚶');
 
     // === 3. SUDDEN STOP DETECTION ===
-    if (isRunning || previousActivity === 'Running') {
+    // Detect sudden stop when transitioning from running/fast movement to walking
+    if (isRunning || previousActivity.includes('Running') || previousActivity.includes('Fast Movement')) {
       const timeSinceLastSuddenStop = (now - lastSuddenStopAlert) / 1000;
       if (timeSinceLastSuddenStop > SUDDEN_STOP_COOLDOWN) {
-        const recentVariances = varianceHistory.slice(-5).map(v => v.variance);
-        const olderVariances = varianceHistory.slice(-15, -5).map(v => v.variance);
-
-        if (olderVariances.length >= 3 && recentVariances.length >= 3) {
-          const oldAvg = olderVariances.reduce((a, b) => a + b, 0) / olderVariances.length;
-          const newAvg = recentVariances.reduce((a, b) => a + b, 0) / recentVariances.length;
-          const drop = oldAvg - newAvg;
-
-          if (drop > SUDDEN_STOP_VARIANCE_DROP && oldAvg > SUDDEN_STOP_MIN_RUNNING_VARIANCE) {
-            console.log(`⚠️ SUDDEN STOP: Variance dropped ${oldAvg.toFixed(2)} → ${newAvg.toFixed(2)}`);
-            triggerAlert('SUDDEN STOP DETECTED');
-            lastSuddenStopAlert = now;
-          }
-        }
+        console.log('⚠️ SUDDEN STOP: High Movement → Walking detected');
+        triggerAlert('SUDDEN STOP DETECTED');
+        lastSuddenStopAlert = now;
       }
     }
 
+    // Reset running state when dropping below running threshold
     isRunning = false;
     runningStartTime = null;
   } else {
@@ -175,7 +180,7 @@ const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
       updateActivity('Standing Still 🧍');
 
       // Check for sudden stop from running
-      if (isRunning || previousActivity === 'Running') {
+      if (isRunning || previousActivity.includes('Running')) {
         const timeSinceLastSuddenStop = (now - lastSuddenStopAlert) / 1000;
         if (timeSinceLastSuddenStop > SUDDEN_STOP_COOLDOWN) {
           console.log('⚠️ SUDDEN STOP: Running → Still');
@@ -187,6 +192,7 @@ const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
       lastActivity = 'Still';
     }
 
+    // Always reset running state when variance drops below walking
     isRunning = false;
     runningStartTime = null;
   }
@@ -280,6 +286,8 @@ export const startActivityMonitoring = async (): Promise<boolean> => {
     baselineStepCount = 0;
     isFirstStepUpdate = true;
     lastSuddenStopAlert = 0;
+    lastProlongedRunningAlert = 0;
+    lastFallAlert = 0;
     lastActivity = 'Still';
     potentialFallTime = null;
     potentialFallImpact = 0;

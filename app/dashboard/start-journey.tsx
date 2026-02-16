@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, Touch
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import api from '../../services/api';
+import { resetJourneyAlert } from '../../services/JourneyArrivalService';
 
 export default function StartJourneyScreen() {
   const router = useRouter();
@@ -164,6 +165,9 @@ export default function StartJourneyScreen() {
       const { email } = JSON.parse(userData!);
       const res = await api.post('/journey/end', { email });
       if (res.status === 200) {
+        // Reset journey alert flag so it can trigger for next journey
+        resetJourneyAlert();
+        
         setIsJourneyActive(false);
         setDest('');
         setExpectedTime(new Date(Date.now() + 30 * 60000));

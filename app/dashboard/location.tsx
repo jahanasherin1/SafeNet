@@ -24,6 +24,17 @@ interface SafePlace {
   coords: { latitude: number; longitude: number };
 }
 
+interface HeatmapPoint {
+  city: string;
+  latitude: number;
+  longitude: number;
+  intensity: number;
+  color: string;
+  recentCrimes: number;
+  totalCrimes: number;
+  riskLevel: string;
+}
+
 export default function UserLocationScreen() {
   const router = useRouter();
   const { user, weatherAlertVisible, setWeatherAlertVisible } = useSession();
@@ -38,6 +49,9 @@ export default function UserLocationScreen() {
   const [loadingPlaces, setLoadingPlaces] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'police' | 'hospital' | 'fire'>('all');
   const [dataSource, setDataSource] = useState<string>(''); // Track data source
+  const [heatmapVisible, setHeatmapVisible] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
+  const [loadingHeatmap, setLoadingHeatmap] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -221,6 +235,41 @@ export default function UserLocationScreen() {
     });
   };
 
+  const fetchHeatmapData = async () => {
+    setLoadingHeatmap(true);
+    try {
+      const response = await api.get('/crime-zone/heatmap-coordinates');
+      if (response.data.success && response.data.points) {
+        setHeatmapData(response.data.points);
+        setHeatmapVisible(true);
+      } else {
+        Alert.alert('Error', 'Failed to fetch heatmap data');
+        setHeatmapVisible(false);
+      }
+    } catch (error: any) {
+      console.error('Error fetching heatmap data:', error);
+      Alert.alert('Error', 'Could not fetch crime heatmap data. Please try again.');
+      setHeatmapVisible(false);
+    } finally {
+      setLoadingHeatmap(false);
+    }
+  };
+
+  const handleHeatmapToggle = async () => {
+    if (heatmapVisible) {
+      // Hide heatmap
+      setHeatmapVisible(false);
+      setHeatmapData([]);
+    } else {
+      // Show heatmap - fetch data if not already loaded
+      if (heatmapData.length === 0) {
+        await fetchHeatmapData();
+      } else {
+        setHeatmapVisible(true);
+      }
+    }
+  };
+
   // Extract area name from address (handles multiple formats)
   const extractAreaName = (address: string): string => {
     if (!address) return '';
@@ -320,13 +369,15 @@ export default function UserLocationScreen() {
         
         {/* --- MAP SECTION --- */}
         <View style={styles.mapContainer}>
-          {userLocation ? (
+          {userLocation && userLocation.latitude !== 0 && userLocation.longitude !== 0 ? (
             <>
               <MapComponent
                 initialLatitude={userLocation.latitude}
                 initialLongitude={userLocation.longitude}
                 mapRef={mapRef}
                 mapType={mapType}
+                heatmapData={heatmapData}
+                showHeatmap={heatmapVisible}
                 markers={[
                   ...safePlaces.map((place) => ({
                     id: place.id,
@@ -445,10 +496,33 @@ export default function UserLocationScreen() {
 
         {/* --- HEAT ZONES --- */}
         <View style={styles.heatZoneContainer}>
-            <Text style={styles.heatZoneTitle}>Heat zones</Text>
-            <TouchableOpacity style={styles.heatZoneButton}>
-                <Text style={styles.heatZoneText}>Show/Hide Heat Zones</Text>
+            <View style={styles.heatZoneHeaderContainer}>
+              <Text style={styles.heatZoneTitle}>Crime Heat Map</Text>
+              {loadingHeatmap && <ActivityIndicator size="small" color="#6A5ACD" />}
+            </View>
+            <Text style={styles.heatZoneDescription}>
+              View crime intensity zones - Green (Low) → Orange (Medium) → Red (High)
+            </Text>
+            <TouchableOpacity 
+              style={[styles.heatZoneButton, heatmapVisible && styles.heatZoneButtonActive]}
+              onPress={handleHeatmapToggle}
+              disabled={loadingHeatmap}
+            >
+              <Ionicons 
+                name={heatmapVisible ? 'eye-off' : 'eye'} 
+                size={18} 
+                color={heatmapVisible ? '#FFF' : '#666'} 
+                style={{ marginRight: 8 }}
+              />
+              <Text style={[styles.heatZoneText, heatmapVisible && styles.heatZoneTextActive]}>
+                {loadingHeatmap ? 'Loading...' : heatmapVisible ? 'Hide Heat Map' : 'Show Heat Map'}
+              </Text>
             </TouchableOpacity>
+            {heatmapData.length > 0 && (
+              <Text style={styles.heatmapStatsText}>
+                📍 {heatmapData.length} crime zones detected
+              </Text>
+            )}
         </View>
 
         <View style={{height: 100}} /> 
@@ -576,12 +650,26 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  heatZoneTitle: { fontSize: 16, fontWeight: '700', color: '#1A1B4B', marginBottom: 10 },
+  heatZoneHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  heatZoneTitle: { fontSize: 16, fontWeight: '700', color: '#1A1B4B' },
+  heatZoneDescription: { fontSize: 12, color: '#999', marginBottom: 12, fontStyle: 'italic' },
   heatZoneButton: {
     backgroundColor: '#F5F5F5',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  heatZoneButtonActive: {
+    backgroundColor: '#6A5ACD',
   },
   heatZoneText: { color: '#666', fontWeight: '600' },
+  heatZoneTextActive: { color: '#FFF' },
+  heatmapStatsText: { fontSize: 12, color: '#6A5ACD', marginTop: 12, fontWeight: '600', textAlign: 'center' },
 });

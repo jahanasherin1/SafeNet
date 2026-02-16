@@ -10,7 +10,7 @@ import Constants from 'expo-constants';
 const LAPTOP_IP = '192.168.1.105';     // ← College IP
 // ========================================
 
-const PORT = 5000; 
+const PORT = 5000;  
 
 const getBaseUrl = () => {
   // 1. Attempt to get IP automatically from Expo Go (Development Mode)

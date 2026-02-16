@@ -185,6 +185,22 @@ async function fetchOSMFacilities(latitude, longitude, radiusKm, amenityType, fa
         // Calculate distance from user location
         const distance = calculateOSMDistance(latitude, longitude, lat, lng);
 
+        // Extract phone number - try multiple keys
+        let phoneNumber = element.tags?.phone || 
+                         element.tags?.['contact:phone'] || 
+                         element.tags?.['contact:mobile'] ||
+                         undefined;
+        
+        // If no phone number found, use default emergency number for this type
+        if (!phoneNumber) {
+          const defaultNumbers = {
+            'police': '100',      // India Police Emergency
+            'hospital': '108',    // India Ambulance/Medical
+            'fire_station': '101' // India Fire Emergency
+          };
+          phoneNumber = defaultNumbers[facilityType] || '112';
+        }
+
         facilities.push({
           id: `osm_${element.id}`,
           name: element.tags?.name || `${facilityType} #${element.id}`,
@@ -194,7 +210,7 @@ async function fetchOSMFacilities(latitude, longitude, radiusKm, amenityType, fa
           address: element.tags?.['addr:full'] || 
                    `${element.tags?.['addr:street'] || ''} ${element.tags?.['addr:housenumber'] || ''}`.trim() ||
                    'Address not available',
-          phoneNumber: element.tags?.phone || element.tags?.['contact:phone'] || undefined,
+          phoneNumber: phoneNumber,
           website: element.tags?.website || element.tags?.['contact:website'] || undefined,
           operatingHours: element.tags?.opening_hours || undefined,
           distance: distance
@@ -203,6 +219,7 @@ async function fetchOSMFacilities(latitude, longitude, radiusKm, amenityType, fa
 
       // Sort by distance and return top 5
       facilities.sort((a, b) => a.distance - b.distance);
+      console.log(`✅ Returning ${facilities.length} ${facilityType} with phone numbers: ${facilities.map(f => `${f.name} (${f.phoneNumber})`).join(', ')}`);
       return facilities.slice(0, 5);
     } else {
       console.log(`⚠️ No ${facilityType} found from OSM in the specified area`);

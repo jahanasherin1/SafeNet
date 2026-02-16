@@ -5,6 +5,7 @@ import { startBackgroundActivityMonitoring, stopBackgroundActivityMonitoring } f
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import { startWeatherMonitoring, stopWeatherMonitoring } from './BackgroundWeatherAlertService';
 import { checkBackgroundLocationStatus } from './DiagnosticsService';
+import { startJourneyMonitoring, stopJourneyMonitoring } from './JourneyArrivalService';
 import { initializeLocalNotifications, setupNotificationListeners } from './LocalNotificationService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
@@ -226,6 +227,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch (weatherError) {
         console.warn('⚠️ Weather monitoring setup warning:', weatherError);
       }
+
+      // Start journey arrival monitoring
+      try {
+        await startJourneyMonitoring();
+        console.log('🚗 Journey arrival monitoring started');
+      } catch (journeyError) {
+        console.warn('⚠️ Journey monitoring setup warning:', journeyError);
+      }
     } catch (error) {
       console.error('Error saving session:', error);
       throw error;
@@ -245,6 +254,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Stop weather monitoring
       stopWeatherMonitoring();
+      
+      // Stop journey arrival monitoring
+      stopJourneyMonitoring();
       
       // Release wake lock
       await releaseWakeLock();
@@ -320,6 +332,19 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Weather alerts management
   const addWeatherAlert = async (alert: StoredWeatherAlert) => {
     try {
+      // Check if a similar alert was already sent recently (5 minute cooldown)
+      const recentAlert = weatherAlerts.find(a => {
+        const timeDiff = Date.now() - a.timestamp;
+        return timeDiff < 5 * 60 * 1000 && // Within 5 minutes
+               a.level === alert.level && // Same safety level
+               a.weatherCondition === alert.weatherCondition; // Same weather condition
+      });
+
+      if (recentAlert) {
+        console.log('⏳ Similar weather alert already sent recently, skipping duplicate');
+        return;
+      }
+
       const updatedAlerts = [alert, ...weatherAlerts].slice(0, 50); // Keep last 50 alerts
       setWeatherAlerts(updatedAlerts);
       await AsyncStorage.setItem('weatherAlerts', JSON.stringify(updatedAlerts));

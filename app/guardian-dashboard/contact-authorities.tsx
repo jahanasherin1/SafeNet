@@ -397,7 +397,12 @@ export default function ContactAuthoritiesScreen() {
                   <Text style={styles.facilityName}>{place.name}</Text>
                   <Text style={styles.facilityAddress} numberOfLines={1}>{place.address}</Text>
                   {place.phoneNumber && (
-                    <Text style={styles.facilityPhone}>📞 {place.phoneNumber}</Text>
+                    <TouchableOpacity onPress={() => callNearbyFacility(place)}>
+                      <Text style={styles.facilityPhone}>
+                        <Ionicons name="call" size={14} color="#6A5ACD" /> {place.phoneNumber}
+                        {place.distance && <Text style={styles.facilityDistance}> • {place.distance.toFixed(1)}km away</Text>}
+                      </Text>
+                    </TouchableOpacity>
                   )}
                 </View>
                 
@@ -672,6 +677,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6A5ACD',
     fontWeight: '500',
+  },
+  facilityDistance: {
+    fontSize: 12,
+    color: '#AAA',
+    fontWeight: '400',
   },
   facilityCallButton: {
     width: 44,

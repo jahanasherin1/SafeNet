@@ -13,6 +13,15 @@ interface MapMarker {
   color?: string;
 }
 
+interface HeatmapPoint {
+  latitude: number;
+  longitude: number;
+  intensity: number;
+  color: string;
+  city?: string;
+  recentCrimes?: number;
+}
+
 interface MapComponentProps {
   initialLatitude: number;
   initialLongitude: number;
@@ -20,6 +29,8 @@ interface MapComponentProps {
   onMarkerPress?: (marker: MapMarker) => void;
   mapRef?: React.RefObject<any>;
   mapType?: 'standard' | 'satellite' | 'hybrid' | 'terrain';
+  heatmapData?: HeatmapPoint[];
+  showHeatmap?: boolean;
 }
 
 export default function MapComponent({
@@ -29,6 +40,8 @@ export default function MapComponent({
   onMarkerPress,
   mapRef: externalMapRef,
   mapType = 'standard',
+  heatmapData = [],
+  showHeatmap = false,
 }: MapComponentProps) {
   const internalMapRef = useRef<any>(null);
   const mapRef = externalMapRef || internalMapRef;
@@ -69,8 +82,18 @@ export default function MapComponent({
 
   // --- ANDROID: LEAFLET + SATELLITE ---
   const generateLeafletHTML = () => {
+    // Helper function to safely escape strings for JavaScript
+    const escapeString = (str: string): string => {
+      if (!str) return '';
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'") 
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+    };
+
     // Determine tile layer based on mapType
-    let tileLayer = '';
     let tileLayerUrl = '';
     
     switch(mapType) {
@@ -89,33 +112,58 @@ export default function MapComponent({
         break;
     }
 
-    const markerHTML = [
-      // Pulse User Icon
-      `
-      var userIcon = L.divIcon({
-          className: 'custom-div-icon',
-          html: "<div style='position:relative; width:20px; height:20px;'>" +
-                  "<div style='position:absolute; top:0; left:0; width:20px; height:20px; background:#4285F4; border:3px solid white; border-radius:50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index:2;'></div>" +
-                  "<div style='position:absolute; top:-10px; left:-10px; width:40px; height:40px; background:rgba(66, 133, 244, 0.4); border-radius:50%; animation: pulse 2s infinite; z-index:1;'></div>" +
-                "</div>",
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-      });
-      L.marker([${initialLatitude}, ${initialLongitude}], { icon: userIcon }).addTo(map);
-      `,
-      // Other Markers
-      ...markers.filter(m => m.id !== 'user').map(marker => `
-        var pinIcon = L.divIcon({
-            className: 'custom-pin-icon',
-            html: "<div style='background-color:${marker.color || '#EA4335'}; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 1px 1px 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;'><div style='width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(45deg);'></div></div>",
-            iconSize: [24, 24],
-            iconAnchor: [12, 24],
-            popupAnchor: [0, -24]
-        });
-        L.marker([${marker.latitude}, ${marker.longitude}], {icon: pinIcon}).addTo(map)
-          .bindPopup('<div style="font-family: Roboto, sans-serif; font-size: 14px; padding: 5px;"><b>${marker.title}</b><br><span style="color:#555;">${marker.description || ''}</span></div>');
-      `)
-    ].join('');
+    // Build marker data as JSON for safer passing
+    const markerData = [
+      // User marker
+      {
+        type: 'user',
+        lat: initialLatitude,
+        lng: initialLongitude
+      },
+      // Safe place markers
+      ...markers.filter(m => m.id !== 'user').map(marker => ({
+        type: 'place',
+        id: marker.id,
+        lat: marker.latitude,
+        lng: marker.longitude,
+        title: escapeString(marker.title),
+        description: escapeString(marker.description || ''),
+        color: marker.color || '#EA4335'
+      })),
+      // Heatmap points
+      ...(showHeatmap && heatmapData.length > 0 ? heatmapData.map(point => ({
+        type: 'heatmap',
+        lat: point.latitude,
+        lng: point.longitude,
+        intensity: point.intensity,
+        color: point.color,
+        city: escapeString(point.city || 'Crime Zone'),
+        recentCrimes: point.recentCrimes || 0
+      })) : [])
+    ];
+
+    // Validate coordinates
+    if (!initialLatitude || !initialLongitude || initialLatitude === 0 || initialLongitude === 0) {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <style>
+            body { margin: 0; padding: 0; background: #F5F5F5; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; }
+            .container { text-align: center; color: #666; }
+            .icon { font-size: 48px; margin-bottom: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">📍</div>
+            <p>Acquiring location...</p>
+          </div>
+        </body>
+        </html>
+      `;
+    }
 
     return `
       <!DOCTYPE html>
@@ -125,7 +173,6 @@ export default function MapComponent({
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
-          /* CRITICAL: touch-action: none prevents the page from scrolling when dragging map */
           body { margin: 0; padding: 0; background: #ddd; touch-action: none; overflow: hidden; }
           #map { width: 100%; height: 100vh; background: #ddd; }
           @keyframes pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -142,23 +189,67 @@ export default function MapComponent({
             zoomDelta: 0.5
           }).setView([${initialLatitude}, ${initialLongitude}], 16);
 
-          // Tile Layer based on mapType
           L.tileLayer('${tileLayerUrl}', {
             maxZoom: 20
           }).addTo(map);
 
-          ${markerHTML}
+          // Ensure map is properly sized
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 100);
+
+          // User marker
+          var userIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='position:relative; width:20px; height:20px;'><div style='position:absolute; top:0; left:0; width:20px; height:20px; background:#4285F4; border:3px solid white; border-radius:50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index:2;'></div><div style='position:absolute; top:-10px; left:-10px; width:40px; height:40px; background:rgba(66, 133, 244, 0.4); border-radius:50%; animation: pulse 2s infinite; z-index:1;'></div></div>",
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+          L.marker([${initialLatitude}, ${initialLongitude}], { icon: userIcon }).addTo(map);
+
+          // Add markers from data
+          var markerData = ${JSON.stringify(markerData)};
+          
+          markerData.forEach(function(data) {
+            if (data.type === 'user') {
+              // Already added above
+              return;
+            } else if (data.type === 'place') {
+              var pinIcon = L.divIcon({
+                className: 'custom-pin-icon',
+                html: "<div style='background-color:" + data.color + "; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 1px 1px 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;'><div style='width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(45deg);'></div></div>",
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24]
+              });
+              var popupText = '<div style="font-family: Roboto, sans-serif; font-size: 14px; padding: 5px;"><b>' + data.title + '</b><br><span style="color:#555;">' + data.description + '</span></div>';
+              L.marker([data.lat, data.lng], {icon: pinIcon}).bindPopup(popupText).addTo(map);
+            } else if (data.type === 'heatmap') {
+              L.circleMarker([data.lat, data.lng], {
+                radius: Math.max(5, data.intensity * 15),
+                fillColor: data.color,
+                color: data.color,
+                weight: 1,
+                opacity: 0.7,
+                fillOpacity: 0.5 + data.intensity * 0.4,
+                zIndex: 1
+              }).bindPopup('<div style="font-family: Roboto; font-size: 12px;"><b>' + data.city + '</b><br>Crime Cases: ' + data.recentCrimes + '<br>Intensity: ' + (data.intensity * 100).toFixed(0) + '%</div>').addTo(map);
+            }
+          });
         </script>
       </body>
       </html>
     `;
   };
 
+  // Create a stable key that only changes on core map changes, not on marker updates
+  const mapKey = `map-${mapType}-${Math.round(initialLatitude * 100)}-${Math.round(initialLongitude * 100)}`;
+
   return (
     <View style={styles.container}>
       {Platform.OS === 'android' ? (
         <WebView
-          key={mapType}
+          key={mapKey}
           ref={mapRef}
           style={styles.map}
           source={{ html: generateLeafletHTML() }}
@@ -167,7 +258,7 @@ export default function MapComponent({
           startInLoadingState={true}
           scalesPageToFit={true}
           androidLayerType="hardware"
-          scrollEnabled={false} // Disable native scroll to let map handle gestures
+          scrollEnabled={false}
           overScrollMode="never"
         />
       ) : (

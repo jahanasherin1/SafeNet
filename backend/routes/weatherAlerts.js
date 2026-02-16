@@ -1,5 +1,5 @@
 import express from 'express';
-import { User } from '../models/schemas.js';
+import { Alert, User } from '../models/schemas.js';
 import { createAlert } from './alerts.js';
 
 const router = express.Router();
@@ -28,6 +28,25 @@ router.post('/send', async (req, res) => {
     }
 
     const displayName = userName || user.name || 'User';
+
+    // Check for duplicate weather alert in the last 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const recentAlert = await Alert.findOne({
+      userEmail: user.email,
+      type: 'weather',
+      createdAt: { $gte: fiveMinutesAgo }
+    });
+
+    if (recentAlert && recentAlert.metadata?.safetyLevel === safetyLevel && 
+        recentAlert.metadata?.weatherCondition === weatherCondition) {
+      console.log('⏳ Similar weather alert already sent recently, skipping duplicate');
+      return res.status(200).json({
+        message: 'Weather alert already sent recently (duplicate prevented)',
+        success: true,
+        alertCreated: false,
+        isDuplicate: true
+      });
+    }
 
     // Create alert for user's weather alert history
     console.log('📝 Creating weather alert in database...');

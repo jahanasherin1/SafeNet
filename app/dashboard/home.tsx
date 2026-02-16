@@ -8,12 +8,14 @@ import React, { useCallback, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import { useSession } from '../../services/SessionContext';
 // Import the task name and functions
 import { isBackgroundTrackingActive, startBackgroundLocationTracking, stopBackgroundLocationTracking } from '../../services/BackgroundLocationService';
 import { startWeatherMonitoring, stopWeatherMonitoring } from '../../services/BackgroundWeatherAlertService';
 
 export default function DashboardHome() {
   const router = useRouter();
+  const { isAlertVisible } = useSession();
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   
@@ -32,6 +34,16 @@ export default function DashboardHome() {
       loadSosStatus();
     }, [])
   );
+
+  // --- 1.5. RELOAD SOS STATUS WHEN ALERT MODAL CLOSES ---
+  React.useEffect(() => {
+    // When alert modal closes (isAlertVisible becomes false), reload lastSosTime
+    // This ensures the cancel button appears immediately after SOS is sent
+    if (!isAlertVisible) {
+      console.log('🔄 Alert modal closed, reloading SOS status...');
+      loadSosStatus();
+    }
+  }, [isAlertVisible]);
 
   const loadSosStatus = async () => {
     try {

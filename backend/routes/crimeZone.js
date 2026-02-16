@@ -141,4 +141,172 @@ router.get('/cities', async (req, res) => {
   }
 });
 
+// GET heatmap data for visualization
+router.get('/heatmap', async (req, res) => {
+  try {
+    const crimeData = getCrimeData();
+    
+    // Convert crime data to array of points with intensity
+    const heatmapPoints = [];
+    
+    // Get max crime count for normalization
+    let maxCrimes = 0;
+    Object.entries(crimeData).forEach(([city, data]) => {
+      if (data.recentYearCrimes > maxCrimes) {
+        maxCrimes = data.recentYearCrimes;
+      }
+    });
+    
+    // Ensure maxCrimes is at least 1 to avoid division by zero
+    maxCrimes = Math.max(maxCrimes, 1);
+    
+    // Process each city and create heatmap points
+    Object.entries(crimeData).forEach(([city, data]) => {
+      // Try to get coordinates from city coordinates file or use average
+      let lat = 11.2588; // Default: approx center of Kerala
+      let lng = 75.7139;
+      
+      // Parse from city name if multiple entries, use the last known coordinates
+      // We'll extract coordinates from the original CSV data differently
+      // For now, we'll use the city's data to calculate intensity
+      
+      const riskLevel = calculateRiskLevel(data);
+      
+      // Calculate intensity (0-1) based on recent crimes
+      const intensity = Math.min(data.recentYearCrimes / maxCrimes, 1);
+      
+      // Map intensity to color (green -> orange -> red)
+      let color;
+      if (intensity < 0.33) {
+        color = '#00AA00'; // Green
+      } else if (intensity < 0.66) {
+        color = '#FFAA00'; // Orange
+      } else {
+        color = '#FF0000'; // Red
+      }
+      
+      heatmapPoints.push({
+        city,
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lng),
+        intensity, // 0-1 normalized value
+        color,
+        recentCrimes: data.recentYearCrimes,
+        totalCrimes: data.totalCrimes,
+        riskLevel
+      });
+    });
+    
+    res.status(200).json({
+      success: true,
+      points: heatmapPoints,
+      maxIntensity: 1,
+      colorScale: {
+        low: '#00AA00',     // Green
+        medium: '#FFAA00',  // Orange
+        high: '#FF0000'     // Red
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching heatmap data:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching heatmap data', 
+      error: error.message 
+    });
+  }
+});
+
+// GET heatmap data with actual coordinates from crime CSV
+router.get('/heatmap-coordinates', async (req, res) => {
+  try {
+    // Parse raw CSV to get actual coordinates
+    const fs = await import('fs').then(m => m.default);
+    const path = await import('path').then(m => m.default);
+    const { fileURLToPath } = await import('url').then(m => m.default);
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    const csvPath = path.join(__dirname, '../crime-data-coordinates.csv');
+    const csvData = fs.readFileSync(csvPath, 'utf-8');
+    const lines = csvData.split('\n').filter(line => line.trim());
+    
+    // Collect unique locations with crime counts
+    const locationMap = {};
+    const dataLines = lines.slice(1); // Skip header
+    
+    dataLines.forEach(line => {
+      const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+      if (!values || values.length < 6) return;
+      
+      const [city, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
+      
+      if (!lat || !lng) return;
+      
+      const key = `${lat},${lng}`;
+      if (!locationMap[key]) {
+        locationMap[key] = {
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          city,
+          totalCrimes: 0,
+          recentCrimes: 0
+        };
+      }
+      
+      const crimeCount = parseInt(count) || 0;
+      const yearNum = parseInt(year);
+      
+      locationMap[key].totalCrimes += crimeCount;
+      if (yearNum >= 2024) {
+        locationMap[key].recentCrimes += crimeCount;
+      }
+    });
+    
+    // Convert to array and calculate intensity
+    const points = Object.values(locationMap);
+    
+    let maxCrimes = Math.max(...points.map(p => p.recentCrimes));
+    maxCrimes = Math.max(maxCrimes, 1);
+    
+    const heatmapPoints = points.map(point => {
+      const intensity = Math.min(point.recentCrimes / maxCrimes, 1);
+      
+      let color;
+      if (intensity <= 0.33) {
+        color = '#00AA00'; // Green
+      } else if (intensity <= 0.66) {
+        color = '#FFAA00'; // Orange
+      } else {
+        color = '#FF0000'; // Red
+      }
+      
+      return {
+        ...point,
+        intensity,
+        color
+      };
+    });
+    
+    res.status(200).json({
+      success: true,
+      points: heatmapPoints,
+      totalPoints: heatmapPoints.length,
+      colorScale: {
+        low: '#00AA00',
+        medium: '#FFAA00',
+        high: '#FF0000'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching heatmap coordinates:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching heatmap coordinates', 
+      error: error.message 
+    });
+  }
+});
+
 export default router;
