@@ -19,12 +19,21 @@ const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 function getCrimeData() {
   const now = Date.now();
   if (!crimeDataCache || !cacheTimestamp || (now - cacheTimestamp > CACHE_DURATION)) {
-    console.log('Loading crime data from CSV...');
+    console.log('🔄 Loading crime data from CSV...');
     crimeDataCache = parseCrimeData();
     cacheTimestamp = now;
+    console.log(`✅ Loaded ${Object.keys(crimeDataCache).length} crime locations`);
   }
   return crimeDataCache;
 }
+
+// Clear cache endpoint (for development/testing)
+router.post('/clear-cache', (req, res) => {
+  crimeDataCache = null;
+  cacheTimestamp = null;
+  console.log('🗑️ Crime data cache cleared');
+  res.json({ success: true, message: 'Cache cleared successfully' });
+});
 
 // GET zone alert for specific location
 router.post('/zone-alert', async (req, res) => {
@@ -162,13 +171,12 @@ router.get('/heatmap', async (req, res) => {
     
     // Process each city and create heatmap points
     Object.entries(crimeData).forEach(([city, data]) => {
-      // Try to get coordinates from city coordinates file or use average
-      let lat = 11.2588; // Default: approx center of Kerala
-      let lng = 75.7139;
+      // Use actual coordinates from parsed crime data
+      const lat = data.latitude || 11.2588; // Fallback to Kerala default if missing
+      const lng = data.longitude || 75.7139;
       
-      // Parse from city name if multiple entries, use the last known coordinates
-      // We'll extract coordinates from the original CSV data differently
-      // For now, we'll use the city's data to calculate intensity
+      // Skip if no valid coordinates
+      if (!lat || !lng) return;
       
       const riskLevel = calculateRiskLevel(data);
       
@@ -177,9 +185,9 @@ router.get('/heatmap', async (req, res) => {
       
       // Map intensity to color (green -> orange -> red)
       let color;
-      if (intensity < 0.33) {
+      if (intensity <= 0.33) {
         color = '#00AA00'; // Green
-      } else if (intensity < 0.66) {
+      } else if (intensity <= 0.66) {
         color = '#FFAA00'; // Orange
       } else {
         color = '#FF0000'; // Red
@@ -220,59 +228,31 @@ router.get('/heatmap', async (req, res) => {
 // GET heatmap data with actual coordinates from crime CSV
 router.get('/heatmap-coordinates', async (req, res) => {
   try {
-    // Parse raw CSV to get actual coordinates
-    const fs = await import('fs').then(m => m.default);
-    const path = await import('path').then(m => m.default);
-    const { fileURLToPath } = await import('url').then(m => m.default);
+    // Use the parsed crime data which now includes coordinates
+    const crimeData = getCrimeData();
     
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
+    // Convert crime data to array of points with intensity
+    const heatmapPoints = [];
     
-    const csvPath = path.join(__dirname, '../crime-data-coordinates.csv');
-    const csvData = fs.readFileSync(csvPath, 'utf-8');
-    const lines = csvData.split('\n').filter(line => line.trim());
-    
-    // Collect unique locations with crime counts
-    const locationMap = {};
-    const dataLines = lines.slice(1); // Skip header
-    
-    dataLines.forEach(line => {
-      const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-      if (!values || values.length < 6) return;
-      
-      const [city, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
-      
-      if (!lat || !lng) return;
-      
-      const key = `${lat},${lng}`;
-      if (!locationMap[key]) {
-        locationMap[key] = {
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lng),
-          city,
-          totalCrimes: 0,
-          recentCrimes: 0
-        };
-      }
-      
-      const crimeCount = parseInt(count) || 0;
-      const yearNum = parseInt(year);
-      
-      locationMap[key].totalCrimes += crimeCount;
-      if (yearNum >= 2024) {
-        locationMap[key].recentCrimes += crimeCount;
+    // Get max crime count for normalization
+    let maxCrimes = 0;
+    Object.entries(crimeData).forEach(([city, data]) => {
+      if (data.recentYearCrimes > maxCrimes) {
+        maxCrimes = data.recentYearCrimes;
       }
     });
     
-    // Convert to array and calculate intensity
-    const points = Object.values(locationMap);
-    
-    let maxCrimes = Math.max(...points.map(p => p.recentCrimes));
+    // Ensure maxCrimes is at least 1 to avoid division by zero
     maxCrimes = Math.max(maxCrimes, 1);
     
-    const heatmapPoints = points.map(point => {
-      const intensity = Math.min(point.recentCrimes / maxCrimes, 1);
+    // Convert to array and calculate intensity with actual coordinates
+    Object.entries(crimeData).forEach(([city, data]) => {
+      // Use coordinates from parsed crime data
+      if (!data.latitude || !data.longitude) return;
       
+      const intensity = Math.min(data.recentYearCrimes / maxCrimes, 1);
+      
+      // Map intensity to color (green -> orange -> red)
       let color;
       if (intensity <= 0.33) {
         color = '#00AA00'; // Green
@@ -282,11 +262,15 @@ router.get('/heatmap-coordinates', async (req, res) => {
         color = '#FF0000'; // Red
       }
       
-      return {
-        ...point,
+      heatmapPoints.push({
+        city,
+        latitude: data.latitude,
+        longitude: data.longitude,
         intensity,
-        color
-      };
+        color,
+        recentCrimes: data.recentYearCrimes,
+        totalCrimes: data.totalCrimes
+      });
     });
     
     res.status(200).json({

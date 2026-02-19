@@ -275,6 +275,15 @@ export default function ZoneActivityScreen() {
                   )}
                 </View>
               </View>
+              {/* Expanded Search Notice */}
+              {crimeChanceData.isExpandedSearch && (
+                <View style={styles.expandedSearchBanner}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#EA580C" />
+                  <Text style={styles.expandedSearchText}>
+                    Showing from nearest location. No crime data within 3km.
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Overall Risk Summary */}
@@ -463,6 +472,21 @@ const styles = StyleSheet.create({
   locationAddress: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  expandedSearchBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 12,
+    gap: 8,
+  },
+  expandedSearchText: {
+    fontSize: 12,
+    color: '#92400E',
+    flex: 1,
+    fontWeight: '500',
   },
   overallRiskCard: {
     backgroundColor: '#FFF',

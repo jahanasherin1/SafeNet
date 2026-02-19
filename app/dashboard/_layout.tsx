@@ -62,6 +62,12 @@ export default function DashboardLayout() {
           href: null
         }} 
       />
+      <Tabs.Screen 
+        name="app-about" 
+        options={{ 
+          href: null
+        }} 
+      />
     
     </Tabs>
   );

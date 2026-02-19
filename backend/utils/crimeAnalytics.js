@@ -35,6 +35,24 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c; // Distance in km
 }
 
+// Normalize city name by removing administrative divisions
+// "Kozhikode city cyber" → "Kozhikode" (same coordinates, just administrative division)
+// "Mukkam" → "Mukkam" (separate town, keep as is)
+function normalizeCityName(fullLocation) {
+  if (!fullLocation) return '';
+  
+  let normalized = fullLocation.trim();
+  
+  // ONLY remove administrative divisions that share the same coordinates
+  // These are: "city cyber", "city kasaba", "city vanitha", etc.
+  // Pattern: location + " city " + administrative_type
+  normalized = normalized
+    .replace(/\s+(city\s+(cyber|kasaba|vanitha|north|south|east|west|central))$/i, '')
+    .trim();
+  
+  return normalized;
+}
+
 // Parse CSV file and calculate crime statistics
 export function parseCrimeData() {
   try {
@@ -52,13 +70,29 @@ export function parseCrimeData() {
       const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
       if (!values || values.length < 6) return;
       
-      const [city, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
+      const [fullLocation, lat, lng, crimeType, year, count] = values.map(v => v.replace(/^"|"$/g, '').trim());
       
-      if (!city || !crimeType || !year || !count) return;
+      if (!fullLocation || !crimeType || !year || !count) return;
       
-      // Initialize city data
-      if (!crimeByCity[city]) {
-        crimeByCity[city] = {
+      // Normalize location name (removes only admin divisions like "city cyber")
+      const location = normalizeCityName(fullLocation);
+      
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      
+      // Validate coordinates - Kerala boundaries approximately:
+      // Latitude: 8.2° to 12.8°N, Longitude: 74.8° to 77.5°E
+      // Filter out invalid coordinates that would place points in the sea
+      if (latitude < 8.0 || latitude > 13.0 || longitude < 74.5 || longitude > 78.0) {
+        console.warn(`Invalid coordinates for ${location}: ${latitude}, ${longitude}`);
+        return; // Skip this entry
+      }
+      
+      // Initialize location data with EXACT CSV coordinates (NOT standardized)
+      if (!crimeByCity[location]) {
+        crimeByCity[location] = {
+          latitude: latitude,      // Use EXACT validated CSV coordinate
+          longitude: longitude,    // Use EXACT validated CSV coordinate
           totalCrimes: 0,
           recentYearCrimes: 0,
           crimeTypes: {},
@@ -70,24 +104,24 @@ export function parseCrimeData() {
       const yearNum = parseInt(year);
       
       // Aggregate total crimes
-      crimeByCity[city].totalCrimes += crimeCount;
+      crimeByCity[location].totalCrimes += crimeCount;
       
       // Track recent years (2024-2025)
       if (yearNum >= 2024) {
-        crimeByCity[city].recentYearCrimes += crimeCount;
+        crimeByCity[location].recentYearCrimes += crimeCount;
       }
       
       // Track by crime type
-      if (!crimeByCity[city].crimeTypes[crimeType]) {
-        crimeByCity[city].crimeTypes[crimeType] = 0;
+      if (!crimeByCity[location].crimeTypes[crimeType]) {
+        crimeByCity[location].crimeTypes[crimeType] = 0;
       }
-      crimeByCity[city].crimeTypes[crimeType] += crimeCount;
+      crimeByCity[location].crimeTypes[crimeType] += crimeCount;
       
       // Track by year
-      if (!crimeByCity[city].years[year]) {
-        crimeByCity[city].years[year] = 0;
+      if (!crimeByCity[location].years[year]) {
+        crimeByCity[location].years[year] = 0;
       }
-      crimeByCity[city].years[year] += crimeCount;
+      crimeByCity[location].years[year] += crimeCount;
     });
     
     return crimeByCity;

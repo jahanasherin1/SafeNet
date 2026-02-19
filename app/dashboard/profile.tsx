@@ -142,7 +142,6 @@ export default function ProfileScreen() {
             `Location updates will now occur every 1-5 seconds for real-time tracking.\n\n` +
             (isTrackingActive ? `Your location tracking has been automatically restarted with the new settings.` : ''),
             [{ text: 'OK' }]
-            [{ text: 'OK' }]
           );
         }
       }
@@ -230,7 +229,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* About */}
-          <TouchableOpacity style={styles.prefItem}>
+          <TouchableOpacity style={styles.prefItem} onPress={() => router.push('/dashboard/app-about')}>
             <Text style={styles.prefText}>About the App</Text>
             <Ionicons name="chevron-forward" size={20} color="#7A7A7A" />
           </TouchableOpacity>

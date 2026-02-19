@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import api from '../services/api';
 import { sendWeatherAlertNotification } from '../services/LocalNotificationService';
@@ -29,7 +29,7 @@ export default function WeatherAlertModal({
   latitude,
   longitude,
 }: WeatherAlertModalProps) {
-  const { addWeatherAlert } = useSession();
+  const { addWeatherAlert, weatherAlerts } = useSession();
   const [alert, setAlert] = useState<WeatherAlert | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

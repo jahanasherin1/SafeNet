@@ -18,6 +18,11 @@ export default function AddGuardianScreen() {
   const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validation Error States
+  const [nameError, setNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
   // --- HELPER FOR WEB & MOBILE ALERTS ---
   const showAlert = (title: string, message: string, onOk?: () => void) => {
     if (Platform.OS === 'web') {
@@ -30,33 +35,79 @@ export default function AddGuardianScreen() {
     }
   };
 
+  // Validation Functions
+  const validateName = (text: string) => {
+    if (!text.trim()) {
+      setNameError('Guardian name is required');
+      return false;
+    } else if (text.trim().length < 2) {
+      setNameError('Name must be at least 2 characters');
+      return false;
+    } else {
+      setNameError('');
+      return true;
+    }
+  };
+
+  const validatePhone = (text: string) => {
+    if (!text.trim()) {
+      setPhoneError('Phone number is required');
+      return false;
+    } else if (text.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return false;
+    } else if (text[0] === '0' || text[0] === '1') {
+      setPhoneError('Phone number cannot start with 0 or 1');
+      return false;
+    } else {
+      setPhoneError('');
+      return true;
+    }
+  };
+
+  const validateEmail = (text: string) => {
+    if (!text.trim()) {
+      setEmailError('Email is required for guardian access');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(text)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    } else {
+      setEmailError('');
+      return true;
+    }
+  };
+
+  // Input Handlers with Validation
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (text.trim()) {
+      validateName(text);
+    } else {
+      setNameError('');
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (text.trim()) {
+      validateEmail(text);
+    } else {
+      setEmailError('');
+    }
+  };
+
   const handleAddGuardian = async () => {
-    // Basic Validation
-    if (!name.trim()) {
-      showAlert("Error", "Guardian Name is required");
+    // Trigger validation on all fields
+    const isNameValid = validateName(name);
+    const isPhoneValid = validatePhone(phone);
+    const isEmailValid = validateEmail(email);
+
+    if (!isNameValid || !isPhoneValid || !isEmailValid) {
+      showAlert("Error", "Please fix the errors before adding guardian.");
       return;
-    }
-    
-    // Enhanced Phone Number Validation
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phone.trim()) {
-      showAlert("Error", "Phone number is required");
-      return;
-    }
-    if (!phoneRegex.test(phone)) {
-      showAlert("Error", "Please enter a valid 10-digit phone number");
-      return;
-    }
-    // Check if phone starts with a valid digit (2-9 for most regions)
-    if (phone[0] === '0' || phone[0] === '1') {
-      showAlert("Error", "Phone number cannot start with 0 or 1");
-      return;
-    }
-    
-    // Simple Email Regex
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showAlert("Error", "Please enter a valid email address");
-        return;
     }
 
     setLoading(true);
@@ -100,7 +151,14 @@ export default function AddGuardianScreen() {
 
   const handlePhoneChange = (text: string) => {
     const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 10) setPhone(numericValue);
+    if (numericValue.length <= 10) {
+      setPhone(numericValue);
+      if (numericValue) {
+        validatePhone(numericValue);
+      } else {
+        setPhoneError('');
+      }
+    }
   };
 
   return (
@@ -123,8 +181,10 @@ export default function AddGuardianScreen() {
           <CustomInput 
             placeholder="Enter guardian's full name" 
             value={name}
-            onChangeText={setName}
+            onChangeText={handleNameChange}
+            onBlur={() => validateName(name)}
           />
+          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
           <Text style={styles.label}>Phone Number</Text>
           <CustomInput 
@@ -133,7 +193,9 @@ export default function AddGuardianScreen() {
             keyboardType="numeric"
             value={phone}
             onChangeText={handlePhoneChange}
+            onBlur={() => validatePhone(phone)}
           />
+          {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
           {/* NEW EMAIL INPUT */}
           <Text style={styles.label}>Email Address</Text>
@@ -142,8 +204,10 @@ export default function AddGuardianScreen() {
             iconName="mail-outline"
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
+            onBlur={() => validateEmail(email)}
           />
+          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
           <Text style={styles.label}>Relationship (Optional)</Text>
           <CustomInput 
@@ -217,5 +281,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignSelf: 'center',
     width: '60%',
+  },
+  errorText: { 
+    fontSize: 13, 
+    color: '#FF4B4B', 
+    marginTop: 4, 
+    marginBottom: 8,
+    marginLeft: 4 
   },
 });

@@ -102,6 +102,38 @@ export function parseCrimeChanceData() {
   }
 }
 
+// Extract unique locations for fast nearest lookup
+function extractLocationsFromData(locationData) {
+  const locations = [];
+  Object.values(locationData).forEach(location => {
+    locations.push({
+      name: location.name,
+      latitude: location.latitude,
+      longitude: location.longitude
+    });
+  });
+  return locations;
+}
+
+// Find the nearest location by coordinates
+function findNearestLocation(userLat, userLng, locations) {
+  let nearestLocation = null;
+  let minDistance = Infinity;
+  
+  locations.forEach(location => {
+    const distance = calculateDistance(userLat, userLng, location.latitude, location.longitude);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestLocation = {
+        ...location,
+        distance
+      };
+    }
+  });
+  
+  return nearestLocation;
+}
+
 // Calculate crime type chance/probability
 function calculateCrimeChance(crimeCount, crimeTypeRange) {
   if (!crimeTypeRange || crimeTypeRange.max === 0) {
@@ -160,30 +192,22 @@ function calculateCrimeChance(crimeCount, crimeTypeRange) {
 
 // Get crime chances for user's location
 export function getCrimeChancesAtLocation(userLat, userLng, locationData, crimeTypeRanges, radiusKm = 3) {
-  // Find all locations within radius and sort by distance
-  const nearbyLocations = [];
+  // Extract all locations with coordinates for nearest lookup
+  const locations = extractLocationsFromData(locationData);
   
-  Object.values(locationData).forEach(location => {
-    const distance = calculateDistance(userLat, userLng, location.latitude, location.longitude);
-    if (distance <= radiusKm) {
-      nearbyLocations.push({
-        ...location,
-        distance
-      });
-    }
-  });
+  // Find the nearest location (regardless of distance)
+  const nearestLocationInfo = findNearestLocation(userLat, userLng, locations);
   
-  // Sort by distance (nearest first), then by recent crimes (highest first)
-  nearbyLocations.sort((a, b) => {
-    if (Math.abs(a.distance - b.distance) < 0.1) {
-      // If distances are very similar, sort by crime count
-      return b.recentCrimes - a.recentCrimes;
-    }
-    return a.distance - b.distance;
-  });
+  if (!nearestLocationInfo) {
+    return {
+      success: false,
+      message: 'No crime data available for your location'
+    };
+  }
   
-  // Use the nearest location
-  const closestLocation = nearbyLocations[0];
+  // Get full location data from the nearest location name
+  const locationName = nearestLocationInfo.name;
+  const closestLocation = locationData[locationName];
   
   if (!closestLocation) {
     return {
@@ -192,7 +216,13 @@ export function getCrimeChancesAtLocation(userLat, userLng, locationData, crimeT
     };
   }
   
-  const minDistance = closestLocation.distance;
+  const minDistance = nearestLocationInfo.distance;
+  let isExpandedSearch = false;
+  
+  // Check if we're using expanded search (location beyond initial radius)
+  if (minDistance > radiusKm) {
+    isExpandedSearch = true;
+  }
   
   // Calculate chances for each crime type
   const crimeChances = [];
@@ -249,6 +279,8 @@ export function getCrimeChancesAtLocation(userLat, userLng, locationData, crimeT
       totalRecentCrimes
     },
     crimeChances,
+    isExpandedSearch,
+    searchNote: isExpandedSearch ? `Showing data from nearest location (${closestLocation.name}). No crime data available within ${radiusKm}km radius.` : `Crime data within ${radiusKm}km radius`,
     detectedAt: new Date().toISOString()
   };
 }

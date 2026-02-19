@@ -5,9 +5,10 @@ import Constants from 'expo-constants';
 // ========================================
 // 🌐 NETWORK SETUP - CHANGE IP HERE 👇
 // ========================================
-//const LAPTOP_IP = '172.20.10.4';        // ← Home
-//const LAPTOP_IP = '192.168.1.13';  // ← Home Alt
-const LAPTOP_IP = '192.168.1.105';     // ← College IP
+// Comment out the hardcoded IP to use auto-detection
+// const LAPTOP_IP = '172.20.10.2';        // ← Home
+// const LAPTOP_IP = '192.168.1.13';       // ← Home Alt
+const LAPTOP_IP = '192.168.1.105';      // ← Old IP
 // ========================================
 
 const PORT = 5000;  
@@ -18,12 +19,14 @@ const getBaseUrl = () => {
   
   if (debuggerHost) {
     const ipAddress = debuggerHost.split(':')[0];
-    return `http://${ipAddress}:${PORT}/api`;
+    const url = `http://${ipAddress}:${PORT}/api`;
+    console.log('✅ Using auto-detected IP from Expo:', ipAddress);
+    return url;
   }
 
-  // 2. Fallback for Android Builds (APK), iOS Simulator, or if hostUri fails.
-  // We removed the '10.0.2.2' check so it ALWAYS uses your network IP.
-  return `http://${LAPTOP_IP}:${PORT}/api`;
+  // 2. Fallback: Use localhost for emulator testing
+  console.log('⚠️ Using localhost as fallback - only works with emulator');
+  return `http://localhost:${PORT}/api`;
 };
 
 const BASE_URL = getBaseUrl();

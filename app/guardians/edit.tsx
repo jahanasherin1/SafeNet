@@ -19,6 +19,11 @@ export default function EditGuardianScreen() {
   const [relationship, setRelationship] = useState(params.relationship as string || '');
   const [loading, setLoading] = useState(false);
 
+  // Validation Error States
+  const [nameError, setNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
   // Helper: Get Initials
   const getInitials = (fullName: string) => {
     const names = fullName.trim().split(' ');
@@ -41,21 +46,87 @@ export default function EditGuardianScreen() {
     }
   };
 
+  // Validation Functions
+  const validateName = (text: string) => {
+    if (!text.trim()) {
+      setNameError('Name is required');
+      return false;
+    } else if (text.trim().length < 2) {
+      setNameError('Name must be at least 2 characters');
+      return false;
+    } else {
+      setNameError('');
+      return true;
+    }
+  };
+
+  const validatePhone = (text: string) => {
+    if (!text.trim()) {
+      setPhoneError('Phone number is required');
+      return false;
+    } else if (text.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return false;
+    } else {
+      setPhoneError('');
+      return true;
+    }
+  };
+
+  const validateEmail = (text: string) => {
+    if (!text.trim()) {
+      setEmailError(''); // Email is optional
+      return true;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(text)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    } else {
+      setEmailError('');
+      return true;
+    }
+  };
+
+  // Input Handlers with Validation
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (text.trim()) {
+      validateName(text);
+    } else {
+      setNameError('');
+    }
+  };
+
   const handlePhoneChange = (text: string) => {
     const numericValue = text.replace(/[^0-9]/g, '');
     if (numericValue.length <= 10) {
       setPhone(numericValue);
+      if (numericValue) {
+        validatePhone(numericValue);
+      } else {
+        setPhoneError('');
+      }
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (text.trim()) {
+      validateEmail(text);
+    } else {
+      setEmailError('');
     }
   };
 
   const handleUpdate = async () => {
-    // 1. Validation
-    if (!name.trim() || !phone.trim()) {
-      showAlert("Error", "Name and Phone are required.");
-      return;
-    }
-    if (phone.length !== 10) {
-      showAlert("Error", "Phone number must be exactly 10 digits.");
+    // 1. Validation - Force validation on all fields
+    const isNameValid = validateName(name);
+    const isPhoneValid = validatePhone(phone);
+    const isEmailValid = validateEmail(email);
+
+    if (!isNameValid || !isPhoneValid || !isEmailValid) {
+      showAlert("Error", "Please fix the errors before saving.");
       return;
     }
 
@@ -145,26 +216,32 @@ export default function EditGuardianScreen() {
           <CustomInput 
             placeholder="Name" 
             value={name} 
-            onChangeText={setName} 
+            onChangeText={handleNameChange}
+            onBlur={() => validateName(name)}
           />
+          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
           <Text style={styles.label}>Phone Number</Text>
           <CustomInput 
             placeholder="Phone" 
             value={phone} 
-            onChangeText={handlePhoneChange} 
+            onChangeText={handlePhoneChange}
+            onBlur={() => validatePhone(phone)}
             keyboardType="numeric" 
             iconName="call-outline"
           />
+          {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
           <Text style={styles.label}>Email Address</Text>
           <CustomInput 
             placeholder="Email" 
             value={email} 
-            onChangeText={setEmail} 
+            onChangeText={handleEmailChange}
+            onBlur={() => validateEmail(email)}
             keyboardType="email-address" 
             iconName="mail-outline"
           />
+          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
           <Text style={styles.label}>Relationship</Text>
           <CustomInput 
@@ -213,4 +290,11 @@ const styles = StyleSheet.create({
 
   form: { flex: 1 },
   label: { fontSize: 15, fontWeight: '600', color: '#1A1B4B', marginBottom: 8, marginTop: 10 },
+  errorText: { 
+    fontSize: 13, 
+    color: '#FF4B4B', 
+    marginTop: 4, 
+    marginBottom: 8,
+    marginLeft: 4 
+  },
 });
