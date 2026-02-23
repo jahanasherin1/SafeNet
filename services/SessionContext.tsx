@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { isActivityMonitoringActive, setAlertCallback, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
+import { NativeModules } from 'react-native';
+import { isActivityMonitoringActive, setAlertCallback, setShakeAlertCallbackInActivityMonitor, startActivityMonitoring, stopActivityMonitoring } from './ActivityMonitoringService';
 import { startBackgroundActivityMonitoring, stopBackgroundActivityMonitoring } from './BackgroundActivityMonitoringService';
 import { cleanupAppStateListener, getQueueStatus, isTrackingEnabled, processLocationQueue, startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import { startWeatherMonitoring, stopWeatherMonitoring } from './BackgroundWeatherAlertService';
 import { checkBackgroundLocationStatus } from './DiagnosticsService';
 import { startJourneyMonitoring, stopJourneyMonitoring } from './JourneyArrivalService';
 import { initializeLocalNotifications, setupNotificationListeners } from './LocalNotificationService';
+import NativeStorageService from './NativeStorageService';
 import { acquirePartialWakeLock, releaseWakeLock } from './WakeLockService';
 
 interface User {
@@ -87,6 +89,19 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           setToken(storedToken);
+
+          // Sync user data to native file storage for SOS tile on every app start
+          // This ensures the tile always has current user email even if app was killed
+          console.log('📝 Syncing user data to native storage on app startup...');
+          try {
+            await NativeStorageService.syncUserDataToNative({
+              email: parsedUser.email,
+              name: parsedUser.name
+            });
+            console.log('✅ User data synced to native storage');
+          } catch (syncError) {
+            console.warn('⚠️ Failed to sync user data to native storage:', syncError);
+          }
 
           // Always restart tracking for logged-in users to ensure it's working
           // This handles cases where the task was registered but not receiving updates
@@ -199,10 +214,36 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const login = async (userData: User, authToken: string) => {
     try {
+      console.log('🔐 Login initiated for:', userData.email);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('token', authToken);
+      await AsyncStorage.setItem('userEmail', userData.email);
+      await AsyncStorage.setItem('userName', userData.name);
+      
       setUser(userData);
       setToken(authToken);
+
+      // Sync user data to native SharedPreferences for Quick Settings tile
+      console.log('📱 Syncing user data to native SharedPreferences...');
+      await NativeStorageService.syncUserDataToNative({
+        email: userData.email,
+        name: userData.name
+      });
+      console.log('✅ User data sync completed');
+
+      // Also broadcast user data to native code (including SOS tile)
+      try {
+        const { RCTDeviceEventEmitter } = NativeModules;
+        if (RCTDeviceEventEmitter) {
+          console.log('📢 Broadcasting user login to native code...');
+          RCTDeviceEventEmitter.emit('USER_LOGIN', {
+            email: userData.email,
+            name: userData.name
+          });
+        }
+      } catch (broadcastError) {
+        console.warn('⚠️ Could not broadcast user login:', broadcastError);
+      }
 
       // Start background location tracking
       const trackingStarted = await startBackgroundLocationTracking();
@@ -243,6 +284,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const logout = async () => {
     try {
+      // Clear user data from native SharedPreferences
+      await NativeStorageService.clearNativeUserData();
+
       // Stop background tracking
       await stopBackgroundLocationTracking();
       setIsTrackingActive(false);
@@ -383,7 +427,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     loadWeatherAlerts();
   }, []);
 
-  // Register global alert callback
+  // Register global alert callbacks
   useEffect(() => {
     console.log('📢 Registering global alert callback in SessionContext');
     setAlertCallback((reason: string) => {
@@ -391,6 +435,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAlertReason(reason);
       setAlertVisible(true);
       console.log('✅ Alert state updated - isAlertVisible set to true');
+    });
+
+    // Register shake detection alert callback with activity monitoring service
+    console.log('📢 Registering shake detection alert callback');
+    setShakeAlertCallbackInActivityMonitor((reason: string) => {
+      console.log('📨 Shake alert callback triggered with reason:', reason);
+      setAlertReason(reason);
+      setAlertVisible(true);
+      console.log('✅ Shake SOS alert state updated - isAlertVisible set to true');
     });
   }, []);
 

@@ -55,12 +55,30 @@ let potentialFallImpact = 0;
 let onActivityUpdate: ((activity: string, stepCount: number) => void) | null = null;
 let onAlertTriggered: ((reason: string) => void) | null = null;
 
+// Shake detection state
+let shakeCount = 0;
+let lastShakeTime = 0;
+let lastAcceleration = { x: 0, y: 0, z: 0 };
+const SHAKE_THRESHOLD = 25; // m/s²
+const SHAKE_TIME_WINDOW = 500; // ms
+const MIN_SHAKES_REQUIRED = 3;
+let onShakeAlertTriggered: ((reason: string) => void) | null = null;
+
 export const setActivityUpdateCallback = (callback: (activity: string, stepCount: number) => void) => {
   onActivityUpdate = callback;
 };
 
 export const setAlertCallback = (callback: (reason: string) => void) => {
   onAlertTriggered = callback;
+};
+
+export const setShakeAlertCallback = (callback: (reason: string) => void) => {
+  onShakeAlertTriggered = callback;
+};
+
+export const setShakeAlertCallbackInActivityMonitor = (callback: (reason: string) => void) => {
+  onShakeAlertTriggered = callback;
+  console.log('📢 Registered shake alert callback in ActivityMonitoringService');
 };
 
 const calculateVariance = (values: number[]): number => {
@@ -73,6 +91,36 @@ const calculateVariance = (values: number[]): number => {
 const analyzeMotion = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const magnitude = Math.sqrt(x * x + y * y + z * z);
   const now = Date.now();
+
+  // --- SHAKE DETECTION ---
+  const deltaX = Math.abs(x - lastAcceleration.x);
+  const deltaY = Math.abs(y - lastAcceleration.y);
+  const deltaZ = Math.abs(z - lastAcceleration.z);
+  const accelerationChange = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+  
+  if (accelerationChange > SHAKE_THRESHOLD) {
+    const timeSinceLastShake = now - lastShakeTime;
+    
+    if (timeSinceLastShake < SHAKE_TIME_WINDOW) {
+      shakeCount++;
+      console.log(`🤳 Shake detected! Count: ${shakeCount}/${MIN_SHAKES_REQUIRED}`);
+      
+      if (shakeCount >= MIN_SHAKES_REQUIRED) {
+        console.log('🚨 Multiple shakes detected! Triggering emergency SOS...');
+        shakeCount = 0;
+        if (onShakeAlertTriggered) {
+          onShakeAlertTriggered('Shake Detected - Emergency SOS Triggered');
+          console.log('✅ SOS alert triggered from shake detection');
+        }
+      }
+    } else {
+      shakeCount = 1;
+    }
+    
+    lastShakeTime = now;
+  }
+  
+  lastAcceleration = { x, y, z };
 
   accelHistory.push({ magnitude, timestamp: now });
   if (accelHistory.length > ACTIVITY_HISTORY_SIZE) {

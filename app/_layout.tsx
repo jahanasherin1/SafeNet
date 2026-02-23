@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GlobalAlertModal from '../components/GlobalAlertModal';
 import '../services/BackgroundLocationService'; // Initialize background location task on app start
 import { SessionProvider } from '../services/SessionContext';
+import ShakeDetectionService from '../services/ShakeDetectionService'; // Initialize shake detection for emergency SOS
 import SOSTileService from '../services/SOSTileService'; // Initialize SOS Quick Settings Tile listener
 
 function RootLayoutContent() {
@@ -12,9 +13,15 @@ function RootLayoutContent() {
     console.log('📱 Initializing SOS Tile Service...');
     const sosTileService = SOSTileService.getInstance();
     
+    // Initialize Shake Detection Service for emergency SOS
+    console.log('🤳 Initializing Shake Detection Service...');
+    const shakeDetection = ShakeDetectionService.getInstance();
+    shakeDetection.initialize();
+    
     return () => {
       // Cleanup on unmount
       sosTileService?.destroy();
+      shakeDetection?.destroy();
     };
   }, []);
   return (

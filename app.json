@@ -75,7 +75,8 @@
           "sounds": [],
           "mode": "production"
         }
-      ]
+      ],
+      "./plugins/withSharedPreferencesModule.js"
     ]
   }
 }

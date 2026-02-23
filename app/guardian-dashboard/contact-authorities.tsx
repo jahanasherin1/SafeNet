@@ -17,6 +17,7 @@ interface NearbyPlace {
   address?: string;
   distance?: number;
   phoneNumber?: string;
+  hasRealPhoneNumber?: boolean;
 }
 
 export default function ContactAuthoritiesScreen() {
@@ -27,11 +28,17 @@ export default function ContactAuthoritiesScreen() {
   const [loading, setLoading] = useState(true);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
-
-  // Emergency contact numbers (customize for your region)
-  const POLICE_NUMBER = '100'; // India Police
-  const HOSPITAL_NUMBER = '108'; // India Ambulance
-  const HELPLINE_NUMBER = '112'; // Universal Emergency Number
+  const [emergencyNumbers, setEmergencyNumbers] = useState({
+    police: '100',
+    hospital: '108',
+    helpline: '112'
+  });
+  
+  // Use default emergency numbers for India
+  // These will be dynamically updated based on user's location in the future
+  const POLICE_NUMBER = emergencyNumbers.police;
+  const HOSPITAL_NUMBER = emergencyNumbers.hospital;
+  const HELPLINE_NUMBER = emergencyNumbers.helpline;
   
   // Google Places API Key (should be in environment variables in production)
   const GOOGLE_PLACES_API_KEY = 'AIzaSyDGpAdiZUGAza7OMuWwTBXLfznzB0shrnY';
@@ -155,6 +162,7 @@ export default function ContactAuthoritiesScreen() {
           type: place.type,
           address: place.address,
           phoneNumber: place.phoneNumber,
+          hasRealPhoneNumber: place.hasRealPhoneNumber,
           distance: place.distance
         }));
         
@@ -191,10 +199,13 @@ export default function ContactAuthoritiesScreen() {
     const facilityType = place.type === 'police' ? '🚔 Police Station' : 
                          place.type === 'hospital' ? '🏥 Hospital' : 
                          '🚒 Fire Station';
+    
+    // Clean phone number for display
+    const displayPhoneNumber = place.phoneNumber.replace(/\s+/g, ' ');
 
     Alert.alert(
       `Call ${facilityType}?`,
-      `${place.name}\n${place.address || ''}\n\nPhone: ${place.phoneNumber}`,
+      `${place.name}\n${place.address || ''}\n\nPhone: ${displayPhoneNumber}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -215,7 +226,10 @@ export default function ContactAuthoritiesScreen() {
         {
           text: 'Call Now',
           style: 'default',
-          onPress: () => makeCall(POLICE_NUMBER, 'Police')
+          onPress: () => {
+            const cleanNumber = POLICE_NUMBER.replace(/\D/g, '');
+            makeCall(cleanNumber, 'Police');
+          }
         }
       ]
     );
@@ -230,7 +244,10 @@ export default function ContactAuthoritiesScreen() {
         {
           text: 'Call Now',
           style: 'default',
-          onPress: () => makeCall(HOSPITAL_NUMBER, 'Hospital')
+          onPress: () => {
+            const cleanNumber = HOSPITAL_NUMBER.replace(/\D/g, '');
+            makeCall(cleanNumber, 'Hospital');
+          }
         }
       ]
     );
@@ -245,7 +262,10 @@ export default function ContactAuthoritiesScreen() {
         {
           text: 'Call Now',
           style: 'default',
-          onPress: () => makeCall(HELPLINE_NUMBER, 'Emergency Helpline')
+          onPress: () => {
+            const cleanNumber = HELPLINE_NUMBER.replace(/\D/g, '');
+            makeCall(cleanNumber, 'Emergency Helpline');
+          }
         }
       ]
     );
@@ -253,9 +273,23 @@ export default function ContactAuthoritiesScreen() {
 
   const makeCall = async (phoneNumber: string, serviceName: string) => {
     try {
+      // Validate phone number
+      if (!phoneNumber || phoneNumber.trim().length === 0) {
+        Alert.alert('Error', 'Invalid phone number');
+        return;
+      }
+
+      // Clean the phone number - remove all non-digit characters
+      const cleanedNumber = phoneNumber.replace(/\D/g, '');
+      
+      if (cleanedNumber.length === 0) {
+        Alert.alert('Error', 'Invalid phone number format');
+        return;
+      }
+
       const phoneUrl = Platform.select({
-        ios: `telprompt:${phoneNumber}`,
-        android: `tel:${phoneNumber}`
+        ios: `telprompt:${cleanedNumber}`,
+        android: `tel:${cleanedNumber}`
       });
 
       const canCall = await Linking.canOpenURL(phoneUrl || '');
@@ -398,8 +432,13 @@ export default function ContactAuthoritiesScreen() {
                   <Text style={styles.facilityAddress} numberOfLines={1}>{place.address}</Text>
                   {place.phoneNumber && (
                     <TouchableOpacity onPress={() => callNearbyFacility(place)}>
-                      <Text style={styles.facilityPhone}>
-                        <Ionicons name="call" size={14} color="#6A5ACD" /> {place.phoneNumber}
+                      <Text style={[
+                        styles.facilityPhone,
+                        place.hasRealPhoneNumber ? styles.realPhoneNumber : styles.defaultPhoneNumber
+                      ]}>
+                        <Ionicons name="call" size={14} color={place.hasRealPhoneNumber ? "#4CAF50" : "#FF9800"} /> 
+                        {place.phoneNumber.replace(/\s+/g, ' ')}
+                        {place.hasRealPhoneNumber && <Text style={styles.verifiedBadge}> ✓</Text>}
                         {place.distance && <Text style={styles.facilityDistance}> • {place.distance.toFixed(1)}km away</Text>}
                       </Text>
                     </TouchableOpacity>
@@ -431,6 +470,7 @@ export default function ContactAuthoritiesScreen() {
             <Text style={styles.serviceSubtitle}>
               Contact local police for immediate help
             </Text>
+            <Text style={styles.phoneNumberDisplay}>📞 {POLICE_NUMBER}</Text>
             <TouchableOpacity style={styles.callButton} onPress={handleCallPolice}>
               <Text style={styles.callButtonText}>Call Police</Text>
             </TouchableOpacity>
@@ -449,6 +489,7 @@ export default function ContactAuthoritiesScreen() {
             <Text style={styles.serviceSubtitle}>
               Contact nearest hospital for medical emergencies
             </Text>
+            <Text style={styles.phoneNumberDisplay}>📞 {HOSPITAL_NUMBER}</Text>
             <TouchableOpacity style={styles.callButton} onPress={handleCallHospital}>
               <Text style={styles.callButtonText}>Call Hospital</Text>
             </TouchableOpacity>
@@ -467,6 +508,7 @@ export default function ContactAuthoritiesScreen() {
             <Text style={styles.serviceSubtitle}>
               Contact national emergency helpline for guidance
             </Text>
+            <Text style={styles.phoneNumberDisplay}>📞 {HELPLINE_NUMBER}</Text>
             <TouchableOpacity style={styles.callButton} onPress={handleCallHelpline}>
               <Text style={styles.callButtonText}>Call Helpline</Text>
             </TouchableOpacity>
@@ -563,6 +605,16 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
     lineHeight: 20,
+  },
+  phoneNumberDisplay: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6A5ACD',
+    marginBottom: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#F0E8FF',
+    borderRadius: 4,
   },
   callButton: {
     backgroundColor: '#6A5ACD',
@@ -682,6 +734,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#AAA',
     fontWeight: '400',
+  },
+  realPhoneNumber: {
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  defaultPhoneNumber: {
+    color: '#FF9800',
+    fontWeight: '500',
+  },
+  verifiedBadge: {
+    color: '#4CAF50',
+    fontWeight: '700',
   },
   facilityCallButton: {
     width: 44,
