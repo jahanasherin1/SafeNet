@@ -45,17 +45,38 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   const transformation = options.transformation;
   delete options.transformation; // Remove from options object to be extra safe
   
+  console.log('📤 Starting Cloudinary upload with options:', JSON.stringify({
+    folder: options.folder,
+    public_id: options.public_id,
+    resource_type: options.resource_type,
+    hasTransformation: !!transformation
+  }));
+  
   // Create FormData with ONLY safe parameters (never include transformation in upload)
   const formData = new FormData();
   const blob = new Blob([buffer]);
   
   formData.append('file', blob);
+  console.log('✓ Appended file');
+  
   formData.append('api_key', process.env.CLOUDINARY_API_KEY);
+  console.log('✓ Appended api_key');
   
   // Only these parameters are safe for Cloudinary upload API
-  if (options.folder) formData.append('folder', options.folder);
-  if (options.public_id) formData.append('public_id', options.public_id);
-  if (options.resource_type) formData.append('resource_type', options.resource_type);
+  if (options.folder) {
+    formData.append('folder', options.folder);
+    console.log('✓ Appended folder:', options.folder);
+  }
+  if (options.public_id) {
+    formData.append('public_id', options.public_id);
+    console.log('✓ Appended public_id:', options.public_id);
+  }
+  if (options.resource_type) {
+    formData.append('resource_type', options.resource_type);
+    console.log('✓ Appended resource_type:', options.resource_type);
+  }
+  
+  console.log('⚠️ Checking options object after extraction:', Object.keys(options));
   
   // Try unsigned upload first (simpler)
   const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
