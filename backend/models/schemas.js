@@ -83,6 +83,7 @@ const UserSchema = new mongoose.Schema({
       id: String,
       name: String,
       audioUri: String,
+      audioPublicId: String,  // Cloudinary public_id for deletion
       audioName: String,
       dateAdded: { type: Date, default: Date.now }
     }

@@ -6,9 +6,9 @@ import Constants from 'expo-constants';
 // 🌐 NETWORK SETUP - CHANGE IP HERE 👇
 // ========================================
 // Comment out the hardcoded IP to use auto-detection
-// const LAPTOP_IP = '172.20.10.2';        // ← Home
+ const LAPTOP_IP = '10.172.89.244';        // ← Home
 // const LAPTOP_IP = '192.168.1.13';       // ← Home Alt
-const LAPTOP_IP = '192.168.1.105';      // ← Old IP
+//const LAPTOP_IP = '192.168.1.30';      // ← Old IP
 // ========================================
 
 const PORT = 5000;  
@@ -19,19 +19,47 @@ const getBaseUrl = () => {
   
   if (debuggerHost) {
     const ipAddress = debuggerHost.split(':')[0];
+    // If auto-detected IP is loopback (ADB tunnel), use the real laptop IP instead
+    if (ipAddress === '127.0.0.1' || ipAddress === 'localhost') {
+      const url = `http://${LAPTOP_IP}:${PORT}/api`;
+      console.log('✅ ADB tunnel detected — using LAPTOP_IP:', LAPTOP_IP);
+      return url;
+    }
     const url = `http://${ipAddress}:${PORT}/api`;
     console.log('✅ Using auto-detected IP from Expo:', ipAddress);
     return url;
   }
 
-  // 2. Fallback: Use localhost for emulator testing
-  console.log('⚠️ Using localhost as fallback - only works with emulator');
-  return `http://localhost:${PORT}/api`;
+  // 2. Fallback: Use LAPTOP_IP
+  console.log('✅ Using configured LAPTOP_IP:', LAPTOP_IP);
+  return `http://${LAPTOP_IP}:${PORT}/api`;
 };
 
 const BASE_URL = getBaseUrl();
 
 console.log("🔗 Connecting to Backend at:", BASE_URL);
+
+// ✅ Store BASE_URL in AsyncStorage for Android native code access (e.g., SOS Tile)
+(async () => {
+  try {
+    await AsyncStorage.setItem('backendUrl', BASE_URL);
+    console.log('💾 Stored backend URL in AsyncStorage:', BASE_URL);
+    
+    // Also try to write to native preferences/file for more reliable access
+    try {
+      // This attempts to call a native module if available
+      const { NativeModules } = require('react-native');
+      if (NativeModules.UserDataModule) {
+        NativeModules.UserDataModule.setBackendUrl?.(BASE_URL);
+        console.log('📱 Sent backend URL to Android native module');
+      }
+    } catch (nativeError) {
+      console.warn('⚠️ Could not write to Android native code:', nativeError);
+    }
+  } catch (error) {
+    console.error('Error storing backend URL:', error);
+  }
+})();
 
 const api = axios.create({
   baseURL: BASE_URL,

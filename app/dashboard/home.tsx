@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, AppState, Image, NativeModules, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 import { useSession } from '../../services/SessionContext';
@@ -24,14 +24,17 @@ export default function DashboardHome() {
   const [isTracking, setIsTracking] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('Waiting for updates...');
   const [lastSosTime, setLastSosTime] = useState<string | null>(null);
+  const [lastSosTimeDisplay, setLastSosTimeDisplay] = useState<string | null>(null);
   const [cancelAlarmLoading, setCancelAlarmLoading] = useState(false);
 
   // --- 1. LOAD DATA & CHECK STATUS ON FOCUS ---
   useFocusEffect(
     useCallback(() => {
+      console.log('📱 [DASHBOARD] Screen focused - reloading all data');
       loadUserData();
       checkTrackingStatus();
-      loadSosStatus();
+      loadSosStatus(); // ✅ Check for tile SOS when screen comes into focus
+      storeBackendUrlForAndroid(); // ✅ Store URL for Android native code
     }, [])
   );
 
@@ -45,14 +48,137 @@ export default function DashboardHome() {
     }
   }, [isAlertVisible]);
 
+  // --- 1.6. ✅ RELOAD SOS STATUS WHEN APP COMES TO FOREGROUND (FOR TILE SOS) ---
+  React.useEffect(() => {
+    // Listen for app state changes (e.g., tile clicked, app opened)
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    // Also check immediately in case tile was clicked while app was open in background
+    loadSosStatus();
+    
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  // --- 1.7. LOG LASTSOS TIME CHANGES ---
+  React.useEffect(() => {
+    if (lastSosTime) {
+      console.log('✅ [CANCEL BUTTON STATE] lastSosTime updated:', lastSosTime);
+      console.log('✅ [CANCEL BUTTON] Should be VISIBLE now');
+    } else {
+      console.log('⚠️ [CANCEL BUTTON STATE] lastSosTime cleared or null');
+      console.log('⚠️ [CANCEL BUTTON] Should be HIDDEN now');
+    }
+  }, [lastSosTime]);
+
+  const handleAppStateChange = (nextAppState: string) => {
+    console.log('📱 [APP STATE] State changed to:', nextAppState);
+    // Reload SOS status when app comes to foreground
+    if (nextAppState === 'active') {
+      console.log('🔄 [TILE SOS] App came to foreground, checking for new SOS alerts...');
+      loadSosStatus();
+    }
+  };
+
+  /**
+   * ✅ Check if alert time is stale (older than 1 hour)
+   */
+  const isAlertStale = (sosTimeString: string): boolean => {
+    try {
+      const sosTime = new Date(sosTimeString).getTime();
+      const now = new Date().getTime();
+      const diffMinutes = (now - sosTime) / (1000 * 60);
+      
+      // If alert is older than 1 hour, it's stale
+      if (diffMinutes > 60) {
+        console.log(`⏰ [CANCEL BUTTON] Alert is stale (${diffMinutes.toFixed(0)} mins old) - clearing`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.warn('⚠️ [CANCEL BUTTON] Error checking if alert is stale:', error);
+      return false;
+    }
+  };
+
   const loadSosStatus = async () => {
     try {
       const sosTime = await AsyncStorage.getItem('lastSosTime');
+      console.log('📖 [CANCEL BUTTON] Reading from AsyncStorage - lastSosTime:', sosTime || 'NULL');
+      
       if (sosTime) {
+        // ✅ NEW: Check if alert is stale (older than 1 hour)
+        if (isAlertStale(sosTime)) {
+          console.log('⏰ [CANCEL BUTTON] Clearing stale alert from storage');
+          await AsyncStorage.removeItem('lastSosTime');
+          setLastSosTime(null);
+          return;
+        }
+        
+        console.log('✅ [CANCEL BUTTON] lastSosTime loaded:', sosTime);
         setLastSosTime(sosTime);
+        // ✅ Format for display
+        const displayTime = new Date(sosTime).toLocaleString([], { 
+          day: 'numeric', 
+          month: 'short', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        setLastSosTimeDisplay(displayTime);
+      } else {
+        // ✅ If AsyncStorage is empty, try to read from Android SharedPreferences
+        // This is needed because tile SOS stores to SharedPreferences when app is closed
+        console.log('⚠️ [CANCEL BUTTON] AsyncStorage empty, checking SharedPreferences...');
+        try {
+          const SharedPreferencesModule = NativeModules.SharedPreferencesModule;
+          if (SharedPreferencesModule && SharedPreferencesModule.getString) {
+            console.log('🔧 [CANCEL BUTTON] SharedPreferencesModule found, reading RCTAsyncStorage_user_prefs...');
+            const sharedPrefValue = await SharedPreferencesModule.getString('RCTAsyncStorage_user_prefs', 'lastSosTime');
+            
+            if (sharedPrefValue) {
+              // ✅ NEW: Check if alert is stale before setting
+              if (isAlertStale(sharedPrefValue)) {
+                console.log('⏰ [CANCEL BUTTON] Clearing stale alert from SharedPreferences');
+                setLastSosTime(null);
+                setLastSosTimeDisplay(null);
+                return;
+              }
+              
+              console.log('✅ [CANCEL BUTTON] Found in SharedPreferences:', sharedPrefValue);
+              // Sync back to AsyncStorage for next time
+              await AsyncStorage.setItem('lastSosTime', sharedPrefValue);
+              setLastSosTime(sharedPrefValue);
+              // ✅ Format for display
+              const displayTime = new Date(sharedPrefValue).toLocaleString([], { 
+                day: 'numeric', 
+                month: 'short', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+              });
+              setLastSosTimeDisplay(displayTime);
+            } else {
+              console.log('⚠️ [CANCEL BUTTON] SharedPreferences also empty - no tile click detected');
+              setLastSosTime(null);
+              setLastSosTimeDisplay(null);
+            }
+          } else {
+            console.log('⚠️ [CANCEL BUTTON] SharedPreferencesModule not available - clearing state');
+            setLastSosTime(null);
+            setLastSosTimeDisplay(null);
+          }
+        } catch (nativeError) {
+          console.warn('⚠️ [CANCEL BUTTON] Could not read SharedPreferences:', (nativeError as any).message);
+          setLastSosTime(null);
+          setLastSosTimeDisplay(null);
+        }
       }
     } catch (e) {
-      console.error("Failed to load SOS status", e);
+      console.error("❌ [CANCEL BUTTON] Failed to load SOS status", e);
+      setLastSosTime(null);
+      setLastSosTimeDisplay(null);
     }
   };
 
@@ -68,6 +194,38 @@ export default function DashboardHome() {
       console.error("Failed to load user data", error);
     }
   };
+
+  /**
+   * ✅ NEW: Store backend URL for Android native code (SOS Tile) to access
+   * Works with any backend URL - both SharedPreferences and file storage
+   */
+  const storeBackendUrlForAndroid = async () => {
+    try {
+      const backendUrl = api.defaults.baseURL;
+      if (!backendUrl) {
+        console.warn('⚠️ No backend URL found');
+        return;
+      }
+
+      // Store in AsyncStorage (already done by api.ts, but double-check)
+      await AsyncStorage.setItem('backendUrl', backendUrl);
+      console.log('💾 Backend URL stored in AsyncStorage:', backendUrl);
+
+      // Try to write to Android SharedPreferences via native module if available
+      try {
+        if (NativeModules.UserDataModule) {
+          NativeModules.UserDataModule.setBackendUrl(backendUrl);
+          console.log('📱 Backend URL sent to Android native code');
+        }
+      } catch (nativeError) {
+        console.warn('⚠️ Could not write to Android SharedPreferences:', nativeError);
+        // This is OK - fallback to file storage via UserDataHelper
+      }
+    } catch (error) {
+      console.error('❌ Error storing backend URL:', error);
+    }
+  };
+
 
   const checkTrackingStatus = async () => {
     try {
@@ -169,7 +327,10 @@ export default function DashboardHome() {
           {
             text: "Cancel",
             style: "cancel",
-            onPress: () => setCancelAlarmLoading(false)
+            onPress: () => {
+              console.log('❌ User cancelled the confirmation dialog');
+              setCancelAlarmLoading(false);
+            }
           },
           {
             text: "Confirm",
@@ -179,6 +340,12 @@ export default function DashboardHome() {
                 console.log('🚀 Sending false alarm cancellation request...');
                 console.log('📧 User email:', userEmail);
                 
+                // ✅ Clear immediately to hide button right away
+                setLastSosTime(null);
+                setLastSosTimeDisplay(null);
+                await AsyncStorage.removeItem('lastSosTime');
+                console.log('✅ [CANCEL BUTTON] State cleared immediately');
+                
                 const response = await api.post('/sos/cancel-false-alarm', {
                   userEmail: userEmail
                 });
@@ -186,19 +353,29 @@ export default function DashboardHome() {
                 console.log('✅ Response received:', response.status, response.data);
 
                 if (response.status === 200) {
+                  // Calculate total notifications sent
+                  const emailsSent = response.data?.emailsSent || 0;
+                  const smsSent = response.data?.smsSent || 0;
+                  const totalNotifications = emailsSent + smsSent;
+
+                  const notificationMessage = totalNotifications > 0
+                    ? `Your guardians have been notified via ${emailsSent > 0 ? `${emailsSent} email${emailsSent > 1 ? 's' : ''}` : ''}${emailsSent > 0 && smsSent > 0 ? ' and ' : ''}${smsSent > 0 ? `${smsSent} SMS` : ''}.`
+                    : 'Notifications sent to your guardians.';
+
                   Alert.alert(
                     "✅ False Alarm Cancelled",
-                    `Your guardians have been notified that you are safe. ${response.data.emailsSent} notification(s) sent.`
+                    notificationMessage
                   );
-                  
-                  // Clear SOS timestamp
-                  setLastSosTime(null);
-                  await AsyncStorage.removeItem('lastSosTime');
                 }
               } catch (error: any) {
                 console.error("❌ Cancel false alarm error:", error);
                 console.error("❌ Error response:", error.response?.data);
                 console.error("❌ Error message:", error.message);
+                
+                // ✅ Re-load the state since API call failed
+                console.log('⚠️ API call failed, reloading SOS status');
+                loadSosStatus();
+                
                 Alert.alert(
                   "Error",
                   error.response?.data?.message || error.message || "Failed to cancel false alarm"
@@ -209,7 +386,10 @@ export default function DashboardHome() {
             }
           }
         ],
-        { cancelable: true, onDismiss: () => setCancelAlarmLoading(false) }
+        { cancelable: true, onDismiss: () => {
+          console.log('📋 Alert dialog dismissed');
+          setCancelAlarmLoading(false);
+        }}
       );
     } catch (error) {
       console.error("Cancel false alarm error:", error);
@@ -277,40 +457,55 @@ export default function DashboardHome() {
       
       const response = await api.post('/sos/trigger', sosData);
 
-      console.log("SOS Response:", response.status, response.data);
+        console.log("SOS Response:", response.status, response.data);
 
-      if (response.status === 200) {
-        // Play SOS notification sound
-        try {
-          const { sound } = await Audio.Sound.createAsync(
-            require('../../assets/voice/morse-sos.mp3'),
-            { shouldPlay: true, volume: 1.0 }
-          );
-          // Unload sound after playing to free resources
-          sound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) {
-              sound.unloadAsync();
-            }
+        // Check if SMS was also sent
+        const emailsSent = response.data.emailsSent || 0;
+        const smsSent = response.data.smsSent || 0;
+        const totalNotifications = emailsSent + smsSent;
+
+        if (response.status === 200) {
+          // Play SOS notification sound
+          try {
+            const { sound } = await Audio.Sound.createAsync(
+              require('../../assets/voice/morse-sos.mp3'),
+              { shouldPlay: true, volume: 1.0 }
+            );
+            // Unload sound after playing to free resources
+            sound.setOnPlaybackStatusUpdate((status) => {
+              if (status.isLoaded && status.didJustFinish) {
+                sound.unloadAsync();
+              }
+            });
+          } catch (soundError) {
+            console.warn('Failed to play SOS sound:', soundError);
+          }
+
+          // Alert message mentioning both email and SMS
+          const notificationMessage = totalNotifications > 0
+            ? `Guardians notified: ${emailsSent} via email${smsSent > 0 ? ` and ${smsSent} via SMS` : ''}!`
+            : 'Guardians have been notified with your location!';
+
+          Alert.alert("🚨 SOS SENT", notificationMessage);
+          
+          // ✅ Store SOS trigger timestamp in ISO format for consistency
+          const sosIsoTime = new Date().toISOString();
+          setLastSosTime(sosIsoTime);
+          await AsyncStorage.setItem('lastSosTime', sosIsoTime);
+          console.log('💾 Stored lastSosTime in AsyncStorage:', sosIsoTime);
+          
+          // ✅ Format for display
+          const sosDisplayTime = new Date().toLocaleString([], { 
+            day: 'numeric', 
+            month: 'short', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
           });
-        } catch (soundError) {
-          console.warn('Failed to play SOS sound:', soundError);
-        }
-
-        Alert.alert("🚨 SOS SENT", "Guardians have been notified with your location!");
-        
-        // Store SOS trigger timestamp with full details (day, month, hour, minute, second)
-        const sosTimestamp = new Date().toLocaleString([], { 
-          day: 'numeric', 
-          month: 'short', 
-          hour: '2-digit', 
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        setLastSosTime(sosTimestamp);
-        await AsyncStorage.setItem('lastSosTime', sosTimestamp);
-        
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setLastUpdated(now);
+          setLastSosTimeDisplay(sosDisplayTime);
+          
+          const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          setLastUpdated(now);
         
         // Auto-enable tracking if not already on
         if (!isTracking) {
@@ -345,7 +540,7 @@ export default function DashboardHome() {
             <View style={styles.sosTimeContainer}>
               <Ionicons name="time-outline" size={12} color="#E0E0E0" />
               <Text style={styles.miniTime}>
-                {lastSosTime ? `SOS Tapped: ${lastSosTime}` : "Not triggered yet"}
+                {lastSosTimeDisplay ? `SOS Tapped: ${lastSosTimeDisplay}` : "Not triggered yet"}
               </Text>
             </View>
           </View>
@@ -484,6 +679,7 @@ export default function DashboardHome() {
         </View>
 
         {/* Cancel False Alarm Button - Below Trusted Guardians */}
+        {/* Shows when any alert is triggered: SOS Button, Fall Detection, Sudden Stop, High Risk Area, Quick Settings Tile */}
         {lastSosTime && (
           <TouchableOpacity 
             onPress={handleCancelFalseAlarm}

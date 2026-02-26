@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { AppState, NativeModules, Platform } from 'react-native';
-import { startActivityMonitoring } from './ActivityMonitoringService'; // Import this to keep sensor listeners alive
 import api from './api';
 import { getOptimizedSettings } from './BatteryOptimizationService';
 
@@ -111,19 +110,11 @@ const defineBackgroundTask = () => {
     }
 
     if (data) {
-      // 1. REINFORCE ACTIVITY MONITORING
-      // This is the critical fix. The Location Foreground Service keeps the JS context alive.
-      // We check if activity monitoring should be enabled, and ensures listeners are active.
-      try {
-        const shouldMonitor = await AsyncStorage.getItem('activityMonitoringEnabled');
-        if (shouldMonitor === 'true') {
-           // This is idempotent in ActivityMonitoringService
-           // It ensures the Accelerometer listeners are attached to this active thread
-           startActivityMonitoring();
-        }
-      } catch (e) {
-        // Silent fail
-      }
+      // 1. ACTIVITY MONITORING CHECK
+      // NOTE: Do NOT restart activity monitoring here on every location update!
+      // The location task runs every 5 seconds, calling startActivityMonitoring() 720 times per hour
+      // This causes the infinite log loop. Activity monitoring is started once at app launch.
+      // If it crashes, it will be restarted via SessionContext on next app open.
 
       // 2. PROCESS LOCATION
       const { locations } = data as { locations: Location.LocationObject[] };

@@ -1,28 +1,10 @@
 import express from 'express';
-import fs from 'fs';
-import multer from 'multer';
-import path from 'path';
 import { GuardianOtp, PasswordReset, User } from '../models/schemas.js';
+import { upload } from '../utils/cloudinary.js';
 import sendEmail from '../utils/sendEmail.js';
+import sendSMS from '../utils/sendSMS.js';
 
 const router = express.Router();
-
-// --- MULTER CONFIGURATION ---
-const uploadDir = 'uploads/';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
 
 // Check if email exists
 router.post('/check-email', async (req, res) => {
@@ -128,8 +110,28 @@ router.post('/forgot-password', async (req, res) => {
 
     const emailSubject = "SafeNet Password Reset Code";
     const emailBody = `Hello ${user.name},\n\nYour password reset code is: ${resetCode}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.\n\nStay Safe.`;
+    const smsMessage = `SafeNet Password Reset Code: ${resetCode} (Expires in 15 minutes)`;
     
-    await sendEmail(email, emailSubject, emailBody);
+    try {
+        await sendEmail(email, emailSubject, emailBody);
+        console.log(`✅ Password reset email sent to ${email}`);
+    } catch (emailError) {
+        console.error(`❌ Failed to send password reset email: ${emailError.message}`);
+    }
+
+    // Send SMS to user's phone for password reset
+    if (user.phone) {
+        try {
+            const smsResult = await sendSMS(user.phone, smsMessage);
+            if (smsResult.success) {
+                console.log(`✅ Password reset SMS sent to ${user.phone}`);
+            } else {
+                console.warn(`⚠️ Failed to send password reset SMS to ${user.phone}: ${smsResult.error}`);
+            }
+        } catch (smsError) {
+            console.error(`❌ Error sending password reset SMS: ${smsError.message}`);
+        }
+    }
 
     res.status(200).json({ 
       message: 'Reset code sent to your email',
@@ -191,8 +193,8 @@ router.post('/update-profile', upload.single('profileImage'), async (req, res) =
     }
 
     if (req.file) {
-      // Store path and normalize slashes for cross-platform compatibility
-      updateData.profileImage = req.file.path.replace(/\\/g, "/");
+      // Cloudinary returns the secure URL in req.file.path
+      updateData.profileImage = req.file.path;
     }
 
     const user = await User.findOneAndUpdate(
@@ -237,8 +239,28 @@ router.post('/guardian-request-otp', async (req, res) => {
 
     const emailSubject = "SafeNet Guardian Login OTP";
     const emailBody = `Hello ${guardianDetails.name},\n\nYour SafeNet Guardian Login OTP is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this, please ignore this email.\n\nStay Safe.`;
+    const smsMessage = `SafeNet Guardian Login OTP: ${otp} (Expires in 10 minutes)`;
     
-    await sendEmail(guardianDetails.email, emailSubject, emailBody);
+    try {
+        await sendEmail(guardianDetails.email, emailSubject, emailBody);
+        console.log(`✅ Guardian login OTP email sent to ${guardianDetails.email}`);
+    } catch (emailError) {
+        console.error(`❌ Failed to send guardian login OTP email: ${emailError.message}`);
+    }
+
+    // Send SMS to guardian's phone for OTP
+    if (guardianDetails.phone) {
+        try {
+            const smsResult = await sendSMS(guardianDetails.phone, smsMessage);
+            if (smsResult.success) {
+                console.log(`✅ Guardian login OTP SMS sent to ${guardianDetails.phone}`);
+            } else {
+                console.warn(`⚠️ Failed to send guardian login OTP SMS to ${guardianDetails.phone}: ${smsResult.error}`);
+            }
+        } catch (smsError) {
+            console.error(`❌ Error sending guardian login OTP SMS: ${smsError.message}`);
+        }
+    }
 
     res.status(200).json({ 
       message: 'OTP sent to email',

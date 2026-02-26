@@ -466,8 +466,7 @@ export default function UserLocationScreen() {
         <View style={styles.listSection}>
           <View style={styles.sectionHeaderContainer}>
             <Text style={styles.sectionHeader}>
-              📍 Nearby Safe Places 
-              {dataSource && <Text style={styles.sourceText}> ({dataSource})</Text>}
+              📍 Nearby Safe Places
             </Text>
             {loadingPlaces && <ActivityIndicator size="small" color="#6A5ACD" />}
             {!loadingPlaces && safePlaces.length > 0 && (

@@ -114,6 +114,11 @@ export default function ZoneActivityScreen() {
       if (alertResponse.status === 200) {
         console.log('✅ Guardians notified of high-risk area');
         
+        // ✅ Store lastSosTime for cancel button
+        const sosTime = new Date().toISOString();
+        await AsyncStorage.setItem('lastSosTime', sosTime);
+        console.log('💾 Stored lastSosTime in AsyncStorage:', sosTime);
+        
         // Show user confirmation
         Alert.alert(
           `${riskEmoji} High Risk Area`,

@@ -1,6 +1,7 @@
 import express from 'express';
 import { User } from '../models/schemas.js';
 import sendEmail from '../utils/sendEmail.js';
+import sendSMS from '../utils/sendSMS.js';
 
 const router = express.Router();
 
@@ -25,7 +26,28 @@ router.post('/add', async (req, res) => {
     if (guardianEmail) {
         const emailSubject = "You have been added as a SafeNet Guardian";
         const emailBody = `Hello ${name},\n\n${user.name} has trusted you to be their Safety Guardian.\n\nPhone: ${phone}\nCode: ${accessCode}\n\nStay Safe.`;
-        await sendEmail(guardianEmail, emailSubject, emailBody);
+        const smsMessage = `You are added as a Guardian in SafeNet by ${user.name}. Access Code: ${accessCode}`;
+        
+        try {
+            await sendEmail(guardianEmail, emailSubject, emailBody);
+            console.log(`✅ Guardian invitation email sent to ${guardianEmail}`);
+        } catch (emailError) {
+            console.error(`❌ Failed to send guardian invitation email: ${emailError.message}`);
+        }
+        
+        // Send SMS to guardian's phone if available
+        if (phone) {
+            try {
+                const smsResult = await sendSMS(phone, smsMessage);
+                if (smsResult.success) {
+                    console.log(`✅ Guardian invitation SMS sent to ${phone}`);
+                } else {
+                    console.warn(`⚠️ Failed to send SMS to ${phone}: ${smsResult.error}`);
+                }
+            } catch (smsError) {
+                console.error(`❌ Error sending guardian invitation SMS: ${smsError.message}`);
+            }
+        }
     }
 
     console.log(`Guardian ${name} added.`);

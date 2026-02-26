@@ -1,5 +1,9 @@
 // OpenStreetMap service for real nearby safe places
-// Uses Photon API and Nominatim API for comprehensive place data
+// Uses Geoapify API (primary), Photon API and Nominatim API (fallback) for comprehensive place data
+
+// Geoapify API Key - Free tier available at https://geoapify.com
+// Free tier: 3,000 requests/day without API key
+const GEOAPIFY_API_KEY = ''; // Leave empty to use free tier (3,000/day), or add your key for higher limits
 
 interface OSMPlace {
   osm_id: string;
@@ -88,17 +92,20 @@ function formatAddress(properties: any, displayName: string): string {
 // Format and validate phone number
 function formatPhoneNumber(phone: string): string {
   if (!phone) return '';
-  
-  // Remove common formatting characters
-  let cleaned = phone.trim()
-    .replace(/[\s\-\(\)]/g, '')
-    .replace(/^(\+)?([0-9]+)$/, '$1$2');
-  
-  // If it doesn't start with + or a digit, return as is
+
+  // OSM sometimes stores multiple numbers separated by semicolons — take the first one
+  const firstNumber = phone.split(';')[0].trim();
+
+  // Remove common formatting characters but keep + prefix and digits
+  const cleaned = firstNumber
+    .replace(/[\s\-\(\)\.]/g, '')
+    .trim();
+
+  // If it doesn't start with + or a digit, return as-is
   if (!cleaned.match(/^(\+)?[0-9]/)) {
-    return phone.trim();
+    return firstNumber.trim();
   }
-  
+
   return cleaned;
 }
 
@@ -192,8 +199,7 @@ async function fetchOSMElementDetails(osmType: string, osmId: string): Promise<a
     const response = await fetch(osmApiUrl, {
       headers: {
         'User-Agent': 'SafeNet-App/1.0'
-      },
-      timeout: 5000
+      }
     });
 
     if (!response.ok) {
@@ -228,218 +234,239 @@ function getDefaultEmergencyNumberSync(type: 'police' | 'hospital' | 'fire'): st
   return defaults[type] || '112'; // 112 Universal Emergency
 }
 
-// Search using Overpass API for detailed facility information with phone numbers
-async function searchOverpassAPI(lat: number, lon: number, radiusKm: number = 5): Promise<SafePlace[]> {
+// Search using Geoapify Places API for detailed facility information with phone numbers
+// Geoapify provides structured JSON including phone numbers, easier to use than Overpass
+async function searchGeoapifyAPI(lat: number, lon: number, radiusKm: number = 5): Promise<SafePlace[]> {
   try {
     const radiusMeters = radiusKm * 1000;
-    
-    // Improved Overpass query that explicitly requests phone data and returns centers
-    // Including relations for multi-part amenities
-    const overpassQuery = `
-      [out:json][timeout:25];
-      (
-        node["amenity"="police"](around:${radiusMeters},${lat},${lon});
-        way["amenity"="police"](around:${radiusMeters},${lat},${lon});
-        relation["amenity"="police"](around:${radiusMeters},${lat},${lon});
-        node["amenity"="hospital"](around:${radiusMeters},${lat},${lon});
-        way["amenity"="hospital"](around:${radiusMeters},${lat},${lon});
-        relation["amenity"="hospital"](around:${radiusMeters},${lat},${lon});
-        node["amenity"="clinic"](around:${radiusMeters},${lat},${lon});
-        way["amenity"="clinic"](around:${radiusMeters},${lat},${lon});
-        relation["amenity"="clinic"](around:${radiusMeters},${lat},${lon});
-        node["amenity"="fire_station"](around:${radiusMeters},${lat},${lon});
-        way["amenity"="fire_station"](around:${radiusMeters},${lat},${lon});
-        relation["amenity"="fire_station"](around:${radiusMeters},${lat},${lon});
-      );
-      out center;
-    `;
+    console.log(`🔍 [Geoapify] Querying facility locations (${radiusKm}km radius)...`);
 
-    const encodedQuery = encodeURIComponent(overpassQuery);
-    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodedQuery}`;
-    
-    console.log(`🔍 [Overpass] Querying detailed facility data with phone numbers...`);
+    // Define facility type mappings for Geoapify categories
+    const facilityCategories = [
+      { type: 'police' as const, categories: 'police' },
+      { type: 'hospital' as const, categories: 'healthcare.hospital' },
+      { type: 'hospital' as const, categories: 'healthcare.clinic' },
+      { type: 'fire' as const, categories: 'fire_station' },
+      { type: 'fire' as const, categories: 'emergency.fire_station' },
+    ];
+
+    const allPlaces: SafePlace[] = [];
+
+    // Fetch each facility type separately for better results
+    for (const { type, categories } of facilityCategories) {
+      try {
+        // Build Geoapify API URL
+        const params = new URLSearchParams();
+        params.append('categories', categories);
+        params.append('filter', `circle:${lon},${lat},${radiusMeters}`);
+        params.append('limit', '50');
+        if (GEOAPIFY_API_KEY) {
+          params.append('apiKey', GEOAPIFY_API_KEY);
+        }
+
+        const geoapifyUrl = `https://api.geoapify.com/v2/places?${params.toString()}`;
+
+        const response = await fetch(geoapifyUrl, {
+          headers: {
+            'User-Agent': 'SafeNet-App/1.0'
+          }
+        });
+
+        if (!response.ok) {
+          console.log(`  ⚠️ [Geoapify] API error for ${type}: ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const features = data.features || [];
+
+        console.log(`  ✓ [Geoapify] Found ${features.length} ${type} facilities`);
+
+        for (const feature of features) {
+          const props = feature.properties;
+          if (!props) continue;
+
+          const latitude = feature.geometry.coordinates[1];
+          const longitude = feature.geometry.coordinates[0];
+          const distance = calculateDistance(lat, lon, latitude, longitude);
+
+          if (distance > radiusKm) continue;
+
+          const name = props.name || `${type} facility`;
+          const address = props.address_line2 || props.address_line1 || 'Address not available';
+          const defaultPhone = getDefaultEmergencyNumberSync(type);
+
+          const icon = type === 'police'
+            ? 'shield-checkmark'
+            : type === 'hospital'
+            ? 'medical'
+            : 'flame';
+
+          allPlaces.push({
+            id: `geoapify_${type}_${props.place_id || `${latitude}_${longitude}`}`,
+            type: type,
+            name: name,
+            address: address,
+            phoneNumber: defaultPhone,        // real phone will be merged later
+            hasRealPhoneNumber: false,
+            icon: icon,
+            distance: distance,
+            coords: { latitude, longitude }
+          });
+        }
+      } catch (err) {
+        console.log(`  ⚠️ [Geoapify] Error searching for ${type}:`, err);
+        continue;
+      }
+    }
+
+    // Deduplicate by coordinates
+    const uniquePlaces = new Map<string, SafePlace>();
+    for (const place of allPlaces) {
+      const coordKey = `${place.coords.latitude.toFixed(4)}_${place.coords.longitude.toFixed(4)}_${place.type}`;
+      if (!uniquePlaces.has(coordKey)) {
+        uniquePlaces.set(coordKey, place);
+      }
+    }
+
+    const finalPlaces = Array.from(uniquePlaces.values());
+    console.log(`📊 [Geoapify] ${finalPlaces.length} unique facilities found`);
+    return finalPlaces;
+
+  } catch (error) {
+    console.log(`⚠️ Geoapify API error:`, error);
+    return [];
+  }
+}
+
+/**
+ * Fetch ONLY facilities that have phone numbers in OpenStreetMap using
+ * Overpass API with ["phone"] filter — guaranteed real phone numbers.
+ * Works anywhere in the world (not just Kerala).
+ */
+async function fetchOverpassPhoneNumbers(
+  lat: number,
+  lon: number,
+  radiusKm: number = 5
+): Promise<Array<{ type: 'police' | 'hospital' | 'fire'; name: string; phone: string; lat: number; lon: number }>> {
+  try {
+    const radiusMeters = radiusKm * 1000;
+
+    // Use regex key filter [~"key"~"value"] to match ANY phone-related tag.
+    // This catches: phone, contact:phone, contact:mobile, mobile, telephone, phone:primary, etc.
+    // Kerala/India OSM data typically uses "contact:phone" rather than "phone".
+    const phoneKeyRegex = `~"^(phone|contact:phone|contact:mobile|mobile|telephone|phone:primary|contact:telephone)$"~"."`;
+    const amenities = ['police', 'hospital', 'clinic', 'fire_station'];
+    const elementTypes = ['node', 'way'];
+
+    const queryLines = amenities.flatMap(amenity =>
+      elementTypes.map(
+        t => `${t}["amenity"="${amenity}"][${phoneKeyRegex}](around:${radiusMeters},${lat},${lon});`
+      )
+    ).join('\n  ');
+
+    const overpassQuery = `[out:json][timeout:30];\n(\n  ${queryLines}\n);\nout center;`;
+
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+    console.log(`📡 [Overpass+Phone] Querying OSM for facilities with any phone tag (contact:phone, phone, mobile...)...`);
 
     const response = await fetch(overpassUrl, {
-      headers: {
-        'User-Agent': 'SafeNet-App/1.0'
-      },
-      timeout: 25000 // Overpass can be slower
+      headers: { 'User-Agent': 'SafeNet-App/1.0' }
     });
 
     if (!response.ok) {
-      console.log(`⚠️ Overpass API error: ${response.status}`);
+      console.log(`⚠️ [Overpass+Phone] API error: ${response.status}`);
       return [];
     }
 
     const data = await response.json();
-    const places: SafePlace[] = [];
-    
-    // Log sample of what tags we're getting for debugging
-    let sampleLoggedCount = 0;
-    const maxSampleLogs = 5;
+    const results: Array<{ type: 'police' | 'hospital' | 'fire'; name: string; phone: string; lat: number; lon: number }> = [];
 
-    // Process nodes and ways
-    const allElements = [...(data.elements || [])];
+    for (const element of data.elements || []) {
+      const tags = element.tags || {};
 
-    for (const element of allElements) {
-      if (!element.tags) continue;
+      // Extract phone from any phone-related tag (priority order)
+      const rawPhone =
+        tags.phone ||
+        tags['contact:phone'] ||
+        tags['contact:mobile'] ||
+        tags.mobile ||
+        tags.telephone ||
+        tags['phone:primary'] ||
+        tags['contact:telephone'];
 
-      // Skip if not an emergency facility
-      const amenityType = element.tags.amenity;
-      if (!['police', 'hospital', 'clinic', 'fire_station'].includes(amenityType)) continue;
+      if (!rawPhone) continue;
 
-      // Log sample tags for first few facilities to debug what data is available
-      if (sampleLoggedCount < maxSampleLogs) {
-        const allTagKeys = Object.keys(element.tags);
-        const phoneRelatedTags = allTagKeys.filter(key => 
-          key.toLowerCase().includes('phone') || 
-          key.toLowerCase().includes('contact') || 
-          key.toLowerCase().includes('tel')
-        );
-        console.log(`  📋 Sample: ${element.tags.name || 'Unknown'}`);
-        console.log(`     All tags: ${allTagKeys.join(', ')}`);
-        if (phoneRelatedTags.length > 0) {
-          console.log(`     Phone tags: ${phoneRelatedTags.map(k => `${k}=${element.tags[k]}`).join(', ')}`);
-        } else {
-          console.log(`     ⚠️  NO phone-related tags found in OSM`);
-        }
-        sampleLoggedCount++;
-      }
+      const amenity = tags.amenity;
       let facilityType: 'police' | 'hospital' | 'fire' | null = null;
-      switch (amenityType) {
-        case 'police':
-          facilityType = 'police';
-          break;
-        case 'hospital':
-        case 'clinic':
-          facilityType = 'hospital';
-          break;
-        case 'fire_station':
-          facilityType = 'fire';
-          break;
-      }
-
+      if (amenity === 'police') facilityType = 'police';
+      else if (amenity === 'hospital' || amenity === 'clinic') facilityType = 'hospital';
+      else if (amenity === 'fire_station') facilityType = 'fire';
       if (!facilityType) continue;
 
-      // Get coordinates
-      let latitude: number, longitude: number;
-      if (element.lat && element.lon) {
-        latitude = element.lat;
-        longitude = element.lon;
-      } else if (element.center) {
-        latitude = element.center.lat;
-        longitude = element.center.lon;
-      } else {
-        continue;
-      }
+      // Nodes have lat/lon directly; ways use center
+      const elLat = element.lat ?? element.center?.lat;
+      const elLon = element.lon ?? element.center?.lon;
+      if (elLat == null || elLon == null) continue;
 
-      const distance = calculateDistance(lat, lon, latitude, longitude);
-      if (distance > radiusKm) continue;
+      const phone = formatPhoneNumber(rawPhone);
+      const name = tags.name || `${facilityType} facility`;
+      // Show which tag was the source for debugging
+      const phoneSource = tags.phone ? 'phone' : tags['contact:phone'] ? 'contact:phone' : 'other';
+      console.log(`  ✅ [Overpass+Phone] ${name}: ${phone}  (tag: ${phoneSource})`);
 
-      // Extract facility information
-      const name = element.tags.name || `${facilityType} facility`;
-      const address = element.tags['addr:street'] 
-        ? `${element.tags['addr:housenumber'] || ''} ${element.tags['addr:street']}, ${element.tags['addr:city'] || ''}`.trim()
-        : 'Address not available';
-
-      // Extract phone number from OSM tags
-      let phoneNumber = extractPhoneNumber(element.tags);
-      let hasRealPhone = !!phoneNumber;
-      
-      // Store elements without phone for potential Google Places lookup later
-      if (!phoneNumber) {
-        places.push({
-          id: `overpass_${element.type}_${element.id}`,
-          type: facilityType,
-          name: name,
-          address: address,
-          phoneNumber: undefined, // Mark for later lookup
-          hasRealPhoneNumber: false,
-          icon: amenityType === 'police' ? 'shield-checkmark' : amenityType.includes('hospital') || amenityType === 'clinic' ? 'medical' : 'flame',
-          distance: distance,
-          coords: {
-            latitude: latitude,
-            longitude: longitude
-          }
-        });
-        console.log(`  ⏳ [Overpass] ${name} - No phone in OSM, will try Google Places...`);
-      } else {
-        console.log(`  ✓ [Overpass] ${name} - Phone: ${phoneNumber} (from OSM)`);
-        places.push({
-          id: `overpass_${element.type}_${element.id}`,
-          type: facilityType,
-          name: name,
-          address: address,
-          phoneNumber: phoneNumber,
-          hasRealPhoneNumber: true,
-          icon: amenityType === 'police' ? 'shield-checkmark' : amenityType.includes('hospital') || amenityType === 'clinic' ? 'medical' : 'flame',
-          distance: distance,
-          coords: {
-            latitude: latitude,
-            longitude: longitude
-          }
-        });
-      }
+      results.push({ type: facilityType, name, phone, lat: elLat, lon: elLon });
     }
 
-    // Try to fetch phone numbers from Google Places for facilities without OSM phone numbers
-    const placesWithRealPhone = places.filter(p => p.hasRealPhoneNumber);
-    const placesWithoutPhone = places.filter(p => !p.phoneNumber);
-    
-    console.log(`📊 [Overpass] Summary: ${places.length} total facilities found`);
-    console.log(`   ✓ ${placesWithRealPhone.length} with phone numbers in OSM`);
-    console.log(`   ⏳ ${placesWithoutPhone.length} without phone numbers (will fetch from Google Places...)`);
-    
-    if (placesWithoutPhone.length > 0) {
-      // Fetch in parallel with a limit to avoid rate limiting
-      const batchSize = 5;
-      for (let i = 0; i < placesWithoutPhone.length; i += batchSize) {
-        const batch = placesWithoutPhone.slice(i, i + batchSize);
-        const phonePromises = batch.map(place => 
-          fetchPhoneFromGooglePlaces(place.name, place.coords.latitude, place.coords.longitude)
-            .then(phone => ({
-              id: place.id,
-              phone: phone
-            }))
-        );
-        
-        const results = await Promise.all(phonePromises);
-        
-        // Update places with fetched phone numbers
-        for (const result of results) {
-          const place = places.find(p => p.id === result.id);
-          if (place && result.phone) {
-            place.phoneNumber = result.phone;
-            place.hasRealPhoneNumber = true;
-            console.log(`  ✓ Updated ${place.name} with phone: ${result.phone}`);
-          }
-        }
-        
-        // Small delay between batches to avoid rate limiting
-        if (i + batchSize < placesWithoutPhone.length) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      }
-    }
-
-    // Add default numbers to remaining places without phone
-    let finalWithRealPhones = 0;
-    for (const place of places) {
-      if (!place.phoneNumber) {
-        place.phoneNumber = getDefaultEmergencyNumberSync(place.type);
-        place.hasRealPhoneNumber = false;
-      } else if (place.hasRealPhoneNumber) {
-        finalWithRealPhones++;
-      }
-    }
-
-    console.log(`📊 [Overpass] Final result: ${finalWithRealPhones}/${places.length} facilities with real phone numbers`);
-    return places;
+    console.log(`📊 [Overpass+Phone] ${results.length} facilities with OSM-verified phone numbers`);
+    return results;
 
   } catch (error) {
-    console.log(`⚠️ Overpass API error:`, error);
+    console.log(`⚠️ [Overpass+Phone] Error:`, error);
     return [];
   }
+}
+
+/**
+ * Merge phone numbers from Overpass into Geoapify facility list.
+ * Matches facilities by type + proximity (within 300m).
+ */
+function mergePhoneNumbers(
+  places: SafePlace[],
+  phoneSource: Array<{ type: 'police' | 'hospital' | 'fire'; name: string; phone: string; lat: number; lon: number }>
+): SafePlace[] {
+  if (phoneSource.length === 0) return places;
+
+  let merged = 0;
+
+  const enriched = places.map(place => {
+    // Find closest Overpass match of the same type within 300m
+    const MATCH_RADIUS_KM = 0.3;
+    let bestMatch: typeof phoneSource[0] | null = null;
+    let bestDist = Infinity;
+
+    for (const src of phoneSource) {
+      if (src.type !== place.type) continue;
+      const d = calculateDistance(
+        place.coords.latitude, place.coords.longitude,
+        src.lat, src.lon
+      );
+      if (d < MATCH_RADIUS_KM && d < bestDist) {
+        bestDist = d;
+        bestMatch = src;
+      }
+    }
+
+    if (bestMatch) {
+      merged++;
+      console.log(`  📞 [Merge] ${place.name} ← ${bestMatch.phone} (OSM, ${(bestDist * 1000).toFixed(0)}m match)`);
+      return { ...place, phoneNumber: bestMatch.phone, hasRealPhoneNumber: true };
+    }
+    return place;
+  });
+
+  console.log(`📊 [Merge] Attached real phones to ${merged}/${places.length} facilities`);
+  return enriched;
 }
 
 // Search using Photon API (Photon is a search API based on OpenStreetMap)
@@ -451,8 +478,7 @@ async function searchPhoton(lat: number, lon: number, query: string, radiusKm: n
     const response = await fetch(photonUrl, {
       headers: {
         'User-Agent': 'SafeNet-App/1.0'
-      },
-      timeout: 10000 // 10 second timeout
+      }
     });
 
     if (!response.ok) {
@@ -530,66 +556,42 @@ async function searchPhoton(lat: number, lon: number, query: string, radiusKm: n
   }
 }
 
-// Fetch phone number from Google Places API as fallback
-async function fetchPhoneFromGooglePlaces(facilityName: string, latitude: number, longitude: number): Promise<string | undefined> {
-  try {
-    // Google Places API key
-    const GOOGLE_PLACES_API_KEY = 'AIzaSyDGpAdiZUGAza7OMuWwTBXLfznzB0shrnY';
-    
-    // Do a nearby search to find the place details
-    const nearbySearchUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=100&keyword=${encodeURIComponent(facilityName)}&key=${GOOGLE_PLACES_API_KEY}`;
-    
-    const searchResponse = await fetch(nearbySearchUrl);
-    if (!searchResponse.ok) return undefined;
-
-    const searchData = await searchResponse.json();
-    const results = searchData.results || [];
-    
-    if (results.length === 0) return undefined;
-
-    // Get the first result's place ID
-    const placeId = results[0].place_id;
-
-    // Get detailed information including phone number
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number&key=${GOOGLE_PLACES_API_KEY}`;
-    
-    const detailsResponse = await fetch(detailsUrl);
-    if (!detailsResponse.ok) return undefined;
-
-    const detailsData = await detailsResponse.json();
-    const phoneNumber = detailsData.result?.formatted_phone_number;
-    
-    if (phoneNumber) {
-      console.log(`  📞 [Google Places] ${facilityName} - Found: ${phoneNumber}`);
-      return phoneNumber;
-    }
-    
-    return undefined;
-  } catch (error) {
-    // Silently handle errors
-    return undefined;
-  }
+// Enhanced phone search with location-based fallback - DISABLED (Google Places API not available)
+// This function is kept for reference but no longer used
+async function fetchPhoneWithLocationFallback(facilityName: string, facilityType: 'police' | 'hospital' | 'fire', latitude: number, longitude: number): Promise<string | undefined> {
+  // Google Places API is not properly configured
+  // All phone fetching now relies on OpenStreetMap Overpass, Nominatim, and Photon APIs
+  console.log(`⏭️  [Google Places] Skipped for ${facilityName} - Using OSM data instead`);
+  return undefined;
 }
 
-// Search using Nominatim API for more detailed results
+// Fetch phone number from Google Places API as fallback - DISABLED
+// Google Places API returns REQUEST_DENIED, so all fetching relies on OpenStreetMap APIs
+async function fetchPhoneFromGooglePlaces(facilityName: string, latitude: number, longitude: number, facilityType?: 'police' | 'hospital' | 'fire'): Promise<string | undefined> {
+  return undefined;
+}
+
+// Search using Nominatim API for more detailed results with improved phone extraction
 async function searchNominatim(lat: number, lon: number, query: string, radiusKm: number = 10): Promise<SafePlace[]> {
   try {
-    // Search around the user location
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=20&addressdetails=1&extratags=1&bounded=1&viewbox=${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}`;
+    // Search around the user location with higher limit
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=50&addressdetails=1&extratags=1&bounded=1&viewbox=${lon - 0.15},${lat - 0.15},${lon + 0.15},${lat + 0.15}`;
 
     const response = await fetch(nominatimUrl, {
       headers: {
         'User-Agent': 'SafeNet-App/1.0 (contact@safenet.com)'
-      },
-      timeout: 10000 // 10 second timeout
+      }
     });
 
     if (!response.ok) {
+      console.log(`⚠️ [Nominatim] Search failed: ${response.status}`);
       return [];
     }
 
     const data = await response.json();
     const places: SafePlace[] = [];
+    let foundWithPhone = 0;
+    let foundWithoutPhone = 0;
 
     if (Array.isArray(data)) {
       for (const place of data) {
@@ -613,6 +615,8 @@ async function searchNominatim(lat: number, lon: number, query: string, radiusKm
             case 'hospital':
             case 'clinic':
             case 'doctors':
+            case 'medical_clinic':
+            case 'health_clinic':
               facilityType = 'hospital';
               icon = 'medkit';
               break;
@@ -626,12 +630,36 @@ async function searchNominatim(lat: number, lon: number, query: string, radiusKm
         // Only include emergency facilities
         if (!facilityType) continue;
 
-        const name = place.properties?.name || place.display_name.split(',')[0] || `${facilityType} facility`;
-        const extractedPhone = extractPhoneNumber(place.properties) || extractPhoneNumber(place.extratags);
+        const name = place.name || place.display_name.split(',')[0] || `${facilityType} facility`;
+        
+        // Try to extract phone from multiple sources
+        let extractedPhone: string | undefined;
+        
+        // 1. Try address tags first
+        if (place.address) {
+          extractedPhone = place.address.phone;
+        }
+        
+        // 2. Try extratags (most complete)
+        if (!extractedPhone && place.extratags) {
+          extractedPhone = extractPhoneNumber(place.extratags);
+        }
+        
+        // 3. Try properties
+        if (!extractedPhone && place.properties) {
+          extractedPhone = extractPhoneNumber(place.properties);
+        }
+        
         const phoneNumber = extractedPhone || getDefaultEmergencyNumberSync(facilityType);
         const hasRealPhone = !!extractedPhone;
         
-        console.log(`  📍 [Nominatim] ${name} - Phone: ${phoneNumber} (real: ${hasRealPhone})`);
+        if (hasRealPhone) {
+          foundWithPhone++;
+          console.log(`  ✓ [Nominatim] ${name} - Real phone: ${phoneNumber}`);
+        } else {
+          foundWithoutPhone++;
+          console.log(`  ⚠️ [Nominatim] ${name} - Default: ${phoneNumber}`);
+        }
         
         places.push({
           id: `nominatim_${place.osm_id}`,
@@ -650,24 +678,48 @@ async function searchNominatim(lat: number, lon: number, query: string, radiusKm
       }
     }
 
+    console.log(`  📊 [Nominatim] Found ${foundWithPhone} with real phones, ${foundWithoutPhone} with defaults`);
     return places;
 
-  } catch (error) {
-    // Silently handle errors - network failures are common with public APIs
+  } catch (error: any) {
+    console.log(`⚠️ [Nominatim] Error:`, error.message);
     return [];
   }
 }
 
-// Main function to get nearby safe places using both APIs
+// Main function to get nearby safe places using multiple APIs
 export async function getNearbyRealSafePlaces(latitude: number, longitude: number, radiusKm: number = 5): Promise<SafePlace[]> {
   try {
     console.log(`🔍 Fetching emergency facilities (${radiusKm}km radius)`);
 
-    // Primary: Use Overpass API for detailed facility information with phone numbers
-    console.log(`📡 Attempting Overpass API (most detailed data)...`);
-    let allPlaces = await searchOverpassAPI(latitude, longitude, radiusKm);
+    // Run Geoapify (facility locations) and Overpass ["phone"] filter in parallel.
+    // Overpass only returns facilities that have phone numbers in OSM — guaranteed real data.
+    console.log(`📡 Fetching facility locations (Geoapify) + verified phone numbers (Overpass) in parallel...`);
+    const [geoapifyPlaces, overpassPhones] = await Promise.all([
+      searchGeoapifyAPI(latitude, longitude, radiusKm),
+      fetchOverpassPhoneNumbers(latitude, longitude, radiusKm),
+    ]);
 
-    // Fallback: If Overpass doesn't return enough results, use Photon and Nominatim
+    // Merge: attach OSM-verified phones to Geoapify facilities by proximity
+    let allPlaces = mergePhoneNumbers(geoapifyPlaces, overpassPhones);
+
+    // If Geoapify returned nothing but Overpass has results, convert Overpass entries directly
+    if (allPlaces.length === 0 && overpassPhones.length > 0) {
+      console.log(`📡 Geoapify returned nothing — using Overpass results directly...`);
+      allPlaces = overpassPhones.map(src => ({
+        id: `overpass_phone_${src.lat}_${src.lon}`,
+        type: src.type,
+        name: src.name,
+        address: 'Address not available',
+        phoneNumber: src.phone,
+        hasRealPhoneNumber: true,
+        icon: src.type === 'police' ? 'shield-checkmark' : src.type === 'hospital' ? 'medical' : 'flame',
+        distance: calculateDistance(latitude, longitude, src.lat, src.lon),
+        coords: { latitude: src.lat, longitude: src.lon }
+      }));
+    }
+
+    // Fallback: If combined result is still thin, supplement with Photon and Nominatim
     if (allPlaces.length < 5) {
       console.log(`📡 Supplementing with Photon & Nominatim APIs...`);
       
@@ -707,41 +759,58 @@ export async function getNearbyRealSafePlaces(latitude: number, longitude: numbe
 
     console.log(`📊 Facilities with REAL phone numbers: ${placesWithRealPhoneNumbers.length}, with default numbers: ${placesWithDefaultNumbers.length}`);
 
-    // Remove duplicates from places with real phone numbers (prioritize these)
-    const uniqueRealPhones: SafePlace[] = [];
-    const addedCoords = new Set<string>();
+    // Smart deduplication: prefer places with real phone numbers
+    const uniquePlaces: SafePlace[] = [];
+    const coordIndex = new Map<string, SafePlace>();
 
+    // First pass: Index all places with real phone numbers
     for (const place of placesWithRealPhoneNumbers) {
       const coordKey = `${place.coords.latitude.toFixed(4)}_${place.coords.longitude.toFixed(4)}_${place.type}`;
       
-      if (!addedCoords.has(coordKey)) {
-        addedCoords.add(coordKey);
-        uniqueRealPhones.push(place);
-        console.log(`✅ ${place.name} - Real phone: ${place.phoneNumber} (${place.distance.toFixed(1)}km)`);
+      if (!coordIndex.has(coordKey)) {
+        coordIndex.set(coordKey, place);
+      } else {
+        // If we already have this location, prefer the one closer to the search center
+        const existing = coordIndex.get(coordKey)!;
+        if (place.distance < existing.distance) {
+          coordIndex.set(coordKey, place);
+        }
       }
     }
 
-    // Add filtered places with default numbers only if we don't have enough results
+    // Second pass: Add places with default numbers only for new locations
     for (const place of placesWithDefaultNumbers) {
       const coordKey = `${place.coords.latitude.toFixed(4)}_${place.coords.longitude.toFixed(4)}_${place.type}`;
       
-      if (!addedCoords.has(coordKey) && uniqueRealPhones.length < 15) {
-        addedCoords.add(coordKey);
-        uniqueRealPhones.push(place);
-        console.log(`⚠️ ${place.name} - Default phone: ${place.phoneNumber} (${place.distance.toFixed(1)}km)`);
+      if (!coordIndex.has(coordKey)) {
+        coordIndex.set(coordKey, place);
       }
     }
 
-    // Sort by distance and limit to 20 closest
-    uniqueRealPhones.sort((a, b) => a.distance - b.distance);
-    const finalPlaces = uniqueRealPhones.slice(0, 20);
+    // Convert to array and sort by distance
+    uniquePlaces.push(...Array.from(coordIndex.values()));
+    uniquePlaces.sort((a, b) => a.distance - b.distance);
+
+    // Limit to 20 closest
+    const finalPlaces = uniquePlaces.slice(0, 20);
 
     if (finalPlaces.length > 0) {
       const police = finalPlaces.filter(p => p.type === 'police').length;
       const hospitals = finalPlaces.filter(p => p.type === 'hospital').length;
       const fire = finalPlaces.filter(p => p.type === 'fire').length;
       const withRealNumbers = finalPlaces.filter(p => p.hasRealPhoneNumber).length;
-      console.log(`✅ Successfully found ${finalPlaces.length} facilities (🚔${police} 🏥${hospitals} 🚒${fire}) | ${withRealNumbers} with REAL phone numbers`);
+      
+      console.log(`✅ Successfully found ${finalPlaces.length} facilities (🚔${police} 🏥${hospitals} 🚒${fire})`);
+      console.log(`📞 ${withRealNumbers} with REAL phone numbers, ${finalPlaces.length - withRealNumbers} with defaults`);
+      
+      // Log details
+      finalPlaces.forEach(p => {
+        if (p.hasRealPhoneNumber) {
+          console.log(`   ✓ ${p.name}: ${p.phoneNumber} (${p.distance.toFixed(1)}km)`);
+        } else {
+          console.log(`   ⚠️  ${p.name}: ${p.phoneNumber} - DEFAULT (${p.distance.toFixed(1)}km)`);
+        }
+      });
     } else {
       console.log('⚠️ No emergency facilities found in the specified area');
     }

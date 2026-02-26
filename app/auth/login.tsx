@@ -95,6 +95,17 @@ export default function LoginScreen() {
           // Use session context to save user data
           await login(response.data.user, response.data.token || '');
 
+          // ✅ Store backend URL for Android native code (SOS Tile)
+          try {
+            const backendUrl = api.defaults.baseURL;
+            if (backendUrl) {
+              await AsyncStorage.setItem('backendUrl', backendUrl);
+              console.log('💾 Backend URL stored after login:', backendUrl);
+            }
+          } catch (storageError) {
+            console.warn('⚠️ Could not store backend URL:', storageError);
+          }
+
           console.log("Login Successful");
           
           // Navigate to Dashboard

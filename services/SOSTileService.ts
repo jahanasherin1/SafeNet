@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import api from './api';
@@ -37,21 +38,27 @@ export class SOSTileService {
       const deviceEventEmitter = new NativeEventEmitter();
       this.eventEmitter = deviceEventEmitter;
 
+      console.log('🔔 Setting up SOS Tile Event Emitter listener...');
+
       this.subscription = deviceEventEmitter.addListener(
         'SOS_TILE_PRESSED',
         (data: any) => {
-          console.log('🚨 SOS Tile Event Received:', data);
+          console.log('🚨 [SOS TILE] Event Received:', data);
+          console.log('⏰ Event timestamp:', new Date().toISOString());
           if (this.sosCallback) {
+            console.log('📞 Calling SOS callback...');
             this.sosCallback(data);
           }
           // Automatically trigger SOS
+          console.log('📤 Calling triggerSOS()...');
           this.triggerSOS();
         }
       );
 
-      console.log('✅ SOS Tile listener registered successfully');
+      console.log('✅ SOS Tile listener registered successfully for event: SOS_TILE_PRESSED');
     } catch (error) {
       console.error('❌ Error setting up SOS Tile listener:', error);
+      console.error('Error stack:', (error as any).stack);
     }
   }
 
@@ -63,27 +70,40 @@ export class SOSTileService {
   }
 
   /**
-   * Trigger SOS from Quick Settings tile
+   * ✅ Trigger SOS from Quick Settings tile
+   * Integrated with SessionContext for consistent cancel button behavior across all alert types
    */
   private async triggerSOS() {
     try {
-      console.log('📤 Triggering SOS from Quick Settings tile...');
+      console.log('🚨 [TILE SOS] Triggering SOS from Quick Settings tile...');
+      console.log('⏰ Current time:', new Date().toISOString());
 
-      // Get user email from AsyncStorage (you might need to import AsyncStorage)
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const email = await AsyncStorage.getItem('userEmail');
       const name = await AsyncStorage.getItem('userName');
 
+      console.log('👤 User email:', email);
+      console.log('👤 User name:', name);
+
       if (!email) {
-        console.error('❌ No user email found');
+        console.error('❌ [TILE SOS] No user email found in AsyncStorage');
         return;
       }
+
+      // ✅ Store lastSosTime immediately (cancel button appears like other alerts)
+      const sosTime = new Date().toISOString();
+      await AsyncStorage.setItem('lastSosTime', sosTime);
+      await AsyncStorage.setItem('lastAlertType', 'TILE_SOS');
+      console.log('✅ [TILE SOS] lastSosTime stored for cancel button:', sosTime);
 
       // Get location
       let location = null;
       try {
+        console.log('📍 [TILE SOS] Requesting location permission...');
         const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log('📍 [TILE SOS] Location permission status:', status);
+        
         if (status === 'granted') {
+          console.log('📍 [TILE SOS] Getting current position...');
           const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.High,
           });
@@ -91,10 +111,12 @@ export class SOSTileService {
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,
           };
-          console.log('📍 Location obtained:', location);
+          console.log('✅ [TILE SOS] Location obtained:', location);
+        } else {
+          console.warn('⚠️ [TILE SOS] Location permission not granted');
         }
       } catch (error) {
-        console.warn('⚠️ Could not get location:', error);
+        console.warn('⚠️ [TILE SOS] Could not get location:', error);
       }
 
       // Send SOS alert to backend
@@ -108,27 +130,39 @@ export class SOSTileService {
         timestamp: new Date().toISOString(),
       };
 
-      console.log('📤 Sending alert to backend with data:', alertPayload);
+      console.log('📦 [TILE SOS] Alert payload prepared:', JSON.stringify(alertPayload, null, 2));
+      console.log('🔗 [TILE SOS] Sending to backend at:', api.defaults.baseURL);
 
       try {
+        console.log('📤 [TILE SOS] Making POST request to /sos/trigger...');
         const response = await api.post('/sos/trigger', alertPayload);
-        console.log('✅ SOS alert sent successfully');
-        console.log('📊 Response status:', response.status);
+        
+        console.log('✅ [TILE SOS] Alert sent successfully to backend');
+        console.log('📊 [TILE SOS] Response status:', response.status);
+        console.log('📊 [TILE SOS] Response data:', response.data);
+        console.log('📨 [TILE SOS] Guardians have been notified with location');
       } catch (error: any) {
-        console.error('❌ Error sending SOS alert:', error.message);
-        // Retry logic
+        console.error('❌ [TILE SOS] Error sending to backend:', error.message);
+        console.error('❌ [TILE SOS] Error response:', error.response?.data);
+        console.error('❌ [TILE SOS] But cancel button will still work', { sosTime });
+        
+        // Retry logic for 500 errors
         if (error.response?.status === 500) {
-          console.log('🔄 Retrying SOS alert...');
+          console.log('🔄 [TILE SOS] Retrying alert...');
           try {
-            await api.post('/sos/trigger', alertPayload);
-            console.log('✅ SOS alert sent on retry');
-          } catch (retryError) {
-            console.error('❌ SOS alert failed on retry:', retryError);
+            const retryResponse = await api.post('/sos/trigger', alertPayload);
+            console.log('✅ [TILE SOS] Alert sent on retry');
+            console.log('📊 [TILE SOS] Retry response:', retryResponse.data);
+          } catch (retryError: any) {
+            console.error('❌ [TILE SOS] Retry failed:', retryError.message);
+            console.error('⚠️ [TILE SOS] Cancel button functional regardless');
           }
         }
       }
-    } catch (error) {
-      console.error('❌ Error triggering SOS:', error);
+    } catch (error: any) {
+      console.error('❌ [TILE SOS] Unexpected error in triggerSOS:', error);
+      console.error('❌ [TILE SOS] Error message:', error.message);
+      console.error('❌ [TILE SOS] Error stack:', error.stack);
     }
   }
 

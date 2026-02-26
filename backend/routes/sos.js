@@ -1,6 +1,7 @@
 import express from 'express';
 import { User } from '../models/schemas.js';
 import sendEmail from '../utils/sendEmail.js';
+import sendSMS from '../utils/sendSMS.js';
 import { createAlert } from './alerts.js';
 
 const router = express.Router();
@@ -71,6 +72,12 @@ router.post('/trigger', async (req, res) => {
         emailSubject = `📱 Safety Alert: ${displayName} - ${alertReason}`;
         emailBody = `SAFETY ALERT\n\n${displayName}'s safety app detected unusual activity.\n\nAlert: ${alertReason}\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check on them.`;
       }
+    } else if (alertType === 'TILE_SOS') {
+      // Quick Settings Tile SOS alert
+      alertIcon = '🚨';
+      alertTitle = 'Quick Settings Tile SOS Alert';
+      emailSubject = `🚨 EMERGENCY: ${displayName} triggered SOS from Quick Settings!`;
+      emailBody = `URGENT: ${displayName} has triggered an emergency SOS alert from their device's Quick Settings.\n\nThis indicates they need immediate assistance.\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease respond immediately and check on them!`;
     } else {
       // Standard SOS alert
       alertIcon = '🚨';
@@ -81,6 +88,7 @@ router.post('/trigger', async (req, res) => {
 
     // Send email to all guardians
     let emailsSent = 0;
+    let smsSent = 0;
     console.log(`📋 User has ${user.guardians.length} guardians`);
     for (const guardian of user.guardians) {
       if (guardian.email) {
@@ -96,8 +104,41 @@ router.post('/trigger', async (req, res) => {
       } else {
         console.warn(`⚠️ Guardian ${guardian.name} has no email address`);
       }
+
+      // Send SMS to guardians with phone numbers
+      if (guardian.phone) {
+        try {
+          console.log(`📱 Attempting to send SMS to ${guardian.name} (${guardian.phone})`);
+          
+          // Craft SMS message (shorter for SMS format)
+          let smsMessage = '';
+          if (alertType === 'HIGH_RISK_AREA') {
+            smsMessage = `🚨 ALERT: ${displayName} entered a high-risk area. Location: ${mapsLink}`;
+          } else if (alertType === 'ACTIVITY_MONITOR' && reason.includes('FALL')) {
+            smsMessage = `🆘 URGENT: ${displayName} may have fallen! Location: ${mapsLink}`;
+          } else if (alertType === 'ACTIVITY_MONITOR' && reason.includes('SUDDEN STOP')) {
+            smsMessage = `⚠️ ALERT: ${displayName} stopped suddenly while running. Location: ${mapsLink}`;
+          } else if (alertType === 'TILE_SOS') {
+            smsMessage = `🚨 EMERGENCY: ${displayName} triggered SOS from Quick Settings! Location: ${mapsLink}`;
+          } else {
+            smsMessage = `🚨 SOS: ${displayName} needs help! Reason: ${alertReason}. Location: ${mapsLink}`;
+          }
+          
+          const smsResult = await sendSMS(guardian.phone, smsMessage);
+          if (smsResult.success) {
+            smsSent++;
+            console.log(`✅ Alert SMS sent successfully to ${guardian.name} (${guardian.phone})`);
+          } else {
+            console.warn(`⚠️ Failed to send SMS to ${guardian.phone}: ${smsResult.error}`);
+          }
+        } catch (smsError) {
+          console.error(`❌ Error sending SMS to ${guardian.phone}:`, smsError.message);
+        }
+      } else {
+        console.warn(`⚠️ Guardian ${guardian.name} has no phone number`);
+      }
     }
-    console.log(`📊 Email summary: ${emailsSent}/${user.guardians.length} guardians notified`);
+    console.log(`📊 Notification summary: ${emailsSent}/${user.guardians.length} emails, ${smsSent}/${user.guardians.length} SMS sent`);
 
     // Create alert notification for guardian dashboard
     console.log('📝 Creating alert in database...');
@@ -124,10 +165,11 @@ router.post('/trigger', async (req, res) => {
       console.warn('⚠️ Alert was not created in database');
     }
 
-    console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails sent)`);
+    console.log(`🚨 ${alertType || 'SOS'} Alert for ${displayName} - Reason: ${alertReason} (${emailsSent} emails, ${smsSent} SMS sent)`);
     res.status(200).json({ 
       message: 'Alert sent successfully',
       emailsSent,
+      smsSent,
       guardianCount: user.guardians.length,
       alertCreated: !!createdAlert,
       alertId: createdAlert?._id
@@ -185,18 +227,35 @@ router.post('/cancel-false-alarm', async (req, res) => {
     const displayName = user.name || 'User';
     const emailSubject = `✅ False Alarm: ${displayName} is Safe`;
     const emailBody = `SAFETY UPDATE\n\n${displayName} has confirmed they are safe and the previous alert was a false alarm.\n\nTime: ${new Date().toLocaleString()}\n\nNo further action is needed. This was likely triggered accidentally or the situation has been resolved.\n\nStay safe!`;
+    const smsMessage = `✅ False Alarm: ${displayName} is safe and the alert was accidental. No action needed.`;
 
-    // Send email to all guardians
+    // Send email and SMS to all guardians
     let emailsSent = 0;
-    console.log(`📧 Sending emails to ${user.guardians.length} guardian(s)...`);
+    let smsSent = 0;
+    console.log(`📧 Sending notifications to ${user.guardians.length} guardian(s)...`);
     for (const guardian of user.guardians) {
       if (guardian.email) {
         try {
           await sendEmail(guardian.email, emailSubject, emailBody);
           emailsSent++;
-          console.log(`📧 False alarm notification sent to ${guardian.name} (${guardian.email})`);
+          console.log(`📧 False alarm email sent to ${guardian.name} (${guardian.email})`);
         } catch (emailError) {
           console.error(`Failed to send email to ${guardian.email}:`, emailError.message);
+        }
+      }
+
+      if (guardian.phone) {
+        try {
+          console.log(`📱 Attempting to send false alarm SMS to ${guardian.name} (${guardian.phone})`);
+          const smsResult = await sendSMS(guardian.phone, smsMessage);
+          if (smsResult.success) {
+            smsSent++;
+            console.log(`📱 False alarm SMS sent to ${guardian.name} (${guardian.phone})`);
+          } else {
+            console.warn(`⚠️ Failed to send SMS to ${guardian.phone}: ${smsResult.error}`);
+          }
+        } catch (smsError) {
+          console.error(`Error sending SMS to ${guardian.phone}:`, smsError.message);
         }
       }
     }
@@ -216,16 +275,18 @@ router.post('/cancel-false-alarm', async (req, res) => {
         alertType: 'false_alarm',
         guardianCount: user.guardians.length,
         emailsSent,
+        smsSent,
         timestamp: new Date().toISOString(),
         cancelledAt: new Date().toLocaleString()
       }
     });
     console.log('✅ False alarm alert created for guardian dashboard');
 
-    console.log(`✅ False alarm cancelled for ${displayName} (${emailsSent} notifications sent)`);
+    console.log(`✅ False alarm cancelled for ${displayName} (${emailsSent} emails, ${smsSent} SMS sent)`);
     res.status(200).json({ 
       message: 'False alarm cancelled successfully',
       emailsSent,
+      smsSent,
       guardianCount: user.guardians.length,
       alertCreated: true
     });
