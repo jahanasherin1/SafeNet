@@ -41,7 +41,9 @@ export const uploadVoice = multer({
  */
 export const uploadToCloudinary = async (buffer, options = {}) => {
   // CRITICAL: Extract transformation BEFORE creating FormData to prevent it from being serialized
+  // This MUST happen first - do NOT append transformation to FormData under any circumstances
   const transformation = options.transformation;
+  delete options.transformation; // Remove from options object to be extra safe
   
   // Create FormData with ONLY safe parameters (never include transformation in upload)
   const formData = new FormData();
