@@ -93,6 +93,11 @@ app.use('/api/crime-chance', crimeChanceRoutes);
 app.use('/api/proximity-alerts', proximityAlertsRoutes);
 app.use('/api/weather-alerts', weatherAlertsRoutes);
 
+// Health check endpoint for client apps
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'SafeNet API is healthy' });
+});
+
 app.get('/', (req, res) => {
   res.send('SafeNet API is running...');
 });
