@@ -1,6 +1,7 @@
 // backend/utils/cloudinary.js
 // Upload to Cloudinary API via HTTP (no SDK to avoid ESM/CJS conflicts)
 import axios from 'axios';
+import crypto from 'crypto';
 import multer from 'multer';
 
 // Use memory storage — we stream the buffer directly to Cloudinary
@@ -74,36 +75,35 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
     console.log('✓ Appended resource_type');
   }
   
-  // Try unsigned upload first (simpler)
-  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
-  if (uploadPreset) {
-    // Unsigned upload using preset
-    formData.append('upload_preset', uploadPreset);
-  } else {
-    // Fallback to authenticated upload with signature (works without preset)
-    const timestamp = Math.floor(Date.now() / 1000);
-    formData.append('timestamp', timestamp.toString());
+  // Use authenticated upload with signature (always, for both images and audio)
+  // This works without needing special unsigned presets
+  const timestamp = Math.floor(Date.now() / 1000);
+  formData.append('timestamp', timestamp.toString());
+  console.log('✓ Appended timestamp');
 
-    const paramsToSign = {
-      timestamp: timestamp.toString(),
-      api_key: process.env.CLOUDINARY_API_KEY,
-    };
-    if (options.folder) paramsToSign.folder = options.folder;
-    if (options.public_id) paramsToSign.public_id = options.public_id;
-    if (options.resource_type) paramsToSign.resource_type = options.resource_type;
+  // Build params for signature - DO NOT include api_key in the signature!
+  // Signature is only for: folder, public_id, resource_type, timestamp
+  const paramsToSign = {
+    timestamp: timestamp.toString(),
+  };
+  if (folder) paramsToSign.folder = folder;
+  if (public_id) paramsToSign.public_id = public_id;
+  if (resource_type) paramsToSign.resource_type = resource_type;
 
-    const paramsString = Object.keys(paramsToSign)
-      .sort()
-      .map(key => `${key}=${paramsToSign[key]}`)
-      .join('&');
+  // Create signature string: sort keys, join with &, then append API_SECRET
+  const paramsString = Object.keys(paramsToSign)
+    .sort()
+    .map(key => `${key}=${paramsToSign[key]}`)
+    .join('&');
 
-    const signature = crypto
-      .createHash('sha1')
-      .update(paramsString + process.env.CLOUDINARY_API_SECRET)
-      .digest('hex');
+  console.log('🔑 Signature string:', paramsString);
+  const signature = crypto
+    .createHash('sha1')
+    .update(paramsString + process.env.CLOUDINARY_API_SECRET)
+    .digest('hex');
 
-    formData.append('signature', signature);
-  }
+  formData.append('signature', signature);
+  console.log('✓ Appended signature');
 
   // NEVER append transformation to FormData - Cloudinary upload endpoint doesn't accept it
   // We will apply transformation to the URL instead after upload completes
@@ -112,6 +112,7 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
 
   try {
+    console.log('📤 Sending request to Cloudinary...');
     const response = await axios.post(url, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
