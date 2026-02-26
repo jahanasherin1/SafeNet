@@ -14,6 +14,12 @@ import Constants from 'expo-constants';
 const PORT = 5000;  
 
 const getBaseUrl = () => {
+  // 0. Check for production backend URL first (Vercel)
+  if (process.env.EXPO_PUBLIC_BACKEND_API_URL) {
+    console.log('✅ Using production backend URL:', process.env.EXPO_PUBLIC_BACKEND_API_URL);
+    return process.env.EXPO_PUBLIC_BACKEND_API_URL;
+  }
+
   // 1. Attempt to get IP automatically from Expo Go (Development Mode)
   const debuggerHost = Constants.expoConfig?.hostUri;
   

@@ -1,6 +1,6 @@
 import express from 'express';
 import { GuardianOtp, PasswordReset, User } from '../models/schemas.js';
-import { upload } from '../utils/cloudinary.js';
+import { upload, uploadToCloudinary } from '../utils/cloudinary.js';
 import sendEmail from '../utils/sendEmail.js';
 import sendSMS from '../utils/sendSMS.js';
 
@@ -193,8 +193,11 @@ router.post('/update-profile', upload.single('profileImage'), async (req, res) =
     }
 
     if (req.file) {
-      // Cloudinary returns the secure URL in req.file.path
-      updateData.profileImage = req.file.path;
+      const result = await uploadToCloudinary(req.file.buffer, {
+        folder: 'safenet/profile-images',
+        public_id: `profile_${Date.now()}`,
+      });
+      updateData.profileImage = result.url;
     }
 
     const user = await User.findOneAndUpdate(

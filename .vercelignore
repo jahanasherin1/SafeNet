@@ -2,5 +2,6 @@ node_modules/
 uploads/
 .env
 *.log
-.vercel
-.env*.local
+tests/
+*.test.js
+jest.config.js

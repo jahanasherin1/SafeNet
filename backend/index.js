@@ -129,6 +129,3 @@ if (!process.env.VERCEL) {
 
 // ─── Export app for Vercel serverless handler ───
 export default app;
-
-// ─── Export app for Vercel serverless handler ───
-export default app;

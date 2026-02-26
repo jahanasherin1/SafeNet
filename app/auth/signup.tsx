@@ -163,6 +163,9 @@ export default function SignupScreen() {
         }
 
         // --- BACKEND API CALL ---
+        console.log('📝 Attempting signup with email:', email);
+        console.log('📍 Backend URL:', api.defaults.baseURL);
+        
         const response = await api.post('/auth/signup', {
           name,
           phone,
@@ -184,9 +187,13 @@ export default function SignupScreen() {
           );
         }
       } catch (error: any) {
+        console.error('❌ Signup Error:', error);
+        console.error('Response status:', error.response?.status);
+        console.error('Response data:', error.response?.data);
+        console.error('Request URL:', error.config?.url);
+        
         const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
         showAlert("Registration Error", errorMessage);
-        console.error(error);
       } finally {
         setLoading(false); 
       }

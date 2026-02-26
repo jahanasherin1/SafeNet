@@ -86,6 +86,9 @@ export default function LoginScreen() {
       setLoading(true); 
       try {
         // --- BACKEND API CALL ---
+        console.log('🔐 Attempting login with email:', email);
+        console.log('📍 Backend URL:', api.defaults.baseURL);
+        
         const response = await api.post('/auth/login', {
           email,
           password
@@ -106,13 +109,18 @@ export default function LoginScreen() {
             console.warn('⚠️ Could not store backend URL:', storageError);
           }
 
-          console.log("Login Successful");
+          console.log("✅ Login Successful");
           
           // Navigate to Dashboard
           router.replace('/dashboard/home');
         }
       } catch (error: any) {
         // Handle Error using Cross-Platform Alert
+        console.error('❌ Login Error:', error);
+        console.error('Response status:', error.response?.status);
+        console.error('Response data:', error.response?.data);
+        console.error('Request URL:', error.config?.url);
+        
         const errorMessage = error.response?.data?.message || "Invalid email or password";
         showAlert("Login Failed", errorMessage);
       } finally {

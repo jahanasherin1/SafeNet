@@ -1,6 +1,6 @@
 import express from 'express';
 import { User } from '../models/schemas.js';
-import { cloudinary, uploadVoice } from '../utils/cloudinary.js';
+import { deleteFromCloudinary, uploadToCloudinary, uploadVoice } from '../utils/cloudinary.js';
 
 const router = express.Router();
 
@@ -32,17 +32,21 @@ router.post('/add', uploadVoice.single('audioFile'), async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      // Clean up the uploaded file on Cloudinary if user not found
-      await cloudinary.uploader.destroy(req.file.filename, { resource_type: 'video' }).catch(() => {});
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Cloudinary returns the secure URL in req.file.path and public_id in req.file.filename
+    // Upload buffer to Cloudinary (audio must use resource_type 'video')
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'safenet/voice-profiles',
+      resource_type: 'video',
+      public_id: `voice_${Date.now()}`,
+    });
+
     const newVoice = {
       id: id || Date.now().toString(),
       name,
-      audioUri: req.file.path,           // Cloudinary HTTPS URL
-      audioPublicId: req.file.filename,   // Cloudinary public_id (for deletion)
+      audioUri: result.url,           // Cloudinary HTTPS URL
+      audioPublicId: result.public_id, // Cloudinary public_id (for deletion)
       audioName: req.file.originalname,
       dateAdded: dateAdded || new Date()
     };
@@ -74,7 +78,7 @@ router.delete('/:email/:voiceId', async (req, res) => {
     const voiceToDelete = user.voiceProfiles.find(v => v.id === voiceId);
     if (voiceToDelete?.audioPublicId) {
       try {
-        await cloudinary.uploader.destroy(voiceToDelete.audioPublicId, { resource_type: 'video' });
+        await deleteFromCloudinary(voiceToDelete.audioPublicId, 'video');
         console.log(`🗑️ Deleted voice from Cloudinary: ${voiceToDelete.audioPublicId}`);
       } catch (cloudErr) {
         console.warn('⚠️ Could not delete voice from Cloudinary:', cloudErr.message);

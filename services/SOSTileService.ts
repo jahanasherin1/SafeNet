@@ -34,8 +34,14 @@ export class SOSTileService {
    */
   private setupEventListener() {
     try {
+      // Check if RCTDeviceEventEmitter is available (not available in Expo Go)
+      if (!RCTDeviceEventEmitter) {
+        console.warn('⚠️ RCTDeviceEventEmitter not available - native SOS tile not supported in Expo Go');
+        return;
+      }
+
       // Listen for the SOS Tile Pressed event from native side
-      const deviceEventEmitter = new NativeEventEmitter();
+      const deviceEventEmitter = new NativeEventEmitter(RCTDeviceEventEmitter);
       this.eventEmitter = deviceEventEmitter;
 
       console.log('🔔 Setting up SOS Tile Event Emitter listener...');

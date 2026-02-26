@@ -1,42 +1,105 @@
 // backend/utils/cloudinary.js
-import { v2 as cloudinary } from 'cloudinary';
+// Upload to Cloudinary API via HTTP (no SDK to avoid ESM/CJS conflicts)
+import axios from 'axios';
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
-// Configure Cloudinary with credentials from .env
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Use memory storage — we stream the buffer directly to Cloudinary
+const memoryStorage = multer.memoryStorage();
 
-// ─── Profile Image Storage ───
-const imageStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'safenet/profile-images',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 400, height: 400, crop: 'fill', quality: 'auto' }],
-    public_id: (req, file) => `profile_${Date.now()}`,
+// Multer instance for profile images (5 MB limit)
+export const upload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/image\/(jpeg|jpg|png|webp)/.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
   },
 });
 
-// ─── Voice / Audio Storage ───
-// Cloudinary treats audio as resource_type 'video'
-const voiceStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'safenet/voice-profiles',
-    resource_type: 'video',           // required for audio files
-    allowed_formats: ['mp3', 'wav', 'm4a', 'ogg', 'aac', 'mp4', '3gp', 'flac', 'wma'],
-    public_id: (req, file) => `voice_${Date.now()}`,
-  },
-});
-
-export const upload = multer({ storage: imageStorage });
+// Multer instance for voice/audio files (10 MB limit)
 export const uploadVoice = multer({
-  storage: voiceStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  storage: memoryStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedExts = /\.(mp3|wav|m4a|ogg|aac|mp4|3gp|flac|wma)$/i;
+    if (
+      allowedExts.test(file.originalname) ||
+      file.mimetype.startsWith('audio/') ||
+      file.mimetype === 'application/octet-stream'
+    ) {
+      return cb(null, true);
+    }
+    cb(new Error('Only audio files are allowed'));
+  },
 });
-export { cloudinary };
+
+/**
+ * Upload a buffer to Cloudinary via HTTP API (authenticated).
+ * @param {Buffer} buffer  - File buffer from multer memoryStorage
+ * @param {object} options - Upload options (folder, public_id, resource_type, etc.)
+ * @returns {Promise<{url: string, public_id: string}>}
+ */
+export const uploadToCloudinary = async (buffer, options = {}) => {
+  const formData = new FormData();
+  const blob = new Blob([buffer]);
+  
+  formData.append('file', blob);
+  formData.append('api_key', process.env.CLOUDINARY_API_KEY);
+  formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET || 'safenet');
+  
+  if (options.folder) formData.append('folder', options.folder);
+  if (options.public_id) formData.append('public_id', options.public_id);
+  if (options.resource_type) formData.append('resource_type', options.resource_type);
+
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+
+  try {
+    const response = await axios.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return {
+      url: response.data.secure_url,
+      public_id: response.data.public_id,
+    };
+  } catch (error) {
+    console.error('Cloudinary upload failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Delete a file from Cloudinary via HTTP API.
+ * @param {string} publicId - Cloudinary public_id
+ * @param {string} resourceType - 'image' or 'video'
+ * @returns {Promise<void>}
+ */
+export const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = {
+    public_id: publicId,
+    resource_type: resourceType,
+    timestamp,
+  };
+
+  // Build signature for authenticated delete
+  const signatureString = Object.keys(params)
+    .sort()
+    .map(key => `${key}=${params[key]}`)
+    .join('&') + apiSecret;
+
+  const crypto = await import('crypto');
+  const signature = crypto.default.createHash('sha1').update(signatureString).digest('hex');
+
+  const formData = new URLSearchParams(params);
+  formData.append('api_key', apiKey);
+  formData.append('signature', signature);
+
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`;
+  await axios.post(url, formData);
+};
 
