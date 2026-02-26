@@ -196,6 +196,12 @@ router.post('/update-profile', upload.single('profileImage'), async (req, res) =
       const result = await uploadToCloudinary(req.file.buffer, {
         folder: 'safenet/profile-images',
         public_id: `profile_${Date.now()}`,
+        transformation: {
+          width: 400,
+          height: 400,
+          crop: 'fill',
+          quality: 'auto'
+        }
       });
       updateData.profileImage = result.url;
     }

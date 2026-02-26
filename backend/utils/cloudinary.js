@@ -36,8 +36,8 @@ export const uploadVoice = multer({
 /**
  * Upload a buffer to Cloudinary via HTTP API (authenticated).
  * @param {Buffer} buffer  - File buffer from multer memoryStorage
- * @param {object} options - Upload options (folder, public_id, resource_type, etc.)
- * @returns {Promise<{url: string, public_id: string}>}
+ * @param {object} options - Upload options (folder, public_id, resource_type, transformation, etc.)
+ * @returns {Promise<{url: string, public_id: string, transformedUrl?: string}>}
  */
 export const uploadToCloudinary = async (buffer, options = {}) => {
   const formData = new FormData();
@@ -47,9 +47,13 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   formData.append('api_key', process.env.CLOUDINARY_API_KEY);
   formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET || 'safenet');
   
+  // Only append safe parameters to FormData (NOT transformation)
   if (options.folder) formData.append('folder', options.folder);
   if (options.public_id) formData.append('public_id', options.public_id);
   if (options.resource_type) formData.append('resource_type', options.resource_type);
+  
+  // Extract transformation if provided - we'll apply it to the URL instead
+  const transformation = options.transformation;
 
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
@@ -58,14 +62,58 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
     const response = await axios.post(url, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    
+    let secureUrl = response.data.secure_url;
+    
+    // Apply transformation to URL if provided (instead of upload parameter)
+    if (transformation) {
+      secureUrl = applyCloudinaryTransformationToUrl(secureUrl, transformation);
+    }
+    
     return {
-      url: response.data.secure_url,
+      url: secureUrl,
       public_id: response.data.public_id,
     };
   } catch (error) {
     console.error('Cloudinary upload failed:', error.response?.data || error.message);
     throw error;
   }
+};
+
+/**
+ * Apply Cloudinary transformations to a URL
+ * @param {string} url - Original Cloudinary URL
+ * @param {object|array} transformation - Transformation object or array
+ * @returns {string} - URL with transformation applied
+ */
+export const applyCloudinaryTransformationToUrl = (url, transformation) => {
+  if (!transformation) return url;
+  
+  // Handle array of transformations
+  const transforms = Array.isArray(transformation) ? transformation : [transformation];
+  
+  // Build transformation string
+  let transformString = '';
+  transforms.forEach((t, index) => {
+    const transformParts = [];
+    
+    if (t.width) transformParts.push(`w_${t.width}`);
+    if (t.height) transformParts.push(`h_${t.height}`);
+    if (t.crop) transformParts.push(`c_${t.crop}`);
+    if (t.quality) transformParts.push(`q_${t.quality}`);
+    if (t.gravity) transformParts.push(`g_${t.gravity}`);
+    if (t.format) transformParts.push(`f_${t.format}`);
+    
+    if (transformParts.length > 0) {
+      transformString += transformParts.join(',');
+      if (index < transforms.length - 1) transformString += '/';
+    }
+  });
+  
+  if (!transformString) return url;
+  
+  // Insert transformation into URL (after /upload/)
+  return url.replace(/\/upload\//, `/upload/${transformString}/`);
 };
 
 /**
