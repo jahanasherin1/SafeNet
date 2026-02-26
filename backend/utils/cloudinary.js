@@ -50,17 +50,37 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   formData.append('file', blob);
   formData.append('api_key', process.env.CLOUDINARY_API_KEY);
   
-  // Use upload preset if available, otherwise skip it (authenticated upload)
-  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
-  if (uploadPreset) {
-    formData.append('upload_preset', uploadPreset);
-  }
+  // Add timestamp for authenticated uploads
+  const timestamp = Math.floor(Date.now() / 1000);
+  formData.append('timestamp', timestamp.toString());
   
   // Only these parameters are safe for Cloudinary upload API
   if (options.folder) formData.append('folder', options.folder);
   if (options.public_id) formData.append('public_id', options.public_id);
   if (options.resource_type) formData.append('resource_type', options.resource_type);
   
+  // Generate signature for authenticated upload (uses API secret)
+  // This works without needing an unsigned preset
+  const paramsToSign = {
+    timestamp: timestamp.toString(),
+    api_key: process.env.CLOUDINARY_API_KEY,
+  };
+  if (options.folder) paramsToSign.folder = options.folder;
+  if (options.public_id) paramsToSign.public_id = options.public_id;
+  if (options.resource_type) paramsToSign.resource_type = options.resource_type;
+
+  const paramsString = Object.keys(paramsToSign)
+    .sort()
+    .map(key => `${key}=${paramsToSign[key]}`)
+    .join('&');
+
+  const signature = crypto
+    .createHash('sha1')
+    .update(paramsString + process.env.CLOUDINARY_API_SECRET)
+    .digest('hex');
+
+  formData.append('signature', signature);
+
   // NEVER append transformation to FormData - Cloudinary upload endpoint doesn't accept it
   // We will apply transformation to the URL instead after upload completes
 
