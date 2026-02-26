@@ -43,16 +43,8 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   // CRITICAL: Extract transformation BEFORE creating FormData to prevent it from being serialized
   // This MUST happen first - do NOT append transformation to FormData under any circumstances
   const transformation = options.transformation;
-  delete options.transformation; // Remove from options object to be extra safe
   
-  console.log('📤 Starting Cloudinary upload with options:', JSON.stringify({
-    folder: options.folder,
-    public_id: options.public_id,
-    resource_type: options.resource_type,
-    hasTransformation: !!transformation
-  }));
-  
-  // Create FormData with ONLY safe parameters (never include transformation in upload)
+  // Create FormData with ONLY safe parameters (explicitly list what to append - never transformation)
   const formData = new FormData();
   const blob = new Blob([buffer]);
   
@@ -62,21 +54,25 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
   formData.append('api_key', process.env.CLOUDINARY_API_KEY);
   console.log('✓ Appended api_key');
   
-  // Only these parameters are safe for Cloudinary upload API
-  if (options.folder) {
-    formData.append('folder', options.folder);
-    console.log('✓ Appended folder:', options.folder);
-  }
-  if (options.public_id) {
-    formData.append('public_id', options.public_id);
-    console.log('✓ Appended public_id:', options.public_id);
-  }
-  if (options.resource_type) {
-    formData.append('resource_type', options.resource_type);
-    console.log('✓ Appended resource_type:', options.resource_type);
-  }
+  // ONLY append these specific fields - nothing from transformation
+  const folder = options.folder;
+  const public_id = options.public_id;
+  const resource_type = options.resource_type;
   
-  console.log('⚠️ Checking options object after extraction:', Object.keys(options));
+  console.log('📤 Appending safe fields:', { folder, public_id, resource_type, hasTransformation: !!transformation });
+  
+  if (folder) {
+    formData.append('folder', folder);
+    console.log('✓ Appended folder');
+  }
+  if (public_id) {
+    formData.append('public_id', public_id);
+    console.log('✓ Appended public_id');
+  }
+  if (resource_type) {
+    formData.append('resource_type', resource_type);
+    console.log('✓ Appended resource_type');
+  }
   
   // Try unsigned upload first (simpler)
   const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
