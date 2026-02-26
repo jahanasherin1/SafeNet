@@ -40,20 +40,29 @@ export const uploadVoice = multer({
  * @returns {Promise<{url: string, public_id: string, transformedUrl?: string}>}
  */
 export const uploadToCloudinary = async (buffer, options = {}) => {
+  // CRITICAL: Extract transformation BEFORE creating FormData to prevent it from being serialized
+  const transformation = options.transformation;
+  
+  // Create FormData with ONLY safe parameters (never include transformation in upload)
   const formData = new FormData();
   const blob = new Blob([buffer]);
   
   formData.append('file', blob);
   formData.append('api_key', process.env.CLOUDINARY_API_KEY);
-  formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET || 'safenet');
   
-  // Only append safe parameters to FormData (NOT transformation)
+  // Use upload preset if available, otherwise skip it (authenticated upload)
+  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
+  if (uploadPreset) {
+    formData.append('upload_preset', uploadPreset);
+  }
+  
+  // Only these parameters are safe for Cloudinary upload API
   if (options.folder) formData.append('folder', options.folder);
   if (options.public_id) formData.append('public_id', options.public_id);
   if (options.resource_type) formData.append('resource_type', options.resource_type);
   
-  // Extract transformation if provided - we'll apply it to the URL instead
-  const transformation = options.transformation;
+  // NEVER append transformation to FormData - Cloudinary upload endpoint doesn't accept it
+  // We will apply transformation to the URL instead after upload completes
 
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
@@ -65,17 +74,19 @@ export const uploadToCloudinary = async (buffer, options = {}) => {
     
     let secureUrl = response.data.secure_url;
     
-    // Apply transformation to URL if provided (instead of upload parameter)
+    // Apply transformation to URL ONLY (URL-based transformation, not upload parameter)
     if (transformation) {
+      console.log('📐 Applying transformation to uploaded URL');
       secureUrl = applyCloudinaryTransformationToUrl(secureUrl, transformation);
     }
     
+    console.log(`✅ Upload successful: ${response.data.public_id}`);
     return {
       url: secureUrl,
       public_id: response.data.public_id,
     };
   } catch (error) {
-    console.error('Cloudinary upload failed:', error.response?.data || error.message);
+    console.error('❌ Cloudinary upload failed:', error.response?.data || error.message);
     throw error;
   }
 };
