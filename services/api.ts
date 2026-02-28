@@ -5,18 +5,30 @@ import Constants from 'expo-constants';
 // ========================================
 // 🌐 NETWORK SETUP - CHANGE IP HERE 👇
 // ========================================
+// ✅ PRODUCTION: Hosted Vercel backend (always used when not in dev with local backend)
+const PRODUCTION_URL = 'https://safe-4f094wa29-safegos-projects.vercel.app/api';
+
 // Comment out the hardcoded IP to use auto-detection
  const LAPTOP_IP = '10.172.89.244';        // ← Home
 // const LAPTOP_IP = '192.168.1.13';       // ← Home Alt
 //const LAPTOP_IP = '192.168.1.30';      // ← Old IP
+
+// 🔧 Set USE_PRODUCTION = true to use the hosted backend, false for local dev
+const USE_PRODUCTION = true;
 // ========================================
 
 const PORT = 5000;  
 
 const getBaseUrl = () => {
-  // 0. Check for production backend URL first (Vercel)
+  // 0. Always use production URL if USE_PRODUCTION is true
+  if (USE_PRODUCTION) {
+    console.log('✅ Using production backend URL:', PRODUCTION_URL);
+    return PRODUCTION_URL;
+  }
+
+  // 0b. Check for env var override (Vercel)
   if (process.env.EXPO_PUBLIC_BACKEND_API_URL) {
-    console.log('✅ Using production backend URL:', process.env.EXPO_PUBLIC_BACKEND_API_URL);
+    console.log('✅ Using env backend URL:', process.env.EXPO_PUBLIC_BACKEND_API_URL);
     return process.env.EXPO_PUBLIC_BACKEND_API_URL;
   }
 
@@ -51,16 +63,19 @@ console.log("🔗 Connecting to Backend at:", BASE_URL);
     await AsyncStorage.setItem('backendUrl', BASE_URL);
     console.log('💾 Stored backend URL in AsyncStorage:', BASE_URL);
     
-    // Also try to write to native preferences/file for more reliable access
+    // ✅ Write to Android SharedPreferences so the SOS Quick Settings Tile can read it
+    // The tile reads from preference file 'backend_config', key 'backendUrl'
     try {
-      // This attempts to call a native module if available
       const { NativeModules } = require('react-native');
-      if (NativeModules.UserDataModule) {
-        NativeModules.UserDataModule.setBackendUrl?.(BASE_URL);
-        console.log('📱 Sent backend URL to Android native module');
+      if (NativeModules.SharedPreferencesModule) {
+        NativeModules.SharedPreferencesModule.setString('backend_config', 'backendUrl', BASE_URL)
+          .then(() => console.log('📱 Backend URL saved to Android SharedPreferences (backend_config):', BASE_URL))
+          .catch((err: any) => console.warn('⚠️ Could not save to backend_config SharedPreferences:', err));
+      } else {
+        console.warn('⚠️ SharedPreferencesModule not available - SOS tile will use fallback URL');
       }
     } catch (nativeError) {
-      console.warn('⚠️ Could not write to Android native code:', nativeError);
+      console.warn('⚠️ Could not write backend URL to Android SharedPreferences:', nativeError);
     }
   } catch (error) {
     console.error('Error storing backend URL:', error);
