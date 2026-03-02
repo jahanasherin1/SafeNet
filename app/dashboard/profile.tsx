@@ -167,13 +167,17 @@ export default function ProfileScreen() {
         {/* User Info Section */}
         <View style={styles.profileSection}>
           <View style={styles.imageContainer}>
-            <Image 
-              // 3. Use Dynamic Image or Default Fallback
-              source={{ 
-                uri: profileImage || 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' 
-              }} 
-              style={styles.profileImage} 
-            />
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <Image
+                source={require('../../assets/images/profile.jpg')}
+                style={styles.profileImage}
+              />
+            )}
           </View>
           <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.userPhone}>{userPhone}</Text>
@@ -291,7 +295,13 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 3,
     borderColor: '#FFF',
-    backgroundColor: '#DDD', // Gray background while loading
+    backgroundColor: '#DDD',
+  },
+  profileImagePlaceholder: {
+    backgroundColor: '#F0EDFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   userName: {
     fontSize: 22,

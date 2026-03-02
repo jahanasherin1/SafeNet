@@ -11,7 +11,7 @@ import api from '../../services/api';
 
 // Helper to get full image URL
 const getImageUrl = (path: string | undefined) => {
-  if (!path) return 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg';
+  if (!path) return null;
   if (path.startsWith('http')) return path;
   return `${api.defaults.baseURL?.replace('/api', '')}/${path}`;
 };
@@ -104,6 +104,7 @@ export default function EditProfileScreen() {
 
       const response = await api.post('/auth/update-profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        transformRequest: (data) => data, // Prevent axios from JSON-serializing FormData
       });
 
       if (response.status === 200) {
@@ -114,9 +115,9 @@ export default function EditProfileScreen() {
         ]);
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Update Failed";
+      const msg = error.response?.data?.detail || error.response?.data?.message || "Update Failed";
       Alert.alert("Error", msg);
-      console.error(error);
+      console.error("Update profile error:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -136,10 +137,11 @@ export default function EditProfileScreen() {
         
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={pickImage}>
-            <Image 
-              source={{ uri: profileImage || 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' }} 
-              style={styles.avatar} 
-            />
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.avatar} />
+            ) : (
+              <Image source={require('../../assets/images/profile.jpg')} style={styles.avatar} />
+            )}
             <View style={styles.cameraIconBg}>
                 <Ionicons name="camera" size={18} color="#FFF" />
             </View>
@@ -216,6 +218,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 25, paddingBottom: 40 },
   avatarSection: { alignItems: 'center', marginVertical: 20 },
   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#FFF' },
+  avatarPlaceholder: { backgroundColor: '#F0EDFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cameraIconBg: {
     position: 'absolute', bottom: 0, right: 0,
     backgroundColor: '#6A5ACD', padding: 8, borderRadius: 20,

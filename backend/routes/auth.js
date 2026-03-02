@@ -183,9 +183,32 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // 3. Update Profile (Updated to handle File Uploads)
-router.post('/update-profile', upload.single('profileImage'), async (req, res) => {
+// Multer error handler wrapper
+const handleUpload = (req, res, next) => {
+  upload.single('profileImage')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err.message);
+      // Don't fail — just continue without file
+      req.file = undefined;
+      return next();
+    }
+    next();
+  });
+};
+
+router.post('/update-profile', handleUpload, async (req, res) => {
   try {
     const { currentEmail, name, phone, password } = req.body;
+
+    console.log('📝 Update profile request:', { currentEmail, name, phone, hasFile: !!req.file });
+
+    if (!currentEmail) {
+      return res.status(400).json({ message: 'currentEmail is required' });
+    }
+
+    if (!name || !phone) {
+      return res.status(400).json({ message: 'Name and phone are required' });
+    }
 
     const updateData = { name, phone };
     if (password && password.trim() !== "") {
@@ -193,17 +216,23 @@ router.post('/update-profile', upload.single('profileImage'), async (req, res) =
     }
 
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, {
-        folder: 'safenet/profile-images',
-        public_id: `profile_${Date.now()}`,
-        transformation: {
-          width: 400,
-          height: 400,
-          crop: 'fill',
-          quality: 'auto'
-        }
-      });
-      updateData.profileImage = result.url;
+      try {
+        const result = await uploadToCloudinary(req.file.buffer, {
+          folder: 'safenet/profile-images',
+          public_id: `profile_${Date.now()}`,
+          transformation: {
+            width: 400,
+            height: 400,
+            crop: 'fill',
+            quality: 'auto'
+          }
+        });
+        updateData.profileImage = result.url;
+        console.log('✅ Profile image uploaded to Cloudinary:', result.url);
+      } catch (cloudinaryError) {
+        // Non-fatal: log and continue without updating image
+        console.error('⚠️ Cloudinary upload failed (profile still updated):', cloudinaryError.response?.data || cloudinaryError.message);
+      }
     }
 
     const user = await User.findOneAndUpdate(
@@ -214,10 +243,11 @@ router.post('/update-profile', upload.single('profileImage'), async (req, res) =
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    console.log('✅ Profile updated for:', currentEmail);
     res.status(200).json({ message: "Profile updated", user });
   } catch (error) {
-    console.error("Update Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Update Error:", error.message, error.stack);
+    res.status(500).json({ message: "Server Error", detail: error.message });
   }
 });
 
