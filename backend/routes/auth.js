@@ -203,10 +203,12 @@ router.post('/update-profile', handleUpload, async (req, res) => {
     console.log('📝 Update profile request:', { currentEmail, name, phone, hasFile: !!req.file });
 
     if (!currentEmail) {
+      console.error('❌ currentEmail is missing from request body');
       return res.status(400).json({ message: 'currentEmail is required' });
     }
 
     if (!name || !phone) {
+      console.error('❌ name or phone is missing:', { name, phone });
       return res.status(400).json({ message: 'Name and phone are required' });
     }
 
@@ -217,6 +219,11 @@ router.post('/update-profile', handleUpload, async (req, res) => {
 
     if (req.file) {
       try {
+        console.log('📤 Processing file upload:', { 
+          filename: req.file.originalname, 
+          mimetype: req.file.mimetype, 
+          size: req.file.size 
+        });
         const imgExt = req.file.mimetype.split('/')[1] || 'jpg';
         const result = await uploadToBlob(req.file.buffer, {
           folder: 'safenet/profile-images',
@@ -227,8 +234,23 @@ router.post('/update-profile', handleUpload, async (req, res) => {
         console.log('✅ Profile image uploaded to Vercel Blob:', result.url);
       } catch (blobError) {
         // Non-fatal: log and continue without updating image
-        console.error('⚠️ Vercel Blob upload failed (profile still updated):', blobError.message);
+        console.error('⚠️ Vercel Blob upload failed (continuing with profile update):', {
+          message: blobError.message,
+          stack: blobError.stack,
+          code: blobError.code
+        });
       }
+    }
+
+    console.log('🔄 Attempting to update user in database:', { email: currentEmail, updateData: Object.keys(updateData) });
+    
+    // Verify user exists first
+    const existingUser = await User.findOne({ email: currentEmail });
+    console.log('🔍 User lookup result:', { found: !!existingUser, email: currentEmail });
+    
+    if (!existingUser) {
+      console.error('❌ User not found for email:', currentEmail);
+      return res.status(404).json({ message: "User not found" });
     }
 
     const user = await User.findOneAndUpdate(
@@ -237,12 +259,21 @@ router.post('/update-profile', handleUpload, async (req, res) => {
       { new: true } 
     );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      console.error('❌ Update failed for email:', currentEmail);
+      return res.status(500).json({ message: "Profile update failed" });
+    }
 
-    console.log('✅ Profile updated for:', currentEmail);
+    console.log('✅ Profile updated successfully for:', currentEmail);
     res.status(200).json({ message: "Profile updated", user });
   } catch (error) {
-    console.error("Update Error:", error.message, error.stack);
+    console.error("❌ Update Error - Full Details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name,
+      body: req.body
+    });
     res.status(500).json({ message: "Server Error", detail: error.message });
   }
 });

@@ -13,7 +13,23 @@ import { useSession } from '../../services/SessionContext';
 // Helper to get full image URL
 const getImageUrl = (path: string | undefined) => {
   if (!path) return null;
+  
+  // If it's already an HTTP URL from Vercel Blob, convert to proxy URL
+  if (path.startsWith('https://') && path.includes('.blob.vercel-storage.com')) {
+    // Extract the pathname from the Vercel Blob URL
+    // e.g., https://xxx.private.blob.vercel-storage.com/safenet/profile-images/profile_123.jpg
+    // becomes: safenet/profile-images/profile_123.jpg
+    const blobPathMatch = path.match(/blob\.vercel-storage\.com\/(.+)$/);
+    if (blobPathMatch) {
+      const blobPath = blobPathMatch[1];
+      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/image/${blobPath}`;
+    }
+  }
+  
+  // If it's an HTTP URL, return as-is
   if (path.startsWith('http')) return path;
+  
+  // Otherwise, prepend baseURL
   return `${api.defaults.baseURL?.replace('/api', '')}/${path}`;
 };
 

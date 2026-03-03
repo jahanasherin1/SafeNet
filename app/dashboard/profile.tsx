@@ -10,6 +10,27 @@ import { isBackgroundTrackingActive, startBackgroundLocationTracking, stopBackgr
 import { disableBatteryMode, enableBatteryMode, getBatteryInfo, isBatteryModeEnabled, startBatteryMonitoring, stopBatteryMonitoring } from '../../services/BatteryOptimizationService';
 import { useSession } from '../../services/SessionContext';
 
+// Helper to get full image URL with Vercel Blob proxy support
+const getImageUrl = (path: string | undefined) => {
+  if (!path) return null;
+  
+  // If it's a Vercel Blob private URL, convert to proxy URL
+  if (path.includes('.blob.vercel-storage.com')) {
+    const blobPathMatch = path.match(/blob\.vercel-storage\.com\/(.+)$/);
+    if (blobPathMatch) {
+      const blobPath = blobPathMatch[1];
+      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/image/${blobPath}`;
+    }
+  }
+  
+  // If it's an HTTP URL, return as-is
+  if (path.startsWith('http')) return path;
+  
+  // Otherwise, prepend baseURL
+  const baseUrl = api.defaults.baseURL?.replace('/api', '');
+  return `${baseUrl}/${path}`;
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout, user, isActivityMonitoringActive, toggleActivityMonitoring } = useSession();
@@ -34,8 +55,7 @@ export default function ProfileScreen() {
             setUserName(user.name || 'User');
             setUserPhone(user.phone || '');
             if (user.profileImage) {
-              const baseUrl = api.defaults.baseURL?.replace('/api', '');
-              setProfileImage(user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}/${user.profileImage}`);
+              setProfileImage(getImageUrl(user.profileImage));
             }
           } else {
             // Fallback to AsyncStorage
@@ -45,8 +65,7 @@ export default function ProfileScreen() {
               setUserName(parsedUser.name || 'User');
               setUserPhone(parsedUser.phone || '');
               if (parsedUser.profileImage) {
-                const baseUrl = api.defaults.baseURL?.replace('/api', '');
-                setProfileImage(parsedUser.profileImage.startsWith('http') ? parsedUser.profileImage : `${baseUrl}/${parsedUser.profileImage}`);
+                setProfileImage(getImageUrl(parsedUser.profileImage));
               }
             }
           }

@@ -6,7 +6,7 @@ import Constants from 'expo-constants';
 // 🌐 NETWORK SETUP - CHANGE IP HERE 👇
 // ========================================
 // ✅ PRODUCTION: Hosted Vercel backend (always used when not in dev with local backend)
-const PRODUCTION_URL = 'https://safe-4f094wa29-safegos-projects.vercel.app/api';
+const PRODUCTION_URL = 'https://safe-net-one.vercel.app/api';
 
 // Comment out the hardcoded IP to use auto-detection
  const LAPTOP_IP = '10.172.89.244';        // ← Home

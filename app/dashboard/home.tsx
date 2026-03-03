@@ -671,9 +671,8 @@ export default function DashboardHome() {
         <Text style={styles.sectionTitle}>Trusted Guardians</Text>
         <View style={styles.guardianCard}>
             <Image
-              source={profileImage ? { uri: profileImage } : require('../../assets/images/profile.jpg')}
+              source={require('../../assets/images/guard.png')}
               style={styles.avatar}
-              onError={() => setProfileImage(null)}
             />
             <View style={{flex: 1, marginLeft: 15}}>
                 <Text style={styles.guardianTitle}>Add / Manage Guardians</Text>

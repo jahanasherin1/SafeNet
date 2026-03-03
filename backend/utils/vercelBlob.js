@@ -46,19 +46,32 @@ export const uploadToBlob = async (buffer, options = {}) => {
 
   const pathname = `${folder}/${filename}`;
 
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not set. Cannot upload to Vercel Blob.');
+  }
+
   console.log(`📤 Uploading to Vercel Blob: ${pathname} (${contentType})`);
 
-  const blob = await put(pathname, buffer, {
-    access: 'public',
-    contentType,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
+  try {
+    const blob = await put(pathname, buffer, {
+      access: 'private',  // Changed to private since the store is configured as private
+      contentType,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
 
-  console.log(`✅ Vercel Blob upload successful: ${blob.url}`);
-  return {
-    url: blob.url,
-    pathname: blob.pathname,
-  };
+    console.log(`✅ Vercel Blob upload successful: ${blob.url}`);
+    return {
+      url: blob.url,
+      pathname: blob.pathname,
+    };
+  } catch (error) {
+    console.error('❌ Vercel Blob upload failed:', {
+      message: error.message,
+      code: error.code,
+      path: pathname
+    });
+    throw error;
+  }
 };
 
 /**
@@ -68,9 +81,24 @@ export const uploadToBlob = async (buffer, options = {}) => {
  */
 export const deleteFromBlob = async (url) => {
   if (!url) return;
+  
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn('⚠️ BLOB_READ_WRITE_TOKEN not set, skipping delete');
+    return;
+  }
+
   console.log(`🗑️ Deleting from Vercel Blob: ${url}`);
-  await del(url, {
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-  console.log(`✅ Vercel Blob delete successful`);
+  try {
+    await del(url, {
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    console.log(`✅ Vercel Blob delete successful`);
+  } catch (error) {
+    console.error('❌ Vercel Blob delete failed:', {
+      message: error.message,
+      code: error.code,
+      url: url
+    });
+    // Non-fatal - continue anyway
+  }
 };

@@ -26,42 +26,65 @@ router.post('/add', uploadVoice.single('audioFile'), async (req, res) => {
   try {
     const { email, name, id, dateAdded } = req.body;
 
+    console.log('📝 Voice profile add request:', { email, name, hasFile: !!req.file });
+
     if (!req.file) {
+      console.error('❌ No audio file provided');
       return res.status(400).json({ message: 'No audio file uploaded' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.error('❌ User not found:', email);
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Upload buffer to Vercel Blob
-    const ext = req.file.originalname.split('.').pop() || 'mp3';
-    const result = await uploadToBlob(req.file.buffer, {
-      folder: 'safenet/voice-profiles',
-      filename: `voice_${Date.now()}.${ext}`,
-      contentType: req.file.mimetype || 'audio/mpeg',
-    });
+    try {
+      console.log('📤 Uploading audio to Vercel Blob...');
+      const ext = req.file.originalname.split('.').pop() || 'mp3';
+      const result = await uploadToBlob(req.file.buffer, {
+        folder: 'safenet/voice-profiles',
+        filename: `voice_${Date.now()}.${ext}`,
+        contentType: req.file.mimetype || 'audio/mpeg',
+      });
+      console.log('✅ Audio uploaded to Vercel Blob:', result.url);
 
-    const newVoice = {
-      id: id || Date.now().toString(),
-      name,
-      audioUri: result.url,      // Vercel Blob HTTPS URL
-      audioPublicId: result.url, // Store URL here too for deletion
-      audioName: req.file.originalname,
-      dateAdded: dateAdded || new Date()
-    };
+      const newVoice = {
+        id: id || Date.now().toString(),
+        name,
+        audioUri: result.url,      // Vercel Blob HTTPS URL
+        audioPublicId: result.url, // Store URL here too for deletion
+        audioName: req.file.originalname,
+        dateAdded: dateAdded || new Date()
+      };
 
-    user.voiceProfiles.push(newVoice);
-    await user.save();
+      user.voiceProfiles.push(newVoice);
+      await user.save();
 
-    res.status(200).json({
-      message: 'Voice profile added successfully',
-      voiceProfile: newVoice
-    });
+      console.log('✅ Voice profile saved for:', email);
+      res.status(200).json({
+        message: 'Voice profile added successfully',
+        voiceProfile: newVoice
+      });
+    } catch (uploadError) {
+      console.error('❌ Vercel Blob upload failed:', {
+        message: uploadError.message,
+        code: uploadError.code,
+        stack: uploadError.stack
+      });
+      return res.status(500).json({ 
+        message: 'Audio upload failed', 
+        detail: uploadError.message 
+      });
+    }
   } catch (error) {
-    console.error('Error adding voice profile:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Voice profile error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    res.status(500).json({ message: 'Server error', detail: error.message });
   }
 });
 

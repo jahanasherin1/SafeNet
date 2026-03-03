@@ -8,6 +8,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import api from '../../services/api';
 
+// Helper to convert Vercel Blob URLs to proxy URLs
+const getAudioUrl = (audioUri: string | undefined): string | undefined => {
+  if (!audioUri) return undefined;
+  
+  // If it's a Vercel Blob private URL, convert to proxy URL
+  if (audioUri.includes('.blob.vercel-storage.com')) {
+    // Extract the pathname from the Vercel Blob URL
+    // e.g., https://xxx.private.blob.vercel-storage.com/safenet/voice-profiles/voice_123.wav
+    // becomes: safenet/voice-profiles/voice_123.wav
+    const blobPathMatch = audioUri.match(/blob\.vercel-storage\.com\/(.+)$/);
+    if (blobPathMatch) {
+      const blobPath = blobPathMatch[1];
+      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/audio/${blobPath}`;
+    }
+  }
+  
+  // If it's already a regular HTTP URL or local URI, return as-is
+  return audioUri;
+};
+
 // Type for saved voice profiles
 interface SavedVoice {
   id: string;
@@ -240,7 +260,7 @@ export default function FakeCallScreen() {
           name: callerName || selectedVoice.name,
           hasVibration: vibration ? 'yes' : 'no',
           voiceType: 'custom',
-          customAudioUri: selectedVoice.audioUri
+          customAudioUri: getAudioUrl(selectedVoice.audioUri)
         }
       });
     }

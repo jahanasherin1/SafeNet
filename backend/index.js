@@ -8,6 +8,7 @@ import { Alert } from './models/schemas.js';
 // Import Routes
 import alertRoutes from './routes/alerts.js';
 import authRoutes from './routes/auth.js';
+import blobRoutes from './routes/blob.js';
 import crimeChanceRoutes from './routes/crimeChance.js';
 import crimeZoneRoutes from './routes/crimeZone.js';
 import guardianRoutes from './routes/guardians.js';
@@ -19,6 +20,30 @@ import voiceProfileRoutes from './routes/voiceProfiles.js';
 import weatherAlertsRoutes from './routes/weatherAlerts.js';
 
 dotenv.config();
+
+// Check required environment variables
+const requiredEnvVars = ['MONGO_URI'];
+const optionalEnvVars = ['BLOB_READ_WRITE_TOKEN', 'CLOUDINARY_API_KEY', 'SENDGRID_API_KEY'];
+
+const missingRequired = requiredEnvVars.filter(v => !process.env[v]);
+if (missingRequired.length > 0) {
+  console.error('❌ CRITICAL: Missing required environment variables:', missingRequired);
+  process.exit(1);
+}
+
+const missingOptional = optionalEnvVars.filter(v => !process.env[v]);
+if (missingOptional.length > 0) {
+  console.warn('⚠️ WARNING: Missing optional environment variables:', missingOptional);
+}
+
+console.log('✅ Environment check passed');
+console.log('📋 Available services:', {
+  mongodb: !!process.env.MONGO_URI,
+  vercelBlob: !!process.env.BLOB_READ_WRITE_TOKEN,
+  cloudinary: !!process.env.CLOUDINARY_API_KEY,
+  sendgrid: !!process.env.SENDGRID_API_KEY,
+});
+
 const app = express();
 
 app.use(cors());
@@ -82,6 +107,7 @@ app.use(async (req, res, next) => {
 
 // --- ROUTES MOUNTING ---
 app.use('/api/auth', authRoutes);
+app.use('/api/blob', blobRoutes);
 app.use('/api/guardian', guardianRoutes);
 app.use('/api/sos', sosRoutes);
 app.use('/api/user', userRoutes);
