@@ -212,7 +212,6 @@ export default function EditGuardianScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          <Text style={styles.label}>Guardian Name</Text>
           <CustomInput 
             placeholder="Name" 
             value={name} 
@@ -221,9 +220,8 @@ export default function EditGuardianScreen() {
           />
           {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
-          <Text style={styles.label}>Phone Number</Text>
           <CustomInput 
-            placeholder="Phone" 
+            placeholder="Phone number" 
             value={phone} 
             onChangeText={handlePhoneChange}
             onBlur={() => validatePhone(phone)}
@@ -232,7 +230,6 @@ export default function EditGuardianScreen() {
           />
           {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
-          <Text style={styles.label}>Email Address</Text>
           <CustomInput 
             placeholder="Email" 
             value={email} 
@@ -243,9 +240,8 @@ export default function EditGuardianScreen() {
           />
           {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-          <Text style={styles.label}>Relationship</Text>
           <CustomInput 
-            placeholder="e.g. Father" 
+            placeholder="Relation" 
             value={relationship} 
             onChangeText={setRelationship} 
           />

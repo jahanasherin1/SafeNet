@@ -177,18 +177,16 @@ export default function AddGuardianScreen() {
         {/* Form Fields */}
         <View style={styles.formContainer}>
           
-          <Text style={styles.label}>Guardian Name</Text>
           <CustomInput 
-            placeholder="Enter guardian's full name" 
+            placeholder=" Full Name" 
             value={name}
             onChangeText={handleNameChange}
             onBlur={() => validateName(name)}
           />
           {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
-          <Text style={styles.label}>Phone Number</Text>
           <CustomInput 
-            placeholder="Enter phone number" 
+            placeholder=" Phone Number" 
             iconName="call-outline"
             keyboardType="numeric"
             value={phone}
@@ -197,10 +195,8 @@ export default function AddGuardianScreen() {
           />
           {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
-          {/* NEW EMAIL INPUT */}
-          <Text style={styles.label}>Email Address</Text>
           <CustomInput 
-            placeholder="Enter guardian's email" 
+            placeholder=" Email " 
             iconName="mail-outline"
             keyboardType="email-address"
             value={email}
@@ -209,9 +205,8 @@ export default function AddGuardianScreen() {
           />
           {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-          <Text style={styles.label}>Relationship (Optional)</Text>
           <CustomInput 
-            placeholder="e.g., Parent, Friend" 
+            placeholder="Relation"
             value={relationship}
             onChangeText={setRelationship}
           />

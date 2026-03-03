@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1A1B4B' },
   headerSubtitle: { fontSize: 12, color: '#6A5ACD', fontWeight: '600' },
   markAllButton: { padding: 8, position: 'absolute', right: 20 },
-  listContent: { padding: 15 },
+  listContent: { padding: 15, paddingBottom: 120 },
   alertCard: { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 16, padding: 15, marginBottom: 12, elevation: 2 },
   unreadCard: { borderLeftWidth: 4, borderLeftColor: '#6A5ACD' },
   iconContainer: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 15 },

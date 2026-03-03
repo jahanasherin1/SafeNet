@@ -155,29 +155,27 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Full Name</Text>
-          <CustomInput placeholder="Full Name" value={name} onChangeText={setName} />
+          <CustomInput placeholder="Full Name" value={name} onChangeText={setName} labelBg="#FAF9FF" />
 
-          <Text style={styles.label}>Phone Number</Text>
           <CustomInput 
             placeholder="Phone Number" 
             value={phone} 
             onChangeText={setPhone} 
             iconName="call-outline"
             keyboardType="numeric"
+            labelBg="#FAF9FF"
           />
 
-          <Text style={styles.label}>Email Address</Text>
           <CustomInput 
             placeholder="Email Address" 
             value={email} 
             iconName="mail-outline"
-            onChangeText={() => {}} 
+            onChangeText={() => {}}
+            labelBg="#FAF9FF"
           />
 
           <View style={styles.divider} />
 
-          <Text style={styles.label}>New Password (Optional)</Text>
           <CustomInput 
             placeholder="Change password (min 6 chars)" 
             value={password} 
@@ -185,6 +183,7 @@ export default function EditProfileScreen() {
             isPassword={!showPassword}
             iconName={showPassword ? "eye-off-outline" : "eye-outline"}
             onIconPress={() => setShowPassword(!showPassword)}
+            labelBg="#FAF9FF"
           />
 
           <Text style={styles.privacyNote}>

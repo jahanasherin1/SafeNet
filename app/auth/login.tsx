@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -147,25 +148,25 @@ export default function LoginScreen() {
         <View style={styles.form}>
           
           <View>
-            <Text style={styles.inputLabel}>Email Address</Text>
             <CustomInput 
-              placeholder="Enter your email" 
+              placeholder="Email" 
               value={email}
               onChangeText={validateEmail}
               keyboardType="email-address"
+              labelBg="#faf7fc"
             />
             {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           </View>
           
           <View>
-            <Text style={styles.inputLabel}>Password</Text>
             <CustomInput 
-              placeholder="Enter your password" 
+              placeholder="Password" 
               value={password}
               onChangeText={validatePassword}
               isPassword={!showPassword} 
               iconName={showPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowPassword(!showPassword)}
+              labelBg="#faf7fc"
             />
             {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
           </View>

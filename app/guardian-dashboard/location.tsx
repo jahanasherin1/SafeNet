@@ -459,13 +459,14 @@ export default function GuardianLocationScreen() {
                 </View>
              </View>
 
-             <TouchableOpacity style={styles.navigateBtn} onPress={handleNavigate}>
+             <View style={{ flexDirection: 'row', gap: 10 }}>
+             <TouchableOpacity style={[styles.navigateBtn, { flex: 1 }]} onPress={handleNavigate}>
                 <Ionicons name="navigate" size={18} color="#FFF" style={{marginRight: 8}} />
                 <Text style={styles.navigateBtnText}>Navigate</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.navigateBtn, {backgroundColor: '#E8E6F0', marginTop: 10}]} 
+              style={[styles.navigateBtn, { flex: 1, backgroundColor: '#E8E6F0' }]} 
               onPress={() => {
                 const loc = selectedUser?.location || selectedUser?.currentLocation;
                 if(loc && mapRef.current) mapRef.current.animateToRegion({
@@ -476,6 +477,7 @@ export default function GuardianLocationScreen() {
                 <Ionicons name="locate-sharp" size={18} color="#6A5ACD" style={{marginRight: 8}} />
                 <Text style={[styles.navigateBtnText, {color: '#6A5ACD'}]}>Center View</Text>
             </TouchableOpacity>
+            </View>
           </View>
 
         </View>
@@ -527,7 +529,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
   },
   dragHandle: { width: 40, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3 },
-  sheetContent: { paddingHorizontal: 20, flex: 1 },
+  sheetContent: { paddingHorizontal: 20, flex: 1, paddingBottom: 120 },
   sheetTitle: { fontSize: 16, fontWeight: '700', color: '#1A1B4B', marginBottom: 15 },
   userList: { gap: 10 },
   userCard: { 

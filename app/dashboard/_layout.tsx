@@ -5,8 +5,10 @@ import BottomTabBar from '../../components/BottomTabBar';
 export default function DashboardLayout() {
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
-      tabBar={(props) => <BottomTabBar {...props} />} 
+      screenOptions={{ 
+        headerShown: false
+      }}
+      tabBar={(props) => <BottomTabBar {...props} />}
     >
       <Tabs.Screen
         name="home"

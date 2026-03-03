@@ -18,6 +18,7 @@ export default function DashboardHome() {
   const { isAlertVisible } = useSession();
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   
   // Tracking State
   const [sosLoading, setSosLoading] = useState(false);
@@ -189,6 +190,7 @@ export default function DashboardHome() {
         const parsedUser = JSON.parse(storedUser);
         setUserName(parsedUser.name || 'User');
         setUserEmail(parsedUser.email || '');
+        setProfileImage(parsedUser.profileImage || null);
       }
     } catch (error) {
       console.error("Failed to load user data", error);
@@ -668,7 +670,11 @@ export default function DashboardHome() {
         {/* Trusted Guardians */}
         <Text style={styles.sectionTitle}>Trusted Guardians</Text>
         <View style={styles.guardianCard}>
-            <Image source={{ uri: 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg' }} style={styles.avatar} />
+            <Image
+              source={profileImage ? { uri: profileImage } : require('../../assets/images/profile.jpg')}
+              style={styles.avatar}
+              onError={() => setProfileImage(null)}
+            />
             <View style={{flex: 1, marginLeft: 15}}>
                 <Text style={styles.guardianTitle}>Add / Manage Guardians</Text>
                 <Text style={styles.guardianDesc}>Alerts are sent only to your trusted contacts</Text>
@@ -709,7 +715,7 @@ export default function DashboardHome() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, paddingBottom: 120 },
   headerContainer: { marginBottom: 25 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   dashboardLabel: { fontSize: 14, fontWeight: '600', color: '#6A5ACD', letterSpacing: 0.5, textTransform: 'uppercase' },

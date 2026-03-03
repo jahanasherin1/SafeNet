@@ -172,12 +172,12 @@ export default function GuardianLoginScreen() {
           {step === 1 ? (
             // STEP 1: REQUEST OTP
             <>
-              <Text style={styles.label}>Phone Number</Text>
               <CustomInput 
-                placeholder="Enter your registered phone number" 
+                placeholder="Phone Number" 
                 value={phone}
                 onChangeText={handlePhoneChange}
                 keyboardType="numeric"
+                labelBg="#faf7fc"
               />
               <Text style={styles.helperText}>
                 This should match the contact you registered with.
@@ -199,12 +199,12 @@ export default function GuardianLoginScreen() {
             <>
                
 
-              <Text style={styles.label}>One-Time Password (OTP)</Text>
               <CustomInput 
                 placeholder="Enter 6-digit OTP" 
                 value={otp}
                 onChangeText={handleOtpChange}
                 keyboardType="numeric"
+                labelBg="#faf7fc"
               />
               <Text style={styles.helperText}>
                 Check your email for the 6-digit code. It expires in 10 minutes.

@@ -35,7 +35,7 @@ export default function ProfileScreen() {
             setUserPhone(user.phone || '');
             if (user.profileImage) {
               const baseUrl = api.defaults.baseURL?.replace('/api', '');
-              setProfileImage(`${baseUrl}/${user.profileImage}`);
+              setProfileImage(user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}/${user.profileImage}`);
             }
           } else {
             // Fallback to AsyncStorage
@@ -46,7 +46,7 @@ export default function ProfileScreen() {
               setUserPhone(parsedUser.phone || '');
               if (parsedUser.profileImage) {
                 const baseUrl = api.defaults.baseURL?.replace('/api', '');
-                setProfileImage(`${baseUrl}/${parsedUser.profileImage}`);
+                setProfileImage(parsedUser.profileImage.startsWith('http') ? parsedUser.profileImage : `${baseUrl}/${parsedUser.profileImage}`);
               }
             }
           }
@@ -167,17 +167,11 @@ export default function ProfileScreen() {
         {/* User Info Section */}
         <View style={styles.profileSection}>
           <View style={styles.imageContainer}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <Image
-                source={require('../../assets/images/profile.jpg')}
-                style={styles.profileImage}
-              />
-            )}
+            <Image
+              source={profileImage ? { uri: profileImage } : require('../../assets/images/profile.jpg')}
+              style={styles.profileImage}
+              onError={() => setProfileImage(null)}
+            />
           </View>
           <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.userPhone}>{userPhone}</Text>
@@ -275,7 +269,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 25,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   profileSection: {
     alignItems: 'center',

@@ -135,9 +135,8 @@ export default function ForgotPasswordScreen() {
           {step === 1 ? (
             // STEP 1: REQUEST CODE
             <>
-              <Text style={styles.label}>Email Address</Text>
               <CustomInput 
-                placeholder="Enter your registered email" 
+                placeholder="Registered email" 
                 value={email}
                 onChangeText={setEmail}
               />
@@ -156,25 +155,22 @@ export default function ForgotPasswordScreen() {
           ) : (
             // STEP 2: RESET PASSWORD
             <>
-              <Text style={styles.label}>Reset Code</Text>
               <CustomInput 
-                placeholder="Enter 6-digit code from email" 
+                placeholder="Reset Code" 
                 value={resetCode}
                 onChangeText={(text) => setResetCode(text.replace(/[^0-9]/g, ''))}
                 keyboardType="numeric"
               />
 
-              <Text style={[styles.label, { marginTop: 20 }]}>New Password</Text>
               <CustomInput 
-                placeholder="Enter new password" 
+                placeholder="New Password" 
                 value={newPassword}
                 onChangeText={setNewPassword}
                 isPassword={true}
               />
 
-              <Text style={[styles.label, { marginTop: 20 }]}>Confirm Password</Text>
               <CustomInput 
-                placeholder="Confirm your password" 
+                placeholder="Confirm Password" 
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 isPassword={true}

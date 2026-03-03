@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   headerButton: { padding: 8 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1A1B4B' },
   headerSubtitle: { fontSize: 14, color: '#6A5ACD', marginTop: 2 },
-  scrollContent: { flexGrow: 1, paddingBottom: 100 },
+  scrollContent: { flexGrow: 1, paddingBottom: 120 },
   
   mapContainer: { height: 300, margin: 20, borderRadius: 16, overflow: 'hidden', position: 'relative' },
   mapLoadingContainer: { flex: 1, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center' },

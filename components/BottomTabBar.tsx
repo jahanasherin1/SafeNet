@@ -11,89 +11,96 @@ const BottomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
   // 2. Check if current screen should hide the entire tab bar
   const currentRoute = state.routes[state.index];
   if (hiddenRoutes.includes(currentRoute.name)) {
-    return null; // Hide entire tab bar on these screens
+    return null;
   }
 
   return (
-    <View style={styles.container}>
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
 
-        // 3. FILTER LOGIC: If route name is in the hidden list, don't render it as a tab
-        if (hiddenRoutes.includes(route.name)) {
-          return null;
-        }
-
-        const label = options.tabBarLabel !== undefined
-            ? options.tabBarLabel
-            : options.title !== undefined
-            ? options.title
-            : route.name;
-
-        const isFocused = state.index === index;
-
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
+          if (hiddenRoutes.includes(route.name)) {
+            return null;
           }
-        };
 
-        // Icon Mapping
-        let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
-        if (route.name === 'home') iconName = isFocused ? 'home' : 'home-outline';
-        if (route.name === 'location') iconName = isFocused ? 'location' : 'location-outline';
-        if (route.name === 'alerts') iconName = isFocused ? 'notifications' : 'notifications-outline';
-        if (route.name === 'profile') iconName = isFocused ? 'person' : 'person-outline';
+          const label = options.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options.title !== undefined
+              ? options.title
+              : route.name;
 
-        return (
-          <TouchableOpacity
-            key={index}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            onPress={onPress}
-            style={styles.tabButton}
-            activeOpacity={0.8}
-          >
-            <Ionicons 
-              name={iconName} 
-              size={24} 
-              color={isFocused ? '#6A5ACD' : '#7A7A7A'} 
-              style={{ marginBottom: 4 }}
-            />
-            <Text style={[
-              styles.tabLabel, 
-              { color: isFocused ? '#6A5ACD' : '#7A7A7A' }
-            ]}>
-              {label as string}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          // Icon Mapping
+          let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
+          if (route.name === 'home') iconName = isFocused ? 'home' : 'home-outline';
+          if (route.name === 'location') iconName = isFocused ? 'location' : 'location-outline';
+          if (route.name === 'alerts') iconName = isFocused ? 'notifications' : 'notifications-outline';
+          if (route.name === 'profile') iconName = isFocused ? 'person' : 'person-outline';
+
+          return (
+            <TouchableOpacity
+              key={index}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={onPress}
+              style={styles.tabButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={iconName} 
+                size={22} 
+                color={isFocused ? '#6A5ACD' : '#AAAAAA'} 
+                style={{ marginBottom: 4 }}
+              />
+              <Text style={[
+                styles.tabLabel, 
+                { color: isFocused ? '#6A5ACD' : '#AAAAAA' }
+              ]}>
+                {label as string}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 28 : 18,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
   container: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    height: Platform.OS === 'ios' ? 85 : 65,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E6F0',
-    elevation: 10, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 40,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: '100%',
+    elevation: 16,
+    shadowColor: '#6A5ACD',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   tabButton: {
     flex: 1,
@@ -101,9 +108,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-  }
+  },
 });
 
 export default BottomTabBar;

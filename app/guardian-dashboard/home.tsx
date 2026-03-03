@@ -116,7 +116,8 @@ export default function GuardianHomeScreen() {
           setJourneyData(journey);
 
           if (profileImage) {
-            setUserImage(`${api.defaults.baseURL?.replace('/api', '')}/${profileImage}`);
+            const baseUrl = api.defaults.baseURL?.replace('/api', '');
+            setUserImage(profileImage.startsWith('http') ? profileImage : `${baseUrl}/${profileImage}`);
           } else {
             setUserImage(null);
           }
@@ -241,7 +242,9 @@ export default function GuardianHomeScreen() {
       onPress={() => handleSelectUser(item)}
     >
       <Image
-        source={{ uri: item.profileImage ? `${api.defaults.baseURL?.replace('/api', '')}/${item.profileImage}` : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }}
+        source={{ uri: item.profileImage
+          ? (item.profileImage.startsWith('http') ? item.profileImage : `${api.defaults.baseURL?.replace('/api', '')}/${item.profileImage}`)
+          : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }}
         style={styles.userCardImage}
       />
       <View style={styles.userCardContent}>
@@ -378,7 +381,7 @@ export default function GuardianHomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAF9FF' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, paddingBottom: 120 },
   headerContainer: { marginBottom: 25 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   dashboardLabel: { fontSize: 14, fontWeight: '600', color: '#6A5ACD', letterSpacing: 0.5, textTransform: 'uppercase' },

@@ -6,7 +6,8 @@ export default function GuardianDashboardLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <BottomTabBar {...props} />} 
+      tabBar={(props) => <BottomTabBar {...props} />}
+      sceneContainerStyle={{ paddingBottom: 120 }}
     >
       <Tabs.Screen
         name="home"

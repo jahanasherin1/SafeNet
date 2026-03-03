@@ -231,10 +231,11 @@ export default function StartJourneyScreen() {
         ) : (
             <View style={styles.form}>
             <CustomInput 
-                placeholder="Enter destination" 
+                placeholder="Destination" 
                 iconName="location-outline" 
                 value={dest} 
-                onChangeText={setDest} 
+                onChangeText={setDest}
+                labelBg="#FAF9FF"
             />
 
             {/* DATE & TIME SELECTOR BUTTON */}

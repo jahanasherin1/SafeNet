@@ -215,39 +215,38 @@ export default function SignupScreen() {
 
         <View style={styles.form}>
           <View>
-            <Text style={styles.inputLabel}>Full Name</Text>
             <CustomInput 
-              placeholder="Enter Name" 
+              placeholder=" Name" 
               value={name}
               onChangeText={validateName}
+              labelBg="#faf7fc"
             />
             {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
           </View>
           
           <View>
-            <Text style={styles.inputLabel}>Phone Number</Text>
             <CustomInput 
-              placeholder="Enter Phone Number" 
+              placeholder="Phone Number" 
               value={phone}
               onChangeText={validatePhone}
               keyboardType="numeric"
+              labelBg="#faf7fc"
             />
             {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
           </View>
           
           <View>
-            <Text style={styles.inputLabel}>Email Address</Text>
             <CustomInput 
-              placeholder="Enter Email" 
+              placeholder=" Email" 
               value={email}
               onChangeText={validateEmail}
               keyboardType="email-address"
+              labelBg="#faf7fc"
             />
             {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           </View>
           
           <View>
-            <Text style={styles.inputLabel}>Password</Text>
             <CustomInput 
               placeholder="Password" 
               value={password}
@@ -255,12 +254,12 @@ export default function SignupScreen() {
               isPassword={!showPassword} 
               iconName={showPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowPassword(!showPassword)}
+              labelBg="#faf7fc"
             />
             {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
           </View>
           
           <View>
-            <Text style={styles.inputLabel}>Confirm Password</Text>
             <CustomInput 
               placeholder="Confirm Password" 
               value={confirmPassword}
@@ -268,6 +267,7 @@ export default function SignupScreen() {
               isPassword={!showConfirmPassword}
               iconName={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
               onIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              labelBg="#faf7fc"
             />
             {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
           </View>
