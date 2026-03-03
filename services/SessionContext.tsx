@@ -36,6 +36,7 @@ interface SessionContextType {
   token: string | null;
   isLoading: boolean;
   login: (user: User, token: string) => Promise<void>;
+  updateUser: (user: User) => Promise<void>;
   logout: () => Promise<void>;
   isLoggedIn: boolean;
   isTrackingActive: boolean;
@@ -282,6 +283,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const updateUser = async (userData: User) => {
+    try {
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
   const logout = async () => {
     try {
       // Clear user data from native SharedPreferences
@@ -454,6 +464,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         token,
         isLoading,
         login,
+        updateUser,
         logout,
         isLoggedIn,
         isTrackingActive,

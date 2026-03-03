@@ -1,8 +1,8 @@
 import express from 'express';
 import { GuardianOtp, PasswordReset, User } from '../models/schemas.js';
-import { upload, uploadToCloudinary } from '../utils/cloudinary.js';
 import sendEmail from '../utils/sendEmail.js';
 import sendSMS from '../utils/sendSMS.js';
+import { upload, uploadToBlob } from '../utils/vercelBlob.js';
 
 const router = express.Router();
 
@@ -217,21 +217,17 @@ router.post('/update-profile', handleUpload, async (req, res) => {
 
     if (req.file) {
       try {
-        const result = await uploadToCloudinary(req.file.buffer, {
+        const imgExt = req.file.mimetype.split('/')[1] || 'jpg';
+        const result = await uploadToBlob(req.file.buffer, {
           folder: 'safenet/profile-images',
-          public_id: `profile_${Date.now()}`,
-          transformation: {
-            width: 400,
-            height: 400,
-            crop: 'fill',
-            quality: 'auto'
-          }
+          filename: `profile_${Date.now()}.${imgExt}`,
+          contentType: req.file.mimetype,
         });
         updateData.profileImage = result.url;
-        console.log('✅ Profile image uploaded to Cloudinary:', result.url);
-      } catch (cloudinaryError) {
+        console.log('✅ Profile image uploaded to Vercel Blob:', result.url);
+      } catch (blobError) {
         // Non-fatal: log and continue without updating image
-        console.error('⚠️ Cloudinary upload failed (profile still updated):', cloudinaryError.response?.data || cloudinaryError.message);
+        console.error('⚠️ Vercel Blob upload failed (profile still updated):', blobError.message);
       }
     }
 

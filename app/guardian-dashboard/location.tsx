@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Linking, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View, WebView } from 'react-native';
+import { Alert, Animated, Dimensions, Linking, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import api from '../../services/api';
 
 const { height: screenHeight } = Dimensions.get('window');

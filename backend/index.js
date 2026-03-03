@@ -23,7 +23,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-// NOTE: Local /uploads static serving removed — profile images are now stored on Cloudinary
+// NOTE: Local /uploads static serving removed — files are now stored on Vercel Blob
 
 // Add request logging middleware
 app.use((req, res, next) => {

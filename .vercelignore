@@ -1,7 +1,33 @@
+# Frontend / React Native - not needed for backend deployment
 node_modules/
+android/
+app/
+assets/
+components/
+services/
+plugins/
+debug/
+__tests__/
 uploads/
-.env
+.expo/
+.git/
+
+# Config files not needed by backend
+app.json
+babel.config.js
+tsconfig.json
+jest.config.js
+jest.setup.js
+eslint.config.js
+*.ps1
+*.sh
+
+# Logs and secrets
 *.log
+.env
+.env.local
+
+# Test files
+test-*.js
 tests/
 *.test.js
-jest.config.js

@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import api from '../../services/api';
+import { useSession } from '../../services/SessionContext';
 
 // Helper to get full image URL
 const getImageUrl = (path: string | undefined) => {
@@ -18,6 +19,7 @@ const getImageUrl = (path: string | undefined) => {
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { updateUser } = useSession();
   const [loading, setLoading] = useState(false);
 
   // Form States
@@ -109,6 +111,7 @@ export default function EditProfileScreen() {
 
       if (response.status === 200) {
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        await updateUser(response.data.user);
         
         Alert.alert("Success", "Profile updated successfully!", [
           { text: "OK", onPress: () => router.back() } 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { User } from '../models/schemas.js';
-import { deleteFromCloudinary, uploadToCloudinary, uploadVoice } from '../utils/cloudinary.js';
+import { deleteFromBlob, uploadToBlob, uploadVoice } from '../utils/vercelBlob.js';
 
 const router = express.Router();
 
@@ -35,18 +35,19 @@ router.post('/add', uploadVoice.single('audioFile'), async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Upload buffer to Cloudinary (audio must use resource_type 'video')
-    const result = await uploadToCloudinary(req.file.buffer, {
+    // Upload buffer to Vercel Blob
+    const ext = req.file.originalname.split('.').pop() || 'mp3';
+    const result = await uploadToBlob(req.file.buffer, {
       folder: 'safenet/voice-profiles',
-      resource_type: 'video',
-      public_id: `voice_${Date.now()}`,
+      filename: `voice_${Date.now()}.${ext}`,
+      contentType: req.file.mimetype || 'audio/mpeg',
     });
 
     const newVoice = {
       id: id || Date.now().toString(),
       name,
-      audioUri: result.url,           // Cloudinary HTTPS URL
-      audioPublicId: result.public_id, // Cloudinary public_id (for deletion)
+      audioUri: result.url,      // Vercel Blob HTTPS URL
+      audioPublicId: result.url, // Store URL here too for deletion
       audioName: req.file.originalname,
       dateAdded: dateAdded || new Date()
     };
@@ -74,14 +75,15 @@ router.delete('/:email/:voiceId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Find the voice to get its Cloudinary public_id before removing
+    // Find the voice to get its Vercel Blob URL before removing
     const voiceToDelete = user.voiceProfiles.find(v => v.id === voiceId);
-    if (voiceToDelete?.audioPublicId) {
+    const blobUrlToDelete = voiceToDelete?.audioUri || voiceToDelete?.audioPublicId;
+    if (blobUrlToDelete && blobUrlToDelete.startsWith('https://')) {
       try {
-        await deleteFromCloudinary(voiceToDelete.audioPublicId, 'video');
-        console.log(`🗑️ Deleted voice from Cloudinary: ${voiceToDelete.audioPublicId}`);
-      } catch (cloudErr) {
-        console.warn('⚠️ Could not delete voice from Cloudinary:', cloudErr.message);
+        await deleteFromBlob(blobUrlToDelete);
+        console.log(`🗑️ Deleted voice from Vercel Blob: ${blobUrlToDelete}`);
+      } catch (blobErr) {
+        console.warn('⚠️ Could not delete voice from Vercel Blob:', blobErr.message);
       }
     }
 
