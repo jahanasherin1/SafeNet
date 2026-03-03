@@ -25,6 +25,8 @@ const getImageUrl = (path: string | undefined) => {
       return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/image/${blobPath}`;
     }
   }
+
+  
   
   // If it's an HTTP URL, return as-is
   if (path.startsWith('http')) return path;
