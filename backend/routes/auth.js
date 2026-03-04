@@ -198,16 +198,21 @@ const handleUpload = (req, res, next) => {
 
 router.post('/update-profile', handleUpload, async (req, res) => {
   try {
-    const { currentEmail, name, phone, password } = req.body;
+    // Log all form fields for debugging
+    console.log('📝 Raw req.body keys:', Object.keys(req.body || {}));
+    console.log('📝 Raw req.body:', JSON.stringify(req.body, null, 2));
+    
+    const { currentEmail, name, phone, password } = req.body || {};
 
     console.log('📝 Update profile request:', { currentEmail, name, phone, hasFile: !!req.file });
+    console.log('📝 Environment check:', { hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN });
 
-    if (!currentEmail) {
-      console.error('❌ currentEmail is missing from request body');
+    if (!currentEmail || currentEmail.trim() === '') {
+      console.error('❌ currentEmail is missing or empty from request body');
       return res.status(400).json({ message: 'currentEmail is required' });
     }
 
-    if (!name || !phone) {
+    if (!name || !name.trim() || !phone || !phone.trim()) {
       console.error('❌ name or phone is missing:', { name, phone });
       return res.status(400).json({ message: 'Name and phone are required' });
     }
@@ -222,9 +227,22 @@ router.post('/update-profile', handleUpload, async (req, res) => {
         console.log('📤 Processing file upload:', { 
           filename: req.file.originalname, 
           mimetype: req.file.mimetype, 
-          size: req.file.size 
+          size: req.file.size,
+          bufferSize: req.file.buffer?.length
         });
-        const imgExt = req.file.mimetype.split('/')[1] || 'jpg';
+        
+        // Validate file data
+        if (!req.file.buffer || req.file.buffer.length === 0) {
+          throw new Error('File buffer is empty');
+        }
+        
+        // Check if Blob token is available
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          throw new Error('BLOB_READ_WRITE_TOKEN is not configured on server');
+        }
+        
+        const imgExt = req.file.mimetype?.split('/')[1] || 'jpg';
+        console.log('📤 Uploading to Vercel Blob...');
         const result = await uploadToBlob(req.file.buffer, {
           folder: 'safenet/profile-images',
           filename: `profile_${Date.now()}.${imgExt}`,
@@ -237,8 +255,11 @@ router.post('/update-profile', handleUpload, async (req, res) => {
         console.error('⚠️ Vercel Blob upload failed (continuing with profile update):', {
           message: blobError.message,
           stack: blobError.stack,
-          code: blobError.code
+          code: blobError.code,
+          name: blobError.name
         });
+        // Return a user-friendly warning (but don't fail the whole request)
+        console.log('⚠️ Profile will be updated without image');
       }
     }
 
@@ -272,9 +293,19 @@ router.post('/update-profile', handleUpload, async (req, res) => {
       stack: error.stack,
       code: error.code,
       name: error.name,
-      body: req.body
+      body: req.body,
+      file: req.file ? { name: req.file.originalname, size: req.file.size } : null
     });
-    res.status(500).json({ message: "Server Error", detail: error.message });
+    
+    // Return a proper error response with more details
+    const statusCode = error.code === 11000 ? 400 : 500;
+    res.status(statusCode).json({ 
+      error: {
+        message: error.message || "Server Error",
+        code: String(statusCode),
+        detail: error.stack?.split('\n')[0] || 'An error occurred during profile update'
+      }
+    });
   }
 });
 

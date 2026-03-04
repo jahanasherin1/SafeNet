@@ -48,14 +48,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// NOTE: Removed express.urlencoded - multipart/form-data is handled by multer per route
 // NOTE: Local /uploads static serving removed — files are now stored on Vercel Blob
 
-// Add request logging middleware
+// Add request logging middleware (safe for multipart and other content types)
 app.use((req, res, next) => {
   console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.path}`);
-  if (req.method !== 'GET') {
-    console.log('📦 Body:', JSON.stringify(req.body, null, 2));
-  }
   next();
 });
 
@@ -101,7 +99,15 @@ app.use(async (req, res, next) => {
     await connectDB();
     next();
   } catch (err) {
-    res.status(503).json({ message: 'Database connection failed', error: err.message });
+    console.error('❌ DB Connection Middleware Error:', {
+      message: err.message,
+      stack: err.stack,
+      path: req.path
+    });
+    res.status(503).json({ 
+      message: 'Database connection failed', 
+      error: err.message 
+    });
   }
 });
 

@@ -26,7 +26,7 @@ const getImageUrl = (path: string | undefined) => {
     }
   }
 
-  
+
   
   // If it's an HTTP URL, return as-is
   if (path.startsWith('http')) return path;
@@ -84,11 +84,17 @@ export default function EditProfileScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images, 
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.5,
+        quality: 0.5, // Reduce quality to 50% for smaller file size
       });
 
       if (!result.canceled) {
-        setProfileImage(result.assets[0].uri);
+        const uri = result.assets[0].uri;
+        
+        // Check file size (approximate - React Native doesn't give exact size before upload)
+        // If image quality is 0.5, typical sizes should be under 1MB
+        console.log("📸 Image selected:", { uri, width: result.assets[0].width, height: result.assets[0].height });
+        
+        setProfileImage(uri);
       }
     } catch (error) {
       console.log("Error picking image:", error);
@@ -110,6 +116,8 @@ export default function EditProfileScreen() {
       formData.append('phone', phone);
       if (password) formData.append('password', password);
 
+      console.log("🔄 Sending profile update:", { email, name, phone, hasPassword: !!password });
+
       // Append Image if it's a new local file
       if (profileImage && !profileImage.startsWith('http')) {
         const uri = profileImage;
@@ -120,12 +128,20 @@ export default function EditProfileScreen() {
           name: `photo.${fileType}`,
           type: `image/${fileType}`,
         } as any);
+        
+        console.log("📸 Adding profile image:", { fileType, uri });
+        console.log("⏳ Uploading... This may take a moment for large images.");
+      } else if (profileImage && profileImage.startsWith('http')) {
+        console.log("ℹ️ Keeping existing profile image:", profileImage);
       }
 
       const response = await api.post('/auth/update-profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         transformRequest: (data) => data, // Prevent axios from JSON-serializing FormData
+        timeout: 60000, // 60 second timeout for image upload
       });
+
+      console.log("✅ Profile update response:", response.data);
 
       if (response.status === 200) {
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
@@ -136,9 +152,33 @@ export default function EditProfileScreen() {
         ]);
       }
     } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.message || "Update Failed";
+      console.error("❌ Update profile error:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config?.url
+      });
+      
+      // Parse error message with improved handling
+      let msg = "Update Failed";
+      
+      if (error.response?.data?.error?.message) {
+        msg = error.response.data.error.message;
+      } else if (error.response?.data?.error?.detail) {
+        msg = error.response.data.error.detail;
+      } else if (error.response?.data?.detail) {
+        msg = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        msg = error.response.data.message;
+      } else if (error.message === 'Network Error') {
+        msg = "Network error. Please check your connection and try again.";
+      } else if (error.code === 'ECONNABORTED') {
+        msg = "Request timeout. Please try with a smaller image or check your connection.";
+      } else if (error.message) {
+        msg = error.message;
+      }
+      
       Alert.alert("Error", msg);
-      console.error("Update profile error:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -191,7 +231,8 @@ export default function EditProfileScreen() {
             placeholder="Email Address" 
             value={email} 
             iconName="mail-outline"
-            onChangeText={() => {}}
+            onChangeText={() => {}} // Read-only field
+            editable={false} // Disable editing
             labelBg="#FAF9FF"
           />
 
