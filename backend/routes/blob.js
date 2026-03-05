@@ -91,36 +91,61 @@ router.get('/proxy/image', async (req, res) => {
     }
     
     try {
-      console.log(`📥 Fetching image using @vercel/blob download API`);
+      console.log(`📥 Fetching image from Vercel Blob: ${blobUrl}`);
       
-      // Use @vercel/blob's download function to properly handle private blobs
-      const blobResponse = await download(blobUrl, {
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-      });
+      // For private blobs, send the token in the Authorization header
+      const fetchOptions = {
+        headers: {
+          'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
+        },
+      };
+      
+      const response = await fetch(blobUrl, fetchOptions);
+      
+      if (!response.ok) {
+        console.error(`❌ Blob fetch failed with status ${response.status} ${response.statusText}`);
+        console.error(`   Attempted URL: ${blobUrl}`);
+        
+        if (response.status === 401 || response.status === 403) {
+          return res.status(403).json({ 
+            message: 'Access denied to image. Check token or permissions.'
+          });
+        }
+        
+        if (response.status === 404) {
+          return res.status(404).json({ 
+            message: 'Image not found.'
+          });
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-      const buffer = await blobResponse.arrayBuffer();
-      const contentType = blobResponse.headers.get('content-type') || 'image/jpeg';
-      const contentLength = blobResponse.headers.get('content-length');
+      const buffer = await response.arrayBuffer();
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const contentLength = response.headers.get('content-length') || Buffer.byteLength(buffer);
       
-      console.log(`✅ Image downloaded: ${contentLength || buffer.byteLength} bytes (${contentType})`);
+      console.log(`✅ Image fetched: ${contentLength} bytes (${contentType})`);
       
       res.setHeader('Content-Type', contentType);
-      if (contentLength) res.setHeader('Content-Length', contentLength);
+      res.setHeader('Content-Length', contentLength);
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.setHeader('Access-Control-Allow-Origin', '*');
       
-      console.log(`📤 Streaming image to client...`);
+      console.log(`📤 Sending image to client...`);
       res.send(Buffer.from(buffer));
       
     } catch (error) {
-      console.error('❌ Image download error:', {
+      console.error('❌ Image fetch error:', {
         message: error.message,
-        attemptedUrl: blobUrl
+        code: error.code,
+        attemptedUrl: blobUrl,
+        stack: error.stack?.split('\n')[0]
       });
       
       if (!res.headersSent) {
         res.status(500).json({ 
-          message: 'Failed to download image',
+          message: 'Failed to fetch image',
           error: error.message 
         });
       }
@@ -179,39 +204,63 @@ router.get('/proxy/audio', async (req, res) => {
     }
 
     try {
-      console.log(`📥 Fetching audio using @vercel/blob download API`);
+      console.log(`📥 Fetching audio from Vercel Blob: ${blobUrl}`);
       
-      // Use @vercel/blob's download function to properly handle private blobs
-      const blobResponse = await download(blobUrl, {
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-      });
+      // For private blobs, send the token in the Authorization header
+      const fetchOptions = {
+        headers: {
+          'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
+        },
+      };
+      
+      const response = await fetch(blobUrl, fetchOptions);
+      
+      if (!response.ok) {
+        console.error(`❌ Blob fetch failed with status ${response.status} ${response.statusText}`);
+        console.error(`   Attempted URL: ${blobUrl}`);
+        
+        if (response.status === 401 || response.status === 403) {
+          return res.status(403).json({ 
+            message: 'Access denied to audio. Check token or permissions.'
+          });
+        }
+        
+        if (response.status === 404) {
+          return res.status(404).json({ 
+            message: 'Audio not found.'
+          });
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-      const buffer = await blobResponse.arrayBuffer();
-      const contentType = blobResponse.headers.get('content-type') || 'audio/mpeg';
-      const contentLength = blobResponse.headers.get('content-length');
+      const buffer = await response.arrayBuffer();
+      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      const contentLength = response.headers.get('content-length') || Buffer.byteLength(buffer);
       
-      console.log(`✅ Audio downloaded: ${contentLength || buffer.byteLength} bytes (${contentType})`);
+      console.log(`✅ Audio fetched: ${contentLength} bytes (${contentType})`);
       
       // Set response headers
       res.setHeader('Content-Type', contentType);
-      if (contentLength) res.setHeader('Content-Length', contentLength);
+      res.setHeader('Content-Length', contentLength);
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.setHeader('Access-Control-Allow-Origin', '*');
       
-      // Send the audio data
-      console.log(`📤 Streaming audio to client...`);
+      console.log(`📤 Sending audio to client...`);
       res.send(Buffer.from(buffer));
       
     } catch (error) {
-      console.error('❌ Audio download error:', {
+      console.error('❌ Audio fetch error:', {
         message: error.message,
-        attemptedUrl: blobUrl
+        code: error.code,
+        attemptedUrl: blobUrl,
+        stack: error.stack?.split('\n')[0]
       });
       
       if (!res.headersSent) {
         res.status(500).json({ 
-          message: 'Failed to download audio',
+          message: 'Failed to fetch audio',
           error: error.message 
         });
       }
