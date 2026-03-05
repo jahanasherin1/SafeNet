@@ -128,38 +128,45 @@ export default function EditProfileScreen() {
       // Append Image if it's a new local file
       if (profileImage && !profileImage.startsWith('http')) {
         const uri = profileImage;
-        const fileType = uri.substring(uri.lastIndexOf('.') + 1);
+        const fileType = uri.substring(uri.lastIndexOf('.') + 1).toLowerCase();
         
+        console.log("📸 Adding profile image:", { fileType, uri });
+        
+        // React Native FormData requires file in this specific format
         formData.append('profileImage', {
           uri: uri,
           name: `photo.${fileType}`,
           type: `image/${fileType}`,
         } as any);
         
-        console.log("📸 Adding profile image:", { fileType, uri });
-        console.log("⏳ Uploading... This may take a moment for large images.");
+        console.log("⏳ Uploading image... This may take a moment for large images.");
       } else if (profileImage && profileImage.startsWith('http')) {
-        console.log("ℹ️ Keeping existing profile image:", profileImage);
+        console.log("ℹ️ Keeping existing profile image (not uploading)");
+      } else {
+        console.log("ℹ️ No image provided");
       }
 
+      console.log("🌐 Sending to:", api.defaults.baseURL + '/auth/update-profile');
+      
       const response = await api.post('/auth/update-profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        transformRequest: (data) => data, // Prevent axios from JSON-serializing FormData
-        timeout: 60000, // 60 second timeout for image upload
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 120000, // 120 second timeout for large image uploads
       });
 
-      console.log("✅ Profile update response:", response.data);
+      console.log("✅ Profile update response received:", response.status);
       console.log('📋 Response user object:', { 
         name: response.data.user?.name, 
         phone: response.data.user?.phone, 
-        profileImage: response.data.user?.profileImage 
+        profileImage: response.data.user?.profileImage ? `[Image URL - ${response.data.user.profileImage.substring(0, 50)}...]` : 'none'
       });
 
       if (response.status === 200) {
-        console.log('💾 Saving user to AsyncStorage:', response.data.user);
+        console.log('💾 Saving user to AsyncStorage');
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
         
-        console.log('🔄 Calling updateUser():', response.data.user);
+        console.log('🔄 Updating session context');
         await updateUser(response.data.user);
         
         Alert.alert("Success", "Profile updated successfully!", [
@@ -170,8 +177,10 @@ export default function EditProfileScreen() {
       console.error("❌ Update profile error:", {
         message: error.message,
         status: error.response?.status,
+        statusText: error.response?.statusText,
+        isTimeout: error.code === 'ECONNABORTED',
+        url: error.config?.url,
         data: error.response?.data,
-        config: error.config?.url
       });
       
       // Parse error message with improved handling
@@ -188,7 +197,9 @@ export default function EditProfileScreen() {
       } else if (error.message === 'Network Error') {
         msg = "Network error. Please check your connection and try again.";
       } else if (error.code === 'ECONNABORTED') {
-        msg = "Request timeout. Please try with a smaller image or check your connection.";
+        msg = "Request timeout. Image upload took too long. Please try with a smaller image or check your connection.";
+      } else if (error.message?.includes('timeout')) {
+        msg = "Request timeout. Please check your connection and try again.";
       } else if (error.message) {
         msg = error.message;
       }
