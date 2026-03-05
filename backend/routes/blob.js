@@ -91,44 +91,18 @@ router.get('/proxy/image', async (req, res) => {
     }
     
     try {
-      console.log(`📥 Fetching from: ${blobUrl}`);
-      let response = await fetch(blobUrl);
+      console.log(`📥 Fetching image using @vercel/blob download API`);
       
-      // If 403/404 on public, they might need to fetch as private with auth
-      if ((response.status === 403 || response.status === 404) && process.env.BLOB_READ_WRITE_TOKEN) {
-        console.log(`🔐 Public blob fetch failed (${response.status}), trying with authentication...`);
-        
-        response = await fetch(blobUrl, {
-          headers: {
-            'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`
-          }
-        });
-      }
-      
-      if (!response.ok) {
-        console.error(`❌ Blob fetch failed with status ${response.status}`);
-        console.error(`   URL attempted: ${blobUrl}`);
-        console.error(`   Make sure the full Vercel Blob URL is stored in the database, not just the pathname`);
-        
-        if (response.status === 403) {
-          return res.status(403).json({ 
-            message: 'Access denied to image. The file may have been deleted or permissions changed.'
-          });
-        }
-        
-        if (response.status === 404) {
-          return res.status(404).json({ 
-            message: 'Image not found. Please re-upload your profile picture.'
-          });
-        }
-        
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      // Use @vercel/blob's download function to properly handle private blobs
+      const blobResponse = await download(blobUrl, {
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
 
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      const contentLength = response.headers.get('content-length');
+      const buffer = await blobResponse.arrayBuffer();
+      const contentType = blobResponse.headers.get('content-type') || 'image/jpeg';
+      const contentLength = blobResponse.headers.get('content-length');
       
-      console.log(`✅ Image found: ${contentLength || 'unknown'} bytes (${contentType})`);
+      console.log(`✅ Image downloaded: ${contentLength || buffer.byteLength} bytes (${contentType})`);
       
       res.setHeader('Content-Type', contentType);
       if (contentLength) res.setHeader('Content-Length', contentLength);
@@ -136,17 +110,17 @@ router.get('/proxy/image', async (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       
       console.log(`📤 Streaming image to client...`);
-      response.body.pipe(res);
+      res.send(Buffer.from(buffer));
       
     } catch (error) {
-      console.error('❌ Image fetch error:', {
+      console.error('❌ Image download error:', {
         message: error.message,
         attemptedUrl: blobUrl
       });
       
       if (!res.headersSent) {
         res.status(500).json({ 
-          message: 'Failed to serve image',
+          message: 'Failed to download image',
           error: error.message 
         });
       }
@@ -205,43 +179,18 @@ router.get('/proxy/audio', async (req, res) => {
     }
 
     try {
-      console.log(`📥 Fetching audio from: ${blobUrl}`);
-      let response = await fetch(blobUrl);
+      console.log(`📥 Fetching audio using @vercel/blob download API`);
       
-      // If 403/404 on public, try with authentication
-      if ((response.status === 403 || response.status === 404) && process.env.BLOB_READ_WRITE_TOKEN) {
-        console.log(`🔐 Public blob fetch failed (${response.status}), trying with authentication...`);
-        
-        response = await fetch(blobUrl, {
-          headers: {
-            'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`
-          }
-        });
-      }
-      
-      if (!response.ok) {
-        console.error(`❌ Audio blob fetch failed with status ${response.status}`);
-        console.error(`   URL attempted: ${blobUrl}`);
-        
-        if (response.status === 403) {
-          return res.status(403).json({ 
-            message: 'Access denied to audio. The file may have been deleted or permissions changed.'
-          });
-        }
-        
-        if (response.status === 404) {
-          return res.status(404).json({ 
-            message: 'Audio not found. Please re-upload your voice profile.'
-          });
-        }
-        
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      // Use @vercel/blob's download function to properly handle private blobs
+      const blobResponse = await download(blobUrl, {
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
 
-      const contentType = response.headers.get('content-type') || 'audio/mpeg';
-      const contentLength = response.headers.get('content-length');
+      const buffer = await blobResponse.arrayBuffer();
+      const contentType = blobResponse.headers.get('content-type') || 'audio/mpeg';
+      const contentLength = blobResponse.headers.get('content-length');
       
-      console.log(`✅ Audio blob found: ${contentLength || 'unknown'} bytes (${contentType})`);
+      console.log(`✅ Audio downloaded: ${contentLength || buffer.byteLength} bytes (${contentType})`);
       
       // Set response headers
       res.setHeader('Content-Type', contentType);
@@ -250,19 +199,19 @@ router.get('/proxy/audio', async (req, res) => {
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.setHeader('Access-Control-Allow-Origin', '*');
       
-      // Stream the blob response to the client
+      // Send the audio data
       console.log(`📤 Streaming audio to client...`);
-      response.body.pipe(res);
+      res.send(Buffer.from(buffer));
       
     } catch (error) {
-      console.error('❌ Audio fetch error:', {
+      console.error('❌ Audio download error:', {
         message: error.message,
         attemptedUrl: blobUrl
       });
       
       if (!res.headersSent) {
         res.status(500).json({ 
-          message: 'Failed to serve audio',
+          message: 'Failed to download audio',
           error: error.message 
         });
       }
