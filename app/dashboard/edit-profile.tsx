@@ -12,27 +12,31 @@ import { useSession } from '../../services/SessionContext';
 
 // Helper to get full image URL
 const getImageUrl = (path: string | undefined) => {
-  if (!path) return null;
-  
-  // If it's already an HTTP URL from Vercel Blob, convert to proxy URL
-  if (path.startsWith('https://') && path.includes('.blob.vercel-storage.com')) {
-    // Extract the pathname from the Vercel Blob URL
-    // e.g., https://xxx.private.blob.vercel-storage.com/safenet/profile-images/profile_123.jpg
-    // becomes: safenet/profile-images/profile_123.jpg
-    const blobPathMatch = path.match(/blob\.vercel-storage\.com\/(.+)$/);
-    if (blobPathMatch) {
-      const blobPath = blobPathMatch[1];
-      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/image/${blobPath}`;
-    }
+  if (!path) {
+    return null;
   }
-
-
   
-  // If it's an HTTP URL, return as-is
-  if (path.startsWith('http')) return path;
+  // If it's a Vercel Blob URL, use proxy and pass the FULL URL
+  if (path.includes('.blob.vercel-storage.com') || path.includes('.private.blob.vercel-storage.com')) {
+    console.log('🖼️ Detected Vercel Blob URL - using proxy endpoint');
+    const encodedUrl = encodeURIComponent(path);
+    const baseUrl = api.defaults.baseURL?.replace('/api', '');
+    // Pass the full URL to the proxy endpoint
+    const proxyUrl = `${baseUrl}/api/blob/proxy/image?url=${encodedUrl}`;
+    console.log('🖼️ Using blob proxy URL with full URL:', proxyUrl);
+    return proxyUrl;
+  }
   
-  // Otherwise, prepend baseURL
-  return `${api.defaults.baseURL?.replace('/api', '')}/${path}`;
+  // If it's already a full HTTP URL (not blob storage), return it as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    console.log('🖼️ Full HTTP/HTTPS URL provided, using directly');
+    return path;
+  }
+  
+  // Otherwise treat as relative path and prepend baseURL
+  const baseUrl = api.defaults.baseURL?.replace('/api', '');
+  const finalUrl = `${baseUrl}/${path}`;
+  return finalUrl;
 };
 
 export default function EditProfileScreen() {
@@ -46,6 +50,7 @@ export default function EditProfileScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
   
   const [showPassword, setShowPassword] = useState(false);
 
@@ -56,10 +61,12 @@ export default function EditProfileScreen() {
         const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
           const user = JSON.parse(storedUser);
+          console.log('📋 EditProfile: Loaded user from storage');
           setName(user.name || '');
           setPhone(user.phone || '');
           setEmail(user.email || '');
           if (user.profileImage) {
+            setOriginalImagePath(user.profileImage);
             setProfileImage(getImageUrl(user.profileImage));
           }
         }
@@ -142,9 +149,17 @@ export default function EditProfileScreen() {
       });
 
       console.log("✅ Profile update response:", response.data);
+      console.log('📋 Response user object:', { 
+        name: response.data.user?.name, 
+        phone: response.data.user?.phone, 
+        profileImage: response.data.user?.profileImage 
+      });
 
       if (response.status === 200) {
+        console.log('💾 Saving user to AsyncStorage:', response.data.user);
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        console.log('🔄 Calling updateUser():', response.data.user);
         await updateUser(response.data.user);
         
         Alert.alert("Success", "Profile updated successfully!", [
@@ -199,7 +214,25 @@ export default function EditProfileScreen() {
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={pickImage}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatar} />
+              <Image 
+                source={{ uri: profileImage }} 
+                style={styles.avatar}
+                onError={(error) => {
+                  console.log('⚠️ Failed to load image from:', profileImage);
+                  // Try to use the original blob URL if we have one and haven't already tried it
+                  if (originalImagePath && profileImage !== originalImagePath && originalImagePath.includes('.blob.vercel-storage.com')) {
+                    console.log('🔄 Attempting to use direct blob URL');
+                    setProfileImage(originalImagePath);
+                  } else {
+                    // Fall back to default image
+                    console.log('ℹ️ Using default profile picture');
+                    setProfileImage(null);
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Avatar image loaded successfully');
+                }}
+              />
             ) : (
               <Image source={require('../../assets/images/profile.jpg')} style={styles.avatar} />
             )}

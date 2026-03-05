@@ -12,23 +12,36 @@ import { useSession } from '../../services/SessionContext';
 
 // Helper to get full image URL with Vercel Blob proxy support
 const getImageUrl = (path: string | undefined) => {
-  if (!path) return null;
+  console.log('🖼️ getImageUrl called with path:', path);
   
-  // If it's a Vercel Blob private URL, convert to proxy URL
-  if (path.includes('.blob.vercel-storage.com')) {
-    const blobPathMatch = path.match(/blob\.vercel-storage\.com\/(.+)$/);
-    if (blobPathMatch) {
-      const blobPath = blobPathMatch[1];
-      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/image/${blobPath}`;
-    }
+  if (!path) {
+    console.log('🖼️ getImageUrl: path is empty/null, returning null');
+    return null;
   }
   
-  // If it's an HTTP URL, return as-is
-  if (path.startsWith('http')) return path;
+  // If it's a Vercel Blob URL, use proxy but pass the FULL URL
+  if (path.includes('.blob.vercel-storage.com')) {
+    console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
+    const encodedUrl = encodeURIComponent(path);
+    const baseUrl = api.defaults.baseURL?.replace('/api', '');
+    // Pass the full URL to the proxy endpoint
+    const proxyUrl = `${baseUrl}/api/blob/proxy/image?url=${encodedUrl}`;
+    console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
+    return proxyUrl;
+  }
   
-  // Otherwise, prepend baseURL
+  // If it's an HTTP URL (non-blob), it's probably Cloudinary or similar - use directly if allowed
+  // (check content security policy)
+  if (path.startsWith('http')) {
+    console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
+    return path;
+  }
+  
+  // Otherwise assume it's a local path and prepend baseURL
   const baseUrl = api.defaults.baseURL?.replace('/api', '');
-  return `${baseUrl}/${path}`;
+  const finalUrl = `${baseUrl}/${path}`;
+  console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
+  return finalUrl;
 };
 
 export default function ProfileScreen() {
@@ -52,20 +65,29 @@ export default function ProfileScreen() {
         try {
           // Use session context if available
           if (user) {
+            console.log('📋 Loading user from SessionContext:', { name: user.name, phone: user.phone, profileImage: user.profileImage });
             setUserName(user.name || 'User');
             setUserPhone(user.phone || '');
             if (user.profileImage) {
+              console.log('🖼️ Found profileImage in user:', user.profileImage);
               setProfileImage(getImageUrl(user.profileImage));
+            } else {
+              console.log('❌ profileImage is missing from user object');
             }
           } else {
             // Fallback to AsyncStorage
+            console.log('ℹ️ No user in SessionContext, checking AsyncStorage');
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) {
               const parsedUser = JSON.parse(storedUser);
+              console.log('📋 Loaded user from AsyncStorage:', { name: parsedUser.name, phone: parsedUser.phone, profileImage: parsedUser.profileImage });
               setUserName(parsedUser.name || 'User');
               setUserPhone(parsedUser.phone || '');
               if (parsedUser.profileImage) {
+                console.log('🖼️ Found profileImage in AsyncStorage:', parsedUser.profileImage);
                 setProfileImage(getImageUrl(parsedUser.profileImage));
+              } else {
+                console.log('❌ profileImage is missing from AsyncStorage');
               }
             }
           }
@@ -189,11 +211,28 @@ export default function ProfileScreen() {
             <Image
               source={profileImage ? { uri: profileImage } : require('../../assets/images/profile.jpg')}
               style={styles.profileImage}
-              onError={() => setProfileImage(null)}
+              onError={(error) => {
+                console.error('❌ Image failed to load:', { 
+                  uri: profileImage, 
+                  error: error.nativeEvent?.error,
+                  errorCode: error.nativeEvent?.error?.code
+                });
+                setProfileImage(null);
+              }}
+              onLoad={() => {
+                console.log('✅ Image loaded successfully:', profileImage);
+              }}
             />
           </View>
           <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.userPhone}>{userPhone}</Text>
+          
+          {/* Note: If profile image is not showing, it may need to be re-uploaded */}
+          {!profileImage && user?.profileImage && (
+            <Text style={styles.warningText}>
+              Profile image needs to be updated. Tap Edit to re-upload.
+            </Text>
+          )}
           
           <TouchableOpacity 
             style={styles.editButton} 
@@ -326,6 +365,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7A7A7A',
     marginTop: 5,
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#FF9500',
+    marginTop: 10,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   editButton: {
     backgroundColor: '#E8E6F0',

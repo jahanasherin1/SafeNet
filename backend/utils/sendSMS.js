@@ -2,6 +2,14 @@ import axios from 'axios';
 
 const sendSMS = async (to, message) => {
   console.log(`\n📱 Starting SMS send process to: ${to}`);
+  console.log(`📝 Message content: "${message}"`);
+  
+  // Validate message is not empty
+  if (!message || message.trim() === '') {
+    console.error('❌ SMS_ERROR: Message is empty or null');
+    return { success: false, error: 'Message cannot be empty' };
+  }
+  
   try {
     // Validate TextBee environment variables
     if (!process.env.TEXTBEE_API_KEY || !process.env.TEXTBEE_DEVICE_ID) {

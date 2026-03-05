@@ -7,6 +7,36 @@ import { ActivityIndicator, Alert, FlatList, Image, Linking, Platform, ScrollVie
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 
+// Helper to get full image URL with Vercel Blob proxy support
+const getImageUrl = (path: string | undefined) => {
+  if (!path) {
+    return null;
+  }
+  
+  // If it's a Vercel Blob URL, use proxy and pass the FULL URL
+  if (path.includes('.blob.vercel-storage.com') || path.includes('.private.blob.vercel-storage.com')) {
+    console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
+    const encodedUrl = encodeURIComponent(path);
+    const baseUrl = api.defaults.baseURL?.replace('/api', '');
+    // Pass the full URL to the proxy endpoint
+    const proxyUrl = `${baseUrl}/api/blob/proxy/image?url=${encodedUrl}`;
+    console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
+    return proxyUrl;
+  }
+  
+  // If it's already a full HTTP URL (not blob storage), return it as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
+    return path;
+  }
+  
+  // Otherwise treat as relative path and prepend baseURL
+  const baseUrl = api.defaults.baseURL?.replace('/api', '');
+  const finalUrl = `${baseUrl}/${path}`;
+  console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
+  return finalUrl;
+};
+
 export default function GuardianHomeScreen() {
   const router = useRouter();
   const [guardianName, setGuardianName] = useState('Guardian');
@@ -116,8 +146,7 @@ export default function GuardianHomeScreen() {
           setJourneyData(journey);
 
           if (profileImage) {
-            const baseUrl = api.defaults.baseURL?.replace('/api', '');
-            setUserImage(profileImage.startsWith('http') ? profileImage : `${baseUrl}/${profileImage}`);
+            setUserImage(getImageUrl(profileImage));
           } else {
             setUserImage(null);
           }
@@ -242,9 +271,7 @@ export default function GuardianHomeScreen() {
       onPress={() => handleSelectUser(item)}
     >
       <Image
-        source={{ uri: item.profileImage
-          ? (item.profileImage.startsWith('http') ? item.profileImage : `${api.defaults.baseURL?.replace('/api', '')}/${item.profileImage}`)
-          : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }}
+        source={{ uri: item.profileImage ? getImageUrl(item.profileImage) : 'https://img.freepik.com/free-photo/portrait-beautiful-young-woman-standing-grey-wall_231208-10760.jpg' }}
         style={styles.userCardImage}
       />
       <View style={styles.userCardContent}>

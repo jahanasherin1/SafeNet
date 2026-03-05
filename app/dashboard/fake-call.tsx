@@ -12,16 +12,14 @@ import api from '../../services/api';
 const getAudioUrl = (audioUri: string | undefined): string | undefined => {
   if (!audioUri) return undefined;
   
-  // If it's a Vercel Blob private URL, convert to proxy URL
+  // If it's a Vercel Blob URL, use proxy and pass the FULL URL
   if (audioUri.includes('.blob.vercel-storage.com')) {
-    // Extract the pathname from the Vercel Blob URL
-    // e.g., https://xxx.private.blob.vercel-storage.com/safenet/voice-profiles/voice_123.wav
-    // becomes: safenet/voice-profiles/voice_123.wav
-    const blobPathMatch = audioUri.match(/blob\.vercel-storage\.com\/(.+)$/);
-    if (blobPathMatch) {
-      const blobPath = blobPathMatch[1];
-      return `${api.defaults.baseURL?.replace('/api', '')}/api/blob/proxy/audio/${blobPath}`;
-    }
+    console.log('🎤 Detected Vercel Blob URL - using proxy endpoint');
+    const encodedUrl = encodeURIComponent(audioUri);
+    const baseUrl = api.defaults.baseURL?.replace('/api', '');
+    const proxyUrl = `${baseUrl}/api/blob/proxy/audio?url=${encodedUrl}`;
+    console.log('🎤 Using audio proxy URL:', proxyUrl);
+    return proxyUrl;
   }
   
   // If it's already a regular HTTP URL or local URI, return as-is

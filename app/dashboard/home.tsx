@@ -342,11 +342,29 @@ export default function DashboardHome() {
                 console.log('🚀 Sending false alarm cancellation request...');
                 console.log('📧 User email:', userEmail);
                 
-                // ✅ Clear immediately to hide button right away
+                // ✅ CRITICAL FIX: Clear from BOTH AsyncStorage AND SharedPreferences BEFORE making API call
+                console.log('🧹 Clearing SOS from all storage...');
+                
+                // 1. Clear from AsyncStorage
+                await AsyncStorage.removeItem('lastSosTime');
+                console.log('✅ Removed from AsyncStorage');
+                
+                // 2. Clear from Android SharedPreferences (where tile SOS stores it)
+                try {
+                  const SharedPreferencesModule = NativeModules.SharedPreferencesModule;
+                  if (SharedPreferencesModule && SharedPreferencesModule.remove) {
+                    await SharedPreferencesModule.remove('RCTAsyncStorage_user_prefs', 'lastSosTime');
+                    console.log('✅ Removed from SharedPreferences');
+                  }
+                } catch (nativeError) {
+                  console.warn('⚠️ Could not clear SharedPreferences:', (nativeError as any).message);
+                  // Continue anyway - not critical
+                }
+                
+                // 3. NOW clear the state (after storage is definitely cleared)
                 setLastSosTime(null);
                 setLastSosTimeDisplay(null);
-                await AsyncStorage.removeItem('lastSosTime');
-                console.log('✅ [CANCEL BUTTON] State cleared immediately');
+                console.log('✅ State cleared - button should now be hidden');
                 
                 const response = await api.post('/sos/cancel-false-alarm', {
                   userEmail: userEmail
@@ -374,7 +392,7 @@ export default function DashboardHome() {
                 console.error("❌ Error response:", error.response?.data);
                 console.error("❌ Error message:", error.message);
                 
-                // ✅ Re-load the state since API call failed
+                // ⚠️ ONLY reload if API fails - storage was already cleared
                 console.log('⚠️ API call failed, reloading SOS status');
                 loadSosStatus();
                 

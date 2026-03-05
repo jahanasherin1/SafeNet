@@ -248,8 +248,14 @@ router.post('/update-profile', handleUpload, async (req, res) => {
           filename: `profile_${Date.now()}.${imgExt}`,
           contentType: req.file.mimetype,
         });
+        
+        if (!result || !result.url) {
+          throw new Error('Blob upload returned invalid result: ' + JSON.stringify(result));
+        }
+        
         updateData.profileImage = result.url;
         console.log('✅ Profile image uploaded to Vercel Blob:', result.url);
+        console.log('📝 updateData after blob upload:', { ...updateData, profileImage: updateData.profileImage });
       } catch (blobError) {
         // Non-fatal: log and continue without updating image
         console.error('⚠️ Vercel Blob upload failed (continuing with profile update):', {
@@ -263,11 +269,11 @@ router.post('/update-profile', handleUpload, async (req, res) => {
       }
     }
 
-    console.log('🔄 Attempting to update user in database:', { email: currentEmail, updateData: Object.keys(updateData) });
+    console.log('🔄 Attempting to update user in database:', { email: currentEmail, updateData: updateData, updateDataKeys: Object.keys(updateData) });
     
     // Verify user exists first
     const existingUser = await User.findOne({ email: currentEmail });
-    console.log('🔍 User lookup result:', { found: !!existingUser, email: currentEmail });
+    console.log('🔍 User lookup result:', { found: !!existingUser, email: currentEmail, existingProfileImage: existingUser?.profileImage });
     
     if (!existingUser) {
       console.error('❌ User not found for email:', currentEmail);
@@ -286,6 +292,7 @@ router.post('/update-profile', handleUpload, async (req, res) => {
     }
 
     console.log('✅ Profile updated successfully for:', currentEmail);
+    console.log('📝 Updated user object (from DB):', { name: user.name, phone: user.phone, profileImage: user.profileImage });
     res.status(200).json({ message: "Profile updated", user });
   } catch (error) {
     console.error("❌ Update Error - Full Details:", {

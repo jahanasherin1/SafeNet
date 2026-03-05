@@ -1,5 +1,5 @@
-import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
+import { Drawer } from 'expo-router/drawer';
 
 export default function DrawerLayout() {
   return (
@@ -7,7 +7,7 @@ export default function DrawerLayout() {
       screenOptions={{
         headerShown: false, // We hide the default header to use our custom ones
         drawerActiveTintColor: '#6A5ACD',
-        drawerLabelStyle: { marginLeft: -20 },
+        drawerLabelStyle: { marginLeft: 10 },
       }}
     >
       {/* Option 1: Home */}

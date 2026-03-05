@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import SplashScreen from './splash';
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGuardianLoggedIn, setIsGuardianLoggedIn] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -28,12 +29,17 @@ export default function Index() {
     checkSession();
   }, []);
 
-  if (isLoading) {
+  if (showSplash) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#6A5ACD" />
-      </View>
+      <SplashScreen
+        onComplete={() => setShowSplash(false)}
+        duration={2500}
+      />
     );
+  }
+
+  if (isLoading) {
+    return <SplashScreen duration={Infinity} />;
   }
 
   // If guardian is logged in, go to dashboard. Otherwise, go to main (login page)

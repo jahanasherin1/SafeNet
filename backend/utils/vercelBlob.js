@@ -54,7 +54,7 @@ export const uploadToBlob = async (buffer, options = {}) => {
 
   try {
     const blob = await put(pathname, buffer, {
-      access: 'private',  // Changed to private since the store is configured as private
+      access: 'public',  // Changed to public so they can be accessed directly with the HTTPS URL
       contentType,
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });

@@ -45,23 +45,23 @@ router.post('/trigger', async (req, res) => {
     
     if (alertType === 'HIGH_RISK_AREA') {
       // High risk area alert
-      alertIcon = reason.includes('CRITICAL') ? '🚨' : '⚠️';
+      alertIcon = (reason && reason.includes('CRITICAL')) ? '🚨' : '⚠️';
       alertTitle = 'High Risk Area Alert';
       emailSubject = `${alertIcon} ALERT: ${displayName} entered a high-risk crime area`;
       emailBody = `SAFETY ALERT\n\n${displayName} has entered a high-risk crime area based on recent crime statistics.\n\nAlert Details:\n${reason}\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nThis is an automatic alert based on crime data analysis. Please check in with them to ensure they're aware of the area's risk level.\n\nThey can view detailed crime statistics in their SafeNet app.`;
     } else if (alertType === 'ACTIVITY_MONITOR') {
       // Activity monitoring alerts (fall, running, sudden stop)
-      if (reason.includes('FALL')) {
+      if (reason && reason.includes('FALL')) {
         alertIcon = '🆘';
         alertTitle = 'Fall Detected Alert';
         emailSubject = `🆘 URGENT: ${displayName} may have fallen!`;
         emailBody = `URGENT ALERT\n\n${displayName}'s safety app has detected a potential FALL.\n\nThis alert was triggered by unusual movement patterns detected by their phone's sensors.\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check on them immediately!\n\nIf you cannot reach them, consider contacting emergency services.`;
-      } else if (reason.includes('SUDDEN STOP')) {
+      } else if (reason && reason.includes('SUDDEN STOP')) {
         alertIcon = '⚠️';
         alertTitle = 'Sudden Stop Alert';
         emailSubject = `⚠️ Alert: ${displayName} stopped suddenly while running`;
         emailBody = `SAFETY ALERT\n\n${displayName}'s safety app detected a sudden stop while they were running.\n\nThis could indicate they:\n- Stopped to rest\n- Encountered an obstacle\n- May need assistance\n\nTime: ${new Date().toLocaleString()}\nLocation: ${mapsLink}\n\nPlease check in with them to ensure they're okay.`;
-      } else if (reason.includes('RUNNING') || reason.includes('PROLONGED')) {
+      } else if (reason && (reason.includes('RUNNING') || reason.includes('PROLONGED'))) {
         alertIcon = '🏃';
         alertTitle = 'Prolonged Running Alert';
         emailSubject = `🏃 Alert: ${displayName} has been running for an extended period`;
@@ -114,16 +114,19 @@ router.post('/trigger', async (req, res) => {
           let smsMessage = '';
           if (alertType === 'HIGH_RISK_AREA') {
             smsMessage = `🚨 ALERT: ${displayName} entered a high-risk area. Location: ${mapsLink}`;
-          } else if (alertType === 'ACTIVITY_MONITOR' && reason.includes('FALL')) {
+          } else if (alertType === 'ACTIVITY_MONITOR' && reason && reason.includes('FALL')) {
             smsMessage = `🆘 URGENT: ${displayName} may have fallen! Location: ${mapsLink}`;
-          } else if (alertType === 'ACTIVITY_MONITOR' && reason.includes('SUDDEN STOP')) {
+          } else if (alertType === 'ACTIVITY_MONITOR' && reason && reason.includes('SUDDEN STOP')) {
             smsMessage = `⚠️ ALERT: ${displayName} stopped suddenly while running. Location: ${mapsLink}`;
+          } else if (alertType === 'ACTIVITY_MONITOR' && reason) {
+            smsMessage = `📱 Activity Alert: ${displayName} - ${reason}. Location: ${mapsLink}`;
           } else if (alertType === 'TILE_SOS') {
             smsMessage = `🚨 EMERGENCY: ${displayName} triggered SOS from Quick Settings! Location: ${mapsLink}`;
           } else {
             smsMessage = `🚨 SOS: ${displayName} needs help! Reason: ${alertReason}. Location: ${mapsLink}`;
           }
           
+          console.log(`📤 SMS Message for ${guardian.name}: "${smsMessage}"`);
           const smsResult = await sendSMS(guardian.phone, smsMessage);
           if (smsResult.success) {
             smsSent++;
