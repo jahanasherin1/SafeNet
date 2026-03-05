@@ -58,12 +58,13 @@ export const uploadToBlob = async (buffer, options = {}) => {
 
   try {
     const blobConfig = {
-      access: 'public',  // Changed to public so they can be accessed directly with the HTTPS URL
       contentType,
       token: process.env.BLOB_READ_WRITE_TOKEN,
+      // Note: Removed 'access: public' since this store is configured with private access
+      // The token allows us to read/write to it server-side
     };
     
-    console.log(`📤 Calling @vercel/blob put() with config:`, { access: blobConfig.access, contentType });
+    console.log(`📤 Calling @vercel/blob put() with config:`, { contentType });
     
     const blob = await put(pathname, buffer, blobConfig);
 
