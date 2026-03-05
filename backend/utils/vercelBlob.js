@@ -58,13 +58,12 @@ export const uploadToBlob = async (buffer, options = {}) => {
 
   try {
     const blobConfig = {
+      access: 'private',  // Required by @vercel/blob API - use 'private' for this store
       contentType,
       token: process.env.BLOB_READ_WRITE_TOKEN,
-      // Note: Removed 'access: public' since this store is configured with private access
-      // The token allows us to read/write to it server-side
     };
     
-    console.log(`📤 Calling @vercel/blob put() with config:`, { contentType });
+    console.log(`📤 Calling @vercel/blob put() with config:`, { access: 'private', contentType });
     
     const blob = await put(pathname, buffer, blobConfig);
 
