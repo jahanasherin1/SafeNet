@@ -238,8 +238,12 @@ router.post('/update-profile', handleUpload, async (req, res) => {
         
         // Check if Blob token is available
         if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          console.error('❌ CRITICAL: BLOB_READ_WRITE_TOKEN is missing!');
+          console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('BLOB') || k.includes('blob')));
           throw new Error('BLOB_READ_WRITE_TOKEN is not configured on server');
         }
+        
+        console.log('✅ BLOB_READ_WRITE_TOKEN found:', process.env.BLOB_READ_WRITE_TOKEN.substring(0, 20) + '...');
         
         const imgExt = req.file.mimetype?.split('/')[1] || 'jpg';
         console.log('📤 Uploading to Vercel Blob...');

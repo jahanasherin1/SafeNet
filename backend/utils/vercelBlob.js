@@ -47,19 +47,30 @@ export const uploadToBlob = async (buffer, options = {}) => {
   const pathname = `${folder}/${filename}`;
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('❌ CRITICAL: BLOB_READ_WRITE_TOKEN is NOT set');
+    console.error('Environment variables available:', Object.keys(process.env).filter(k => k.toUpperCase().includes('BLOB')));
     throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not set. Cannot upload to Vercel Blob.');
   }
 
-  console.log(`📤 Uploading to Vercel Blob: ${pathname} (${contentType})`);
+  console.log(`📤 uploadToBlob called: ${pathname} (${contentType}, ${buffer.length} bytes)`);
+  console.log(`🔑 BLOB token exists: ${!!process.env.BLOB_READ_WRITE_TOKEN}`);
+  console.log(`🔑 BLOB token preview: ${process.env.BLOB_READ_WRITE_TOKEN?.substring(0, 20)}...`);
 
   try {
-    const blob = await put(pathname, buffer, {
+    const blobConfig = {
       access: 'public',  // Changed to public so they can be accessed directly with the HTTPS URL
       contentType,
       token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    };
+    
+    console.log(`📤 Calling @vercel/blob put() with config:`, { access: blobConfig.access, contentType });
+    
+    const blob = await put(pathname, buffer, blobConfig);
 
-    console.log(`✅ Vercel Blob upload successful: ${blob.url}`);
+    console.log(`✅ Vercel Blob upload successful`);
+    console.log(`   URL: ${blob.url}`);
+    console.log(`   Pathname: ${blob.pathname}`);
+    
     return {
       url: blob.url,
       pathname: blob.pathname,
@@ -68,7 +79,12 @@ export const uploadToBlob = async (buffer, options = {}) => {
     console.error('❌ Vercel Blob upload failed:', {
       message: error.message,
       code: error.code,
-      path: pathname
+      name: error.name,
+      status: error.status,
+      statusCode: error.statusCode,
+      path: pathname,
+      bufferSize: buffer.length,
+      stack: error.stack?.split('\n')[0]
     });
     throw error;
   }
