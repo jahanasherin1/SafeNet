@@ -97,3 +97,18 @@ const UserSchema = new mongoose.Schema({
 });
 
 export const User = mongoose.model('User', UserSchema);
+
+// --- TESTIMONIALS/SUCCESS STORIES SCHEMA ---
+const TestimonialSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  initials: { type: String, required: true }, // e.g., "SM" for Sarah M.
+  story: { type: String, required: true },
+  status: { type: String, default: 'Safe' }, // e.g., "Safe", "Rescued", "Safe & Sound"
+  featureUsed: { type: String, required: true }, // e.g., "SOS", "Live Location", "Guardian Notify"
+  isFeatured: { type: Boolean, default: true }, // Show on about page
+  backgroundColor: { type: String, default: '#E3F2FD' }, // Hex color for avatar
+  avatarTextColor: { type: String, default: '#2196F3' }, // Text color inside avatar
+  createdAt: { type: Date, default: Date.now }
+});
+
+export const Testimonial = mongoose.model('Testimonial', TestimonialSchema);

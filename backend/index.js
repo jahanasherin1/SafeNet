@@ -15,6 +15,7 @@ import guardianRoutes from './routes/guardians.js';
 import journeyRoutes from './routes/journey.js'; // <--- ADDED THIS
 import proximityAlertsRoutes from './routes/proximityAlerts.js';
 import sosRoutes from './routes/sos.js';
+import testimonialsRoutes from './routes/testimonials.js';
 import userRoutes from './routes/users.js';
 import voiceProfileRoutes from './routes/voiceProfiles.js';
 import weatherAlertsRoutes from './routes/weatherAlerts.js';
@@ -123,6 +124,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/crime-zone', crimeZoneRoutes);
 app.use('/api/crime-chance', crimeChanceRoutes);
 app.use('/api/proximity-alerts', proximityAlertsRoutes);
+app.use('/api/testimonials', testimonialsRoutes);
 app.use('/api/weather-alerts', weatherAlertsRoutes);
 
 // Health check endpoint for client apps

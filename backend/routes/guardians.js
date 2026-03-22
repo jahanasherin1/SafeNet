@@ -12,6 +12,11 @@ router.post('/add', async (req, res) => {
   try {
     const { userEmail, name, phone, relationship, guardianEmail } = req.body;
 
+    // Validate required fields
+    if (!userEmail || !name || !phone || !guardianEmail) {
+      return res.status(400).json({ message: 'Email is required for all guardians. Please provide guardian email address.' });
+    }
+
     const user = await User.findOne({ email: userEmail });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -79,6 +84,12 @@ router.post('/all', async (req, res) => {
 router.put('/update', async (req, res) => {
   try {
     const { userEmail, guardianId, name, phone, relationship, email } = req.body;
+    
+    // Validate that email is not being cleared
+    if (!email || email.trim() === '') {
+      return res.status(400).json({ message: 'Guardian email cannot be empty. Email is required.' });
+    }
+
     const result = await User.updateOne(
       { email: userEmail, "guardians._id": guardianId },
       { 
@@ -143,7 +154,55 @@ router.post('/all-users', async (req, res) => {
 });
 
 /**
- * 6. SOS Status and Live Location (Polled by Guardian)
+ * 6. Get Guardian's Current Profile (Real-time Sync)
+ * Returns the guardian's current name as stored by the user
+ * 
+ * Returns 404 if guardian hasn't been added by any user yet
+ * This is expected for first-time guardians during setup
+ */
+router.post('/profile', async (req, res) => {
+  try {
+    const { guardianEmail } = req.body;
+    if (!guardianEmail) return res.status(400).json({ message: 'Guardian email is required.' });
+
+    // Find the user that has this person as a guardian
+    const user = await User.findOne({ "guardians.email": guardianEmail });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        message: 'Guardian profile not found. Guardian must be added by a user first.',
+        code: 'GUARDIAN_NOT_ADDED_YET',
+        suggestion: 'Have a SafeNet user add you as a guardian to use this feature.'
+      });
+    }
+
+    // Get the guardian details from the user's guardians array
+    const guardian = user.guardians.find(g => g.email === guardianEmail);
+    
+    if (!guardian) {
+      return res.status(404).json({ 
+        message: 'Guardian details not found in user record.',
+        code: 'GUARDIAN_DATA_INCONSISTENT'
+      });
+    }
+
+    res.status(200).json({
+      name: guardian.name,
+      phone: guardian.phone,
+      email: guardian.email,
+      relationship: guardian.relationship,
+      protecting: user.name,
+      protectingEmail: user.email
+    });
+
+  } catch (error) {
+    console.error("Get Guardian Profile Error:", error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+/**
+ * 7. SOS Status and Live Location (Polled by Guardian)
  * Updated to return 'lastSosTime' explicitly for the Red Card
  */
 router.post('/sos-status', async (req, res) => {
