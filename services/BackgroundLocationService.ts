@@ -768,14 +768,33 @@ const startBackgroundWatcher = async () => {
       backgroundWatcherSubscription = null;
     }
 
-    console.log('👁️ Starting continuous location watcher (keeps app alive in background)...');
+    // Check battery optimization settings
+    const batterySettings = await getOptimizedSettings();
+    const batteryStatus = await getBatteryOptimizationStatus();
 
-    // Use watchPositionAsync with aggressive settings for real-time tracking
+    // In battery saving mode, skip the watcher — the 30s background task is sufficient
+    if (!batterySettings.enableBackgroundWatcher) {
+      console.log('🔋 Background watcher disabled in battery saving mode');
+      return;
+    }
+
+    const watcherInterval = batteryStatus.isBatterySavingActive
+      ? batterySettings.locationUpdateInterval  // 30000ms in battery mode
+      : 1000;                                   // 1000ms in normal mode
+    const minSendInterval = batteryStatus.isBatterySavingActive
+      ? batterySettings.locationUpdateInterval  // 30s rate limit in battery mode
+      : 2000;                                   // 2s rate limit in normal mode
+
+    console.log(`👁️ Starting location watcher (interval: ${watcherInterval / 1000}s)...`);
+
+    // Use watchPositionAsync with settings that match battery mode
     backgroundWatcherSubscription = await Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 1000, // Check every 1 second for real-time
-        distanceInterval: 0, // Update on any movement
+        accuracy: batteryStatus.isBatterySavingActive
+          ? Location.Accuracy.Balanced
+          : Location.Accuracy.BestForNavigation,
+        timeInterval: watcherInterval,
+        distanceInterval: batteryStatus.isBatterySavingActive ? 10 : 0,
         mayShowUserSettingsDialog: false,
       },
       async (location) => {
@@ -783,9 +802,9 @@ const startBackgroundWatcher = async () => {
           const coords = location.coords;
           const now = Date.now();
           
-          // Only send if enough time has passed (reduced to 2 seconds for real-time)
+          // Rate-limit sends based on battery mode
           const timeSinceLastSent = now - lastSentTime;
-          if (timeSinceLastSent < 2000) {
+          if (timeSinceLastSent < minSendInterval) {
             return; // Skip if sent too recently
           }
 
@@ -827,7 +846,7 @@ const startBackgroundWatcher = async () => {
       }
     );
 
-    console.log('✅ Continuous location watcher started - will track even when minimized');
+    console.log(`✅ Location watcher started (every ${watcherInterval / 1000}s)`);
   } catch (error) {
     console.error('❌ Failed to start background watcher:', error);
   }

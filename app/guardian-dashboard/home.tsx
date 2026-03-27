@@ -2,10 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import SOSAlertSoundService from '../../services/SOSAlertSoundService';
 
 // Helper to get full image URL with Vercel Blob proxy support
 const getImageUrl = (path: string | undefined) => {
@@ -15,25 +16,25 @@ const getImageUrl = (path: string | undefined) => {
   
   // If it's a Vercel Blob URL, use proxy and pass the FULL URL
   if (path.includes('.blob.vercel-storage.com') || path.includes('.private.blob.vercel-storage.com')) {
-    console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
+    // console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
     const encodedUrl = encodeURIComponent(path);
     const baseUrl = api.defaults.baseURL?.replace('/api', '');
     // Pass the full URL to the proxy endpoint
     const proxyUrl = `${baseUrl}/api/blob/proxy/image?url=${encodedUrl}`;
-    console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
+    // console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
     return proxyUrl;
   }
   
   // If it's already a full HTTP URL (not blob storage), return it as-is
   if (path.startsWith('http://') || path.startsWith('https://')) {
-    console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
+    // console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
     return path;
   }
   
   // Otherwise treat as relative path and prepend baseURL
   const baseUrl = api.defaults.baseURL?.replace('/api', '');
   const finalUrl = `${baseUrl}/${path}`;
-  console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
+  // console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
   return finalUrl;
 };
 
@@ -53,14 +54,20 @@ export default function GuardianHomeScreen() {
 
   // SOS & Journey State
   const [isSosActive, setIsSosActive] = useState(false);
+  // null = not yet initialized (first poll); false/true = last known state
+  const lastSosStateRef = useRef<boolean | null>(null);
   const [lastAlertTime, setLastAlertTime] = useState('No recent alerts'); // Specific to SOS
   const [lastLocationTime, setLastLocationTime] = useState('Waiting for updates...'); // Specific to Location
   const [locationStatus, setLocationStatus] = useState('Waiting for updates...');
   const [journeyData, setJourneyData] = useState(null);
+  const soundService = SOSAlertSoundService.getInstance();
 
   // 1. Initial Load from Storage
   useFocusEffect(
     useCallback(() => {
+      // Reset SOS detector on every screen focus so re-entering doesn't replay sound
+      lastSosStateRef.current = null;
+
       const loadData = async () => {
         try {
           const data = await AsyncStorage.getItem('user');
@@ -72,6 +79,8 @@ export default function GuardianHomeScreen() {
             if (parsed.protectingEmail) setProtectingEmail(parsed.protectingEmail);
             
             if (parsed.guardianEmail) {
+              // Fetch real-time guardian profile data (for name sync)
+              fetchGuardianProfile(parsed.guardianEmail);
               fetchAllUsers(parsed.guardianEmail);
             }
           }
@@ -82,6 +91,40 @@ export default function GuardianHomeScreen() {
       loadData();
     }, [])
   );
+
+  // 1B. Fetch Guardian's Real-time Profile Data
+  const fetchGuardianProfile = async (guardianEmail) => {
+    try {
+      const response = await api.post('/guardian/profile', {
+        guardianEmail: guardianEmail
+      });
+
+      if (response.status === 200) {
+        // Update guardian details in real-time
+        setGuardianName(response.data.name);
+        
+        // Update localStorage so it persists
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          parsed.guardianName = response.data.name;
+          await AsyncStorage.setItem('user', JSON.stringify(parsed));
+        }
+      }
+    } catch (error) {
+      // Check if it's a 404 - guardian hasn't been added by any user yet
+      if (error.response?.status === 404) {
+        console.warn("⚠️ Guardian profile not found - guardian email not yet added by any user");
+        // This is expected for first-time guardians
+        // They will have profile data once a user adds them as a guardian
+      } else {
+        console.error("❌ Error fetching guardian profile:", error.message);
+      }
+      // Silently fail - use cached name if API fails
+    }
+  };
+
+
 
   // 2. Fetch User List
   const fetchAllUsers = async (email) => {
@@ -94,14 +137,29 @@ export default function GuardianHomeScreen() {
       if (response.status === 200) {
         setAllUsers(response.data.users);
         if (response.data.users.length > 0) {
-          setSelectedUserId(response.data.users[0]._id);
-          setProtectingUser(response.data.users[0].name);
-          setProtectingEmail(response.data.users[0].email);
-          setProtectingPhone(response.data.users[0].phone);
+          const firstUser = response.data.users[0];
+          setSelectedUserId(firstUser._id);
+          setProtectingUser(firstUser.name);
+          setProtectingEmail(firstUser.email);
+          setProtectingPhone(firstUser.phone);
+          
+          // Fetch guardian name from FIRST user's perspective
+          fetchGuardianNameFromUser(firstUser.email);
+        } else {
+          // Empty list - guardian hasn't been added by any user yet
+          console.log("ℹ️ Guardian is not protecting any users yet");
+          setProtectingUser("Not yet assigned");
+          setProtectingEmail("");
         }
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      if (error.response?.status === 404) {
+        console.warn("⚠️ Guardian not found in any user's contacts - need to be added first");
+        setProtectingUser("Not yet assigned");
+        setProtectingEmail("");
+      } else {
+        console.error("❌ Error fetching users:", error.message);
+      }
     } finally {
       setLoadingUsers(false);
     }
@@ -141,7 +199,20 @@ export default function GuardianHomeScreen() {
         const currentBatch = results.find(r => r.email === protectingEmail);
         if (currentBatch) {
           const { isSosActive, lastUpdated, lastSosTime, location, profileImage, journey } = currentBatch.data;
-          
+
+          // Play sound only when SOS transitions false → true after the first poll
+          if (lastSosStateRef.current === null) {
+            // First poll after mount/focus — store state silently
+            lastSosStateRef.current = isSosActive;
+          } else if (!lastSosStateRef.current && isSosActive) {
+            // Genuine new SOS alert
+            console.log('🚨 New SOS detected! Playing sound...');
+            soundService.playSOSAlert(1);
+            lastSosStateRef.current = isSosActive;
+          } else {
+            lastSosStateRef.current = isSosActive;
+          }
+
           setIsSosActive(isSosActive);
           setJourneyData(journey);
 
@@ -173,8 +244,13 @@ export default function GuardianHomeScreen() {
             setLocationStatus("Waiting for location...");
           }
         }
+
       } catch (error) {
         console.error("Polling error:", error);
+        // On error, treat as initialized so subsequent polls can detect transitions
+        if (lastSosStateRef.current === null) {
+          lastSosStateRef.current = false;
+        }
       }
     };
 
@@ -183,14 +259,54 @@ export default function GuardianHomeScreen() {
     return () => clearInterval(intervalId); 
   }, [allUsers.length, protectingEmail]);
 
+  // Cleanup sound service on unmount
+  useEffect(() => {
+    return () => {
+      soundService.cleanup();
+    };
+  }, [soundService]);
+
   const handleSelectUser = (user) => {
     setSelectedUserId(user._id);
     setProtectingUser(user.name);
     setProtectingEmail(user.email);
     setProtectingPhone(user.phone);
+    
+    // Reset SOS state detector when switching users so sound doesn't trigger
+    // from previous user's state. Next poll will silently store this user's state.
+    lastSosStateRef.current = null;
+    
+    // Fetch the guardian's name as stored in THIS user's data
+    fetchGuardianNameFromUser(user.email);
+    
     AsyncStorage.setItem('selectedUser', JSON.stringify({
       userId: user._id, userName: user.name, userEmail: user.email, userPhone: user.phone
     })).catch(err => console.error('Error saving selected user:', err));
+  };
+
+  // Fetch guardian's name from the selected user's perspective
+  const fetchGuardianNameFromUser = async (userEmail) => {
+    try {
+      // Get all guardians for this user
+      const response = await api.post('/guardian/all', {
+        userEmail: userEmail
+      });
+
+      if (response.status === 200 && response.data.guardians) {
+        // Find THIS guardian in the user's guardian list
+        const guardians = response.data.guardians;
+        const currentGuardian = guardians.find(g => g.email === guardianEmail);
+        
+        if (currentGuardian) {
+          // Update guardian name to what THIS user has named them
+          setGuardianName(currentGuardian.name);
+          console.log(`✅ Updated guardian name to "${currentGuardian.name}" (from ${userEmail}'s data)`);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching guardian name from user:", error);
+      // Silently fail - keep existing guardian name if API fails
+    }
   };
 
   const handleCallUser = () => {

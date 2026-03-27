@@ -12,35 +12,35 @@ import { useSession } from '../../services/SessionContext';
 
 // Helper to get full image URL with Vercel Blob proxy support
 const getImageUrl = (path: string | undefined) => {
-  console.log('🖼️ getImageUrl called with path:', path);
+  // console.log('🖼️ getImageUrl called with path:', path);
   
   if (!path) {
-    console.log('🖼️ getImageUrl: path is empty/null, returning null');
+    // console.log('🖼️ getImageUrl: path is empty/null, returning null');
     return null;
   }
   
   // If it's a Vercel Blob URL, use proxy but pass the FULL URL
   if (path.includes('.blob.vercel-storage.com')) {
-    console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
+    // console.log('🖼️ getImageUrl: detected Vercel Blob URL - using proxy endpoint');
     const encodedUrl = encodeURIComponent(path);
     const baseUrl = api.defaults.baseURL?.replace('/api', '');
     // Pass the full URL to the proxy endpoint
     const proxyUrl = `${baseUrl}/api/blob/proxy/image?url=${encodedUrl}`;
-    console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
+    // console.log('🖼️ getImageUrl: constructed proxy URL with full blob URL:', proxyUrl);
     return proxyUrl;
   }
   
   // If it's an HTTP URL (non-blob), it's probably Cloudinary or similar - use directly if allowed
   // (check content security policy)
   if (path.startsWith('http')) {
-    console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
+    // console.log('🖼️ getImageUrl: detected HTTP URL, returning as-is');
     return path;
   }
   
   // Otherwise assume it's a local path and prepend baseURL
   const baseUrl = api.defaults.baseURL?.replace('/api', '');
   const finalUrl = `${baseUrl}/${path}`;
-  console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
+  // console.log('🖼️ getImageUrl: constructed base URL:', finalUrl);
   return finalUrl;
 };
 
@@ -153,13 +153,14 @@ export default function ProfileScreen() {
 
           const info = await getBatteryInfo();
           Alert.alert(
-            '✅ Battery Smart Mode Enabled',
-            `Battery optimization is now active. Location updates will now occur every 30 seconds (instead of every 5 seconds) to conserve battery.\n\n` +
-            `Benefits:\n` +
-            `• Reduced battery drain\n` +
-            `• Extended app runtime\n` +
-            `• All safety features maintained\n\n` +
-            (isTrackingActive ? `Your location tracking has been automatically restarted with the new settings.` : ''),
+            '🔋 Battery Smart Mode Enabled',
+            `Power-saving optimizations are now active (Battery: ${info.percentage}%).\n\n` +
+            `Changes applied:\n` +
+            `• Location updates: every 30s (was every 1s)\n` +
+            `• Foreground polling: disabled\n` +
+            `• Background health checks: disabled\n` +
+            `• All SOS & safety features: maintained\n\n` +
+            (isTrackingActive ? `Location tracking restarted with new settings.` : ''),
             [{ text: 'Got it' }]
           );
         }
@@ -179,9 +180,13 @@ export default function ProfileScreen() {
           }
           
           Alert.alert(
-            'Battery Smart Mode Disabled',
-            `Location updates will now occur every 1-5 seconds for real-time tracking.\n\n` +
-            (isTrackingActive ? `Your location tracking has been automatically restarted with the new settings.` : ''),
+            '⚡ Real-Time Mode Restored',
+            `Full real-time tracking is now active.\n\n` +
+            `Changes applied:\n` +
+            `• Location updates: every 1 second\n` +
+            `• Foreground polling fallback: enabled (every 5s)\n` +
+            `• Background health checks: enabled\n\n` +
+            (isTrackingActive ? `Location tracking restarted with real-time settings.` : ''),
             [{ text: 'OK' }]
           );
         }

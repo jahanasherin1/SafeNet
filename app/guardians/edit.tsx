@@ -75,8 +75,8 @@ export default function EditGuardianScreen() {
 
   const validateEmail = (text: string) => {
     if (!text.trim()) {
-      setEmailError(''); // Email is optional
-      return true;
+      setEmailError('Email is required for guardian access');
+      return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(text)) {

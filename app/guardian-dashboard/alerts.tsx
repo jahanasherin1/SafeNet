@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
+import SOSAlertSoundService from '../../services/SOSAlertSoundService';
 
 interface AlertItem {
   _id: string;
@@ -30,12 +31,59 @@ export default function GuardianAlertsScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [previousSosAlertCount, setPreviousSosAlertCount] = useState(0);
+  const [shouldPlaySound, setShouldPlaySound] = useState(false);
+  const soundService = SOSAlertSoundService.getInstance();
 
   useFocusEffect(
     useCallback(() => {
       loadSelectedUser();
     }, [])
   );
+
+  // Monitor for new SOS alerts and play sound (only when shouldPlaySound is true)
+  React.useEffect(() => {
+    const checkForNewSOSAlerts = () => {
+      const currentSosAlerts = alerts.filter(alert => alert.type === 'sos');
+      const sosAlertCount = currentSosAlerts.length;
+
+      // If there are new SOS alerts AND shouldPlaySound is true, play the sound
+      if (shouldPlaySound && sosAlertCount > previousSosAlertCount) {
+        const newAlert = currentSosAlerts[currentSosAlerts.length - 1]; // Get the most recent SOS alert
+        console.log('🚨 New SOS alert detected! Playing sound...');
+        console.log('Alert:', newAlert.title, newAlert.message);
+        
+        // Play SOS alert sound
+        soundService.playSOSAlert(1);
+        
+        // Reset the flag after playing sound
+        setShouldPlaySound(false);
+      }
+
+      setPreviousSosAlertCount(sosAlertCount);
+    };
+
+    checkForNewSOSAlerts();
+  }, [alerts, previousSosAlertCount, shouldPlaySound, soundService]);
+
+  // Cleanup sound service on unmount
+  React.useEffect(() => {
+    return () => {
+      soundService.cleanup();
+    };
+  }, [soundService]);
+
+  // Auto-refresh alerts every 30 seconds to detect new alerts
+  React.useEffect(() => {
+    if (!selectedUser) return;
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing alerts...');
+      fetchAlerts(selectedUser, filterType, false); // false = not a filter change, so enable sound
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedUser, filterType]);
 
   const loadSelectedUser = async () => {
     try {
@@ -53,7 +101,7 @@ export default function GuardianAlertsScreen() {
         
         if (email) {
           setSelectedUser(email);
-          fetchAlerts(email);
+          fetchAlerts(email, undefined, true); // true = initial load, don't play sound
         } else {
           console.log('No email found in user data');
           Alert.alert('Error', 'No user email found');
@@ -93,11 +141,16 @@ export default function GuardianAlertsScreen() {
     }
   };
 
-  const fetchAlerts = async (email: string, type?: string) => {
+  const fetchAlerts = async (email: string, type?: string, isFilterChange: boolean = false) => {
     try {
       setLoading(true);
       console.log('===== FETCHING ALERTS =====');
       console.log('Email:', email);
+      
+      // Set flag to play sound if this is NOT a filter change
+      if (!isFilterChange) {
+        setShouldPlaySound(true);
+      }
       
       // Clean up old read alerts first (client-side filter)
       cleanupOldAlerts();
@@ -111,9 +164,8 @@ export default function GuardianAlertsScreen() {
       console.log('Alerts response:', JSON.stringify(response.data, null, 2));
       
       if (response.data && response.data.alerts) {
-        // Filter out weather alerts (guardian should not see them) and read alerts older than 24 hours
-        const filteredAlerts = filterOldReadAlerts(response.data.alerts)
-          .filter(alert => alert.type !== 'weather');
+        // Filter out read alerts older than 24 hours
+        const filteredAlerts = filterOldReadAlerts(response.data.alerts);
         setAlerts(filteredAlerts);
         setUnreadCount(response.data.pagination?.unread || 0);
         console.log(`Loaded ${filteredAlerts.length} alerts (filtered)`);
@@ -141,17 +193,18 @@ export default function GuardianAlertsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAlerts(selectedUser, filterType);
+    await fetchAlerts(selectedUser, filterType, false); // false = not a filter change, so enable sound
     setRefreshing(false);
   };
 
   const applyFilter = (type: string) => {
     setFilterType(type);
     // For journey filter, fetch all alerts and filter client-side for all journey sub-types
+    // Don't play sound when just changing filters
     if (type === 'journey') {
-      fetchAlerts(selectedUser);
+      fetchAlerts(selectedUser, undefined, true); // true = is a filter change, so don't play sound
     } else {
-      fetchAlerts(selectedUser, type);
+      fetchAlerts(selectedUser, type, true); // true = is a filter change, so don't play sound
     }
   };
 

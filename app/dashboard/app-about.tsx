@@ -63,45 +63,9 @@ export default function AboutUsScreen() {
     </View>
   );
 
-  // 4. Sarah's Story
-  const renderStorySarah = () => (
-    <View>
-      <Text style={styles.popupTitle}>Sarah's Experience</Text>
-      <View style={styles.popupStoryCard}>
-        <Text style={styles.popupStoryText}>
-          "I got a flat tire on a deserted road at 2 AM. I was terrified. I tapped the SOS button, and my dad got my location instantly. He called me within seconds and stayed on the line until help arrived. I don't know what I would have done without it."
-        </Text>
-        <View style={styles.popupAuthorRow}>
-            <View style={styles.avatarPlaceholder}><Text style={{color:'#6A5ACD'}}>SM</Text></View>
-            <View>
-                <Text style={styles.storyName}>Sarah M.</Text>
-                <Text style={styles.storyStatus}>Safe & Sound</Text>
-            </View>
-        </View>
-      </View>
-    </View>
-  );
 
-  // 5. David's Story
-  const renderStoryDavid = () => (
-    <View>
-      <Text style={styles.popupTitle}>David's Experience</Text>
-      <View style={styles.popupStoryCard}>
-        <Text style={styles.popupStoryText}>
-          "I went for a solo hike and twisted my ankle on an unmarked trail. I couldn't walk. The Live Location feature helped the search and rescue team pinpoint my exact coordinates, saving them hours of searching."
-        </Text>
-        <View style={styles.popupAuthorRow}>
-            <View style={[styles.avatarPlaceholder, {backgroundColor: '#F3E5F5'}]}><Text style={{color:'#9C27B0'}}>DL</Text></View>
-            <View>
-                <Text style={styles.storyName}>David L.</Text>
-                <Text style={styles.storyStatus}>Rescued</Text>
-            </View>
-        </View>
-      </View>
-    </View>
-  );
 
-  // 6. Mission
+  // Mission
   const renderMissionPopup = () => (
     <View style={styles.centerPopup}>
       <Ionicons name="ribbon" size={60} color="#0D47A1" />
@@ -118,8 +82,6 @@ export default function AboutUsScreen() {
         case 'sos': return renderSOSPopup();
         case 'location': return renderLocationPopup();
         case 'guardian': return renderGuardianPopup();
-        case 'story_sarah': return renderStorySarah();
-        case 'story_david': return renderStoryDavid();
         case 'mission': return renderMissionPopup();
         default: return null;
     }
@@ -216,32 +178,6 @@ export default function AboutUsScreen() {
             </View>
         </View>
 
-        {/* Success Stories (Specific OnPress) */}
-        <Text style={styles.sectionHeader}>SUCCESS STORIES</Text>
-        <View style={styles.storiesContainer}>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => setActivePopup('story_sarah')} style={styles.storyCard}>
-                <Text style={styles.storyText}>"Flat tire at night. SOS alert notified my dad instantly!"</Text>
-                <View style={styles.storyFooter}>
-                    <View style={styles.avatarPlaceholder}><Text style={{color:'#6A5ACD'}}>SM</Text></View>
-                    <View>
-                        <Text style={styles.storyName}>Sarah M.</Text>
-                        <Text style={styles.storyStatus}>Safe</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity activeOpacity={0.8} onPress={() => setActivePopup('story_david')} style={styles.storyCard}>
-                <Text style={styles.storyText}>"Ankle injury on a hike. Live location helped responders."</Text>
-                <View style={styles.storyFooter}>
-                    <View style={[styles.avatarPlaceholder, {backgroundColor: '#F3E5F5'}]}><Text style={{color:'#9C27B0'}}>DL</Text></View>
-                    <View>
-                        <Text style={styles.storyName}>David L.</Text>
-                        <Text style={styles.storyStatus}>Located</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-        </View>
-
         {/* Mission Footer (Specific OnPress) */}
         <TouchableOpacity activeOpacity={0.8} onPress={() => setActivePopup('mission')} style={styles.missionCard}>
              <Ionicons name="ribbon" size={40} color="#0D47A1" />
@@ -311,14 +247,6 @@ const styles = StyleSheet.create({
   processTextContainer: { marginLeft: 15, flex: 1 },
   processTitle: { fontWeight: 'bold', fontSize: 16, color: '#333' },
   processDesc: { color: '#777', fontSize: 13, marginTop: 4 },
-
-  storiesContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 },
-  storyCard: { backgroundColor: '#FFF', width: '48%', padding: 15, borderRadius: 15, elevation: 2 },
-  storyText: { fontSize: 12, color: '#555', fontStyle: 'italic', marginBottom: 15, lineHeight: 18 },
-  storyFooter: { flexDirection: 'row', alignItems: 'center' },
-  avatarPlaceholder: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  storyName: { fontSize: 12, fontWeight: 'bold' },
-  storyStatus: { fontSize: 10, color: '#00C851' },
 
   missionCard: { backgroundColor: '#E3F2FD', padding: 30, borderRadius: 20, alignItems: 'center', marginBottom: 20 },
   missionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 10, color: '#0D47A1' },

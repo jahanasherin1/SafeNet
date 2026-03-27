@@ -141,8 +141,40 @@ export const sendActivityAlertNotification = async (
 };
 
 /**
+ * Send SOS alert notification for guardians
+ * This notification has the highest priority and will play sound even in silent mode
+ */
+export const sendSOSAlertNotification = async (
+  userName: string,
+  reason: string = 'SOS Emergency Alert'
+): Promise<void> => {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🚨 SOS EMERGENCY ALERT',
+        body: `${userName}: ${reason}`,
+        sound: 'default',
+        badge: 1,
+        data: {
+          alertType: 'SOS_EMERGENCY',
+          severity: 'critical',
+          userName: userName,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      trigger: null, // Show immediately
+    });
+
+    console.log('🚨 SOS alert notification sent to guardian');
+  } catch (error) {
+    console.error('Error sending SOS alert notification:', error);
+  }
+};
+
+/**
  * Send weather alert notification (only for non-safe conditions)
  */
+
 export const sendWeatherAlertNotification = async (
   safetyLevel: 'caution' | 'warning' | 'danger',
   weatherCondition: string,

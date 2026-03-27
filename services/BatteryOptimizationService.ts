@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Battery from 'expo-battery';
 
 const BATTERY_MODE_KEY = 'BATTERY_SMART_MODE';
 const AUTO_ENABLE_KEY = 'BATTERY_AUTO_ENABLE';
@@ -16,9 +17,9 @@ export const getBatteryOptimizationStatus = async (): Promise<BatteryOptimizatio
   try {
     const isEnabled = await isBatteryModeEnabled();
     
-    // In production with expo-battery, you would read actual battery level here
-    // For now, simulate: In Expo Go this returns 100%, in production it would be real
-    const batteryPercentage = 100; // TODO: Replace with Battery.getBatteryLevelAsync() * 100 in production
+    // Get actual battery level from device
+    const batteryLevel = await Battery.getBatteryLevelAsync();
+    const batteryPercentage = Math.round(batteryLevel * 100);
     const isLowBattery = batteryPercentage <= LOW_BATTERY_THRESHOLD;
     
     // Auto-enable battery mode if battery is low (always automatic, no toggle needed)
@@ -176,19 +177,35 @@ export const stopBatteryMonitoring = () => {
 // Get battery info for display
 export const getBatteryInfo = async () => {
   try {
-    // Return simulated battery info since native APIs aren't available in Expo Go
+    const batteryLevel = await Battery.getBatteryLevelAsync();
+    const batteryPercentage = Math.round(batteryLevel * 100);
+    const batteryState = await Battery.getBatteryStateAsync();
+    const isLowBattery = batteryPercentage <= 20;
+    
+    // Determine icon based on battery level
+    let icon: 'battery-full' | 'battery-half' | 'battery-low' | 'battery-empty';
+    if (batteryPercentage >= 75) {
+      icon = 'battery-full';
+    } else if (batteryPercentage >= 50) {
+      icon = 'battery-half';
+    } else if (batteryPercentage >= 20) {
+      icon = 'battery-low';
+    } else {
+      icon = 'battery-empty';
+    }
+    
     return {
-      percentage: 100,
-      state: 'Available',
-      isLowPowerMode: false,
-      isLowBattery: false,
-      icon: 'battery-full' as const
+      percentage: batteryPercentage,
+      state: batteryState,
+      isLowPowerMode: isLowBattery,
+      isLowBattery: isLowBattery,
+      icon
     };
   } catch (error) {
     console.error('Error getting battery info:', error);
     return {
       percentage: 100,
-      state: 'Unknown',
+      state: 'Unknown' as const,
       isLowPowerMode: false,
       isLowBattery: false,
       icon: 'battery-full' as const
