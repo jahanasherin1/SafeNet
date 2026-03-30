@@ -198,7 +198,8 @@ export default function GuardianLocationScreen() {
                     month: 'short', 
                     hour: '2-digit', 
                     minute: '2-digit',
-                    second: '2-digit'
+                    second: '2-digit',
+                    hour12: true
                 });
 
              return { 
@@ -448,7 +449,7 @@ export default function GuardianLocationScreen() {
                    {selectedUser?.lastSosTime && (
                      <Text style={styles.statusDesc}>
                        🚨 SOS Tapped: {new Date(selectedUser.lastSosTime).toLocaleString([], { 
-                         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
                        })}
                      </Text>
                    )}

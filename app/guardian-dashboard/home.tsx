@@ -225,7 +225,7 @@ export default function GuardianHomeScreen() {
           // A. Update SOS Time (Red Card)
           if (isSosActive && lastSosTime) {
             setLastAlertTime(new Date(lastSosTime).toLocaleString([], { 
-              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
             }));
           } else {
             setLastAlertTime("No recent alerts");
@@ -234,7 +234,7 @@ export default function GuardianHomeScreen() {
           // B. Update Location Time (Location Card)
           if (lastUpdated) {
             setLastLocationTime(new Date(lastUpdated).toLocaleString([], { 
-              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
             }));
           }
 
@@ -396,7 +396,7 @@ export default function GuardianHomeScreen() {
           {item.sosActive ? '🚨 Emergency' : '✓ Safe'}
         </Text>
         <Text style={{fontSize: 10, color: '#999', marginTop: 2}}>
-          Updated: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '...'}
+          Updated: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '...'}
         </Text>
       </View>
       {selectedUserId === item._id && <Ionicons name="checkmark-circle" size={24} color="#6A5ACD" />}

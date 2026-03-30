@@ -182,7 +182,7 @@ export default function StartJourneyScreen() {
 
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleString([], { 
-        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
     });
   };
 
@@ -248,7 +248,7 @@ export default function StartJourneyScreen() {
                     <Text style={styles.dateLabel}>Select Expected Arrival</Text>
                     <Text style={styles.dateTimeText}>
                         {expectedTime.toLocaleString([], { 
-                            weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                            weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
                         })}
                     </Text>
                 </View>
