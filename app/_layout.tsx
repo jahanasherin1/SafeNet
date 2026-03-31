@@ -1,5 +1,6 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GlobalAlertModal from '../components/GlobalAlertModal';
 import '../services/BackgroundLocationService'; // Initialize background location task on app start
@@ -8,6 +9,8 @@ import ShakeDetectionService from '../services/ShakeDetectionService'; // Initia
 import SOSTileService from '../services/SOSTileService'; // Initialize SOS Quick Settings Tile listener
 
 function RootLayoutContent() {
+  const router = useRouter();
+
   useEffect(() => {
     // Initialize SOS Tile Service on app startup
     console.log('📱 Initializing SOS Tile Service...');
@@ -17,13 +20,34 @@ function RootLayoutContent() {
     console.log('🤳 Initializing Shake Detection Service...');
     const shakeDetection = ShakeDetectionService.getInstance();
     shakeDetection.initialize();
+
+    // ✅ Listen for tile SOS events and navigate to home screen
+    try {
+      const { RCTDeviceEventEmitter } = NativeModules;
+      if (RCTDeviceEventEmitter) {
+        const deviceEventEmitter = new NativeEventEmitter(RCTDeviceEventEmitter);
+        const subscription = deviceEventEmitter.addListener('SOS_TILE_PRESSED', (data: any) => {
+          console.log('🏠 [TILE EVENT] Quick tile pressed - navigating to home screen...');
+          router.replace('/dashboard/home');
+        });
+        
+        return () => {
+          // Cleanup on unmount
+          subscription.remove();
+          sosTileService?.destroy();
+          shakeDetection?.destroy();
+        };
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not setup tile event listener:', error);
+    }
     
     return () => {
       // Cleanup on unmount
       sosTileService?.destroy();
       shakeDetection?.destroy();
     };
-  }, []);
+  }, [router]);
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {/* We changed (drawer) to main */}
